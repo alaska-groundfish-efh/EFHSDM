@@ -6,7 +6,6 @@ require(dismo)
 require(raster)
 require(PresenceAbsence)
 require(maxnet)
-#require(rJava)
 require(ENMeval)
 
 ####################################################################################################################################
