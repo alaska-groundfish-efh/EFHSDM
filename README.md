@@ -1,4 +1,4 @@
-# EFH_SDM
+# EFH_SDM (in progress)
 
 # Instructions for running SDMs
 
