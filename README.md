@@ -1,7 +1,8 @@
 # EFH_SDM
 
-# Put instructions for package here
+# Instructions for running SDMs
 
-# Hello Megsie
-=======
-# This is a change that Megsie made.
+# Model structure
+As of the 2022 5-year EFH Review, the SDMs used for EFH consist of MaxEnt models and several GAMs.
+
+# What each script does
