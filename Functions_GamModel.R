@@ -3,7 +3,6 @@
 require(mgcv)
 require(raster)
 require(PresenceAbsence)
-require(MESS)
 
 
 # Improved version designed to use the tables produced by the Autodetect functions

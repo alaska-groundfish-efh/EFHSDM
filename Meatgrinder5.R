@@ -14,9 +14,8 @@ region<-F
 # set species.vec and region.vec to NA in order to run everything
 species.vec<-NA                              # use the column abbreviations to select specific species
 region.vec<-NA
-stop.early<-F                                                  # useful if you want to stop and check results
+stop.early<-T                                                  # useful if you want to stop and check results
 update.table<-T
-make.variance<-T                                               # slowest step, so useful to skip sometimes
 rerun<-F
 
 EFH.path<-"Y:/RACE_EFH_variables"
@@ -249,7 +248,7 @@ while(done==F){
           maxnet.abund.check0[r]<-cellStats(maxnet.abund.list[[r]],max)<(max(species.data[,s])*10)
         }
         
-        # if it converges, do the checks
+        # if it converges, do the checks and crossvalidation
         if(maxnet.converge0[r] & maxnet.abund.check0[r]){
           maxnet.model.list[[r]]<-maxnet.model0
           
@@ -261,7 +260,7 @@ while(done==F){
           maxnet.rmse0[r]<-max(c(RMSE(pred = maxnet.error.list[[r]]$pred,obs = maxnet.error.list[[r]]$abund),
                                  RMSE(pred = maxnet.error.list[[r]]$cvpred,obs = maxnet.error.list[[r]]$abund)))
           
-          # will also discard a model any of the cv folds fails
+          # will also discard a model any of the cv folds fails, as it becomes impossible to calculate RMSE
           if(any(is.na(maxnet.cv[[1]]$cvpred))){
             maxnet.model.list[[r]]<-NA
             maxnet.cv.model.list[[r]]<-NA
@@ -279,7 +278,7 @@ while(done==F){
         rm(maxnet.model0)
       }
       
-      # as long as some of the constants managed to converge
+      # as long as some of the constants managed to converge, carry something forward
       if(sum(is.na(maxnet.rmse0))!=6){
         
         maxnet.model<-maxnet.model.list[[which.min(maxnet.rmse0)]]
@@ -315,36 +314,42 @@ while(done==F){
                                 family.gam = "binomial",link.fx = "cloglog",reduce = T,select = T,
                                 verbose=F))
       
-      if(exists("cloglog.model")){
+      cloglog.converge<-exists("cloglog.model") & any(is.infinite(predict(cloglog.model,type="response")))==F &
+        any(is.na(predict(cloglog.model,type="response")))==F
+      if(cloglog.converge){
         cloglog.converge<-T
         cloglog.scale<-mean(species.data[,s])/mean(exp(predict(cloglog.model,type="link")))
         cloglog.abund<-MakeGAMAbundance(model = cloglog.model,r.stack = raster.stack,scale.factor = cloglog.scale,
                                         land = ak.raster,filename = "")
         
         cloglog.abund.check<-cellStats(cloglog.abund,max)<(max(species.data[,s])*10)
-        if(cloglog.abund.check==F){
-          rm(cloglog.abund.check,cloglog.abund,cloglog.scale)
-          
-          print("TPS cloglog model failed abundance test; Trying alternate version")
-          try(cloglog.model<-FitGAM(gam.formula = alt.gam.formula,data = species.data,species = s,
-                                    family.gam = "binomial",link.fx = "cloglog",reduce = T,
-                                    select = T,verbose=F))
-          if(exists("cloglog.model")){
-            cloglog.scale<-mean(species.data[,s])/mean(exp(predict(cloglog.model,type="link")))
-            cloglog.abund<-MakeGAMAbundance(model = cloglog.model,r.stack = raster.stack,scale.factor = cloglog.scale,
-                                            land = ak.raster,filename = "")
-            cloglog.abund.check<-cellStats(cloglog.abund,max)<(max(species.data[,s])*10)
-            if(cloglog.abund.check==F){
-              print("both versions of cloglog model unacceptable; moving to hgam")
-              rm(cloglog.model,cloglog.abund,cloglog.scale)
-            }
-          }else{
-            cloglog.converge<-F
-          }
-        }
       }else{
-        cloglog.converge<-F
         cloglog.abund.check<-F
+      }
+      
+      if(cloglog.abund.check==F){
+        rm(cloglog.abund.check,cloglog.abund,cloglog.scale)
+        
+        print("TPS cloglog model failed abundance test; Trying alternate version")
+        try(cloglog.model<-FitGAM(gam.formula = alt.gam.formula,data = species.data,species = s,
+                                  family.gam = "binomial",link.fx = "cloglog",reduce = T,
+                                  select = T,verbose=F))
+        cloglog.converge<-exists("cloglog.model") & any(is.infinite(predict(cloglog.model,type="response")))==F &
+          any(is.na(predict(cloglog.model,type="response")))==F
+        if(cloglog.converge){
+          cloglog.scale<-mean(species.data[,s])/mean(exp(predict(cloglog.model,type="link")))
+          cloglog.abund<-MakeGAMAbundance(model = cloglog.model,r.stack = raster.stack,scale.factor = cloglog.scale,
+                                          land = ak.raster,filename = "")
+          cloglog.abund.check<-cellStats(cloglog.abund,max)<(max(species.data[,s])*10)
+          
+        }else{
+          cloglog.converge<-F
+        }
+      }
+      
+      if(cloglog.abund.check==F){
+        print("both versions of cloglog model unacceptable; moving to hgam")
+        rm(cloglog.model,cloglog.abund,cloglog.scale)
       }
       
       if(cloglog.converge & cloglog.abund.check){
@@ -376,35 +381,39 @@ while(done==F){
       try(hpoisson.model<-FitHurdleGAM(density.formula = basic.hgam.formula[[1]],prob.formula = basic.hgam.formula[[2]],
                                        data = species.data,verbose = F,select = T,reduce = T))
       
-      if(exists("hpoisson.model")){
-        hpoisson.converge<-T
+      hpoisson.converge<-exists("hpoisson.model") & any(is.infinite(predict(hpoisson.model,type="response")))==F &
+        any(is.na(predict(hpoisson.model,type="response")))==F
+      
+      if(hpoisson.converge){
         hpoisson.scale<-mean(species.data[,s])/mean(predict(hpoisson.model,type="response"))
         hpoisson.abund<-MakeGAMAbundance(model = hpoisson.model,r.stack = raster.stack,scale.factor = hpoisson.scale,
                                          land = ak.raster,filename = "")
         
         hpoisson.abund.check<-cellStats(hpoisson.abund,max)<(max(species.data[,s])*10)
-        if(hpoisson.abund.check==F){
-          rm(hpoisson.model,hpoisson.abund,hpoisson.scale)
-          
-          print("TPS hurdle model failed abundance test; Trying alternate version")
-          try(hpoisson.model<-FitHurdleGAM(density.formula = alt.hgam.formula[[1]],prob.formula = alt.hgam.formula[[2]],
-                                           data = species.data,verbose = F,select = T,reduce = T))
-          if(exists("hpoisson.model")){
-            hpoisson.scale<-mean(species.data[,s])/mean(predict(hpoisson.model,type="response"))
-            hpoisson.abund<-MakeGAMAbundance(model = hpoisson.model,r.stack = raster.stack,scale.factor = hpoisson.scale,
-                                             land = ak.raster,filename = "")
-            hpoisson.abund.check<-cellStats(hpoisson.abund,max)<(max(species.data[,s])*10)
-            if(hpoisson.abund.check==F){
-              print("both versions of hpoisson model unacceptable; moving to gams")
-              rm(hpoisson.model,hpoisson.abund,hpoisson.scale)
-            }
-          }else{
-            hpoisson.converge<-F
-          }
-        }
       }else{
-        hpoisson.converge<-F
         hpoisson.abund.check<-F
+      }
+      
+      if(hpoisson.abund.check==F){
+        rm(hpoisson.model,hpoisson.abund,hpoisson.scale)
+        
+        print("TPS hurdle model failed abundance test; Trying alternate version")
+        try(hpoisson.model<-FitHurdleGAM(density.formula = alt.hgam.formula[[1]],prob.formula = alt.hgam.formula[[2]],
+                                         data = species.data,verbose = F,select = T,reduce = T))
+        
+        hpoisson.converge<-exists("hpoisson.model") & any(is.infinite(predict(hpoisson.model,type="response")))==F &
+          any(is.na(predict(hpoisson.model,type="response")))==F
+        if(hpoisson.converge){
+          hpoisson.scale<-mean(species.data[,s])/mean(predict(hpoisson.model,type="response"))
+          hpoisson.abund<-MakeGAMAbundance(model = hpoisson.model,r.stack = raster.stack,scale.factor = hpoisson.scale,
+                                           land = ak.raster,filename = "")
+          hpoisson.abund.check<-cellStats(hpoisson.abund,max)<(max(species.data[,s])*10)
+          
+        }
+      }
+      if(hpoisson.abund.check==F){
+        print("both versions of hpoisson model unacceptable; moving to gams")
+        rm(hpoisson.model,hpoisson.abund,hpoisson.scale)
       }
       
       if(hpoisson.converge & hpoisson.abund.check){
@@ -438,33 +447,39 @@ while(done==F){
       try(poisson.model<-FitGAM(gam.formula = basic.gam.formula,data = species.data,verbose = F,
                                 reduce = T,select = T,family.gam = "poisson"))
       
-      if(exists("poisson.model")){
-        poisson.converge<-T
+      poisson.converge<-exists("poisson.model") & any(is.infinite(predict(poisson.model,type="response")))==F &
+        any(is.na(predict(poisson.model,type="response")))==F
+      
+      if(poisson.converge){
         poisson.scale<-mean(species.data[,s])/mean(predict(poisson.model,type="response"))
         poisson.abund<-MakeGAMAbundance(model = poisson.model,r.stack = raster.stack,scale.factor = poisson.scale,
                                         land = ak.raster,filename = "")
         
         poisson.abund.check<-cellStats(poisson.abund,max)<(max(species.data[,s])*10)
-        if(poisson.abund.check==F){
-          rm(poisson.model,poisson.abund,poisson.scale)
-          
-          print("TPS poisson model failed abundance test; Trying alternate version")
-          try(poisson.model<-FitGAM(gam.formula = alt.gam.formula,data = species.data,verbose = F,
-                                    select = T,reduce = T,family.gam = "poisson"))
-          if(exists("poisson.model")){
-            poisson.scale<-mean(species.data[,s])/mean(predict(poisson.model,type="response"))
-            poisson.abund<-MakeGAMAbundance(model = poisson.model,r.stack = raster.stack,scale.factor = poisson.scale,
-                                            land = ak.raster,filename = "")
-            poisson.abund.check<-cellStats(poisson.abund,max)<(max(species.data[,s])*10)
-            if(poisson.abund.check==F){
-              print("both versions of poisson model unacceptable; moving to gams")
-              rm(poisson.model,poisson.abund,poisson.scale)
-            }
-          }
-        }
       }else{
-        poisson.converge<-F
         poisson.abund.check<-F
+      }
+      
+      if(poisson.abund.check==F){
+        rm(poisson.model,poisson.abund,poisson.scale)
+        
+        print("TPS poisson model failed abundance test; Trying alternate version")
+        try(poisson.model<-FitGAM(gam.formula = alt.gam.formula,data = species.data,verbose = F,
+                                  select = T,reduce = T,family.gam = "poisson"))
+        
+        poisson.converge<-exists("poisson.model") & any(is.infinite(predict(poisson.model,type="response")))==F &
+          any(is.na(predict(poisson.model,type="response")))==F
+        if(poisson.converge){
+          poisson.scale<-mean(species.data[,s])/mean(predict(poisson.model,type="response"))
+          poisson.abund<-MakeGAMAbundance(model = poisson.model,r.stack = raster.stack,scale.factor = poisson.scale,
+                                          land = ak.raster,filename = "")
+          poisson.abund.check<-cellStats(poisson.abund,max)<(max(species.data[,s])*10)
+          
+        }
+      }
+      if(poisson.abund.check==F){
+        print("both versions of poisson model unacceptable; moving to gams")
+        rm(poisson.model,poisson.abund,poisson.scale)
       }
       
       if(poisson.converge & poisson.abund.check){
@@ -496,33 +511,39 @@ while(done==F){
       try(negbin.model<-FitGAM(gam.formula = basic.gam.formula,data = species.data,verbose = F,select = T,
                                reduce = T,family.gam = "nb"))
       
-      if(exists("negbin.model")){
+      negbin.converge<-exists("negbin.model") & any(is.infinite(predict(negbin.model,type="response")))==F &
+        any(is.na(predict(negbin.model,type="response")))==F
+      if(negbin.converge){
         negbin.converge<-T
         negbin.scale<-mean(species.data[,s])/mean(predict(negbin.model,type="response"))
         negbin.abund<-MakeGAMAbundance(model = negbin.model,r.stack = raster.stack,scale.factor = negbin.scale,
                                        land = ak.raster,filename = "")
         
         negbin.abund.check<-cellStats(negbin.abund,max)<(max(species.data[,s])*10)
-        if(negbin.abund.check==F){
-          rm(negbin.model,negbin.abund,negbin.scale)
-          
-          print("TPS negbin model failed abundance test; Trying alternate version")
-          try(negbin.model<-FitGAM(gam.formula = alt.gam.formula,data = species.data,verbose = F,select = T,
-                                   reduce = T,family.gam = "nb"))
-          if(exists("negbin.model")){
-            negbin.scale<-mean(species.data[,s])/mean(predict(negbin.model,type="response"))
-            negbin.abund<-MakeGAMAbundance(model = negbin.model,r.stack = raster.stack,scale.factor = negbin.scale,
-                                           land = ak.raster,filename = "")
-            negbin.abund.check<-cellStats(negbin.abund,max)<(max(species.data[,s])*10)
-            if(negbin.abund.check==F){
-              print("both versions of negbin model unacceptable; moving to gams")
-              rm(negbin.model,negbin.abund,negbin.scale)
-            }
-          }
-        }
       }else{
-        negbin.converge<-F
         negbin.abund.check<-F
+      }
+      
+      if(negbin.abund.check==F){
+        rm(negbin.model,negbin.abund,negbin.scale)
+        
+        print("TPS negbin model failed abundance test; Trying alternate version")
+        try(negbin.model<-FitGAM(gam.formula = alt.gam.formula,data = species.data,verbose = F,select = T,
+                                 reduce = T,family.gam = "nb"))
+        negbin.converge<-exists("negbin.model") & any(is.infinite(predict(negbin.model,type="response")))==F &
+          any(is.na(predict(negbin.model,type="response")))==F
+        if(negbin.converge){
+          negbin.scale<-mean(species.data[,s])/mean(predict(negbin.model,type="response"))
+          negbin.abund<-MakeGAMAbundance(model = negbin.model,r.stack = raster.stack,scale.factor = negbin.scale,
+                                         land = ak.raster,filename = "")
+          negbin.abund.check<-cellStats(negbin.abund,max)<(max(species.data[,s])*10)
+          
+        }
+      }
+      
+      if(negbin.abund.check==F){
+        print("both versions of negbin model unacceptable; moving to gams")
+        rm(negbin.model,negbin.abund,negbin.scale)
       }
       
       if(negbin.converge & negbin.abund.check){
@@ -601,7 +622,7 @@ while(done==F){
       abund.list<-list()
       efh.list<-list()
       var.list<-list()
-
+      
       
       # now loop through a run the extra tests for each one
       for(m in 1:length(model.vec)){
@@ -653,19 +674,18 @@ while(done==F){
           area.vec[m]<-sum(getValues(efh.list[[m]])>1,na.rm=T)
           names(area.vec)[m]<-model.name
           
-          if(make.variance){
-            var.list[[m]]<-MakeVarianceRasters(model.list = cv.model.list[[m]],raster.stack = raster.stack,
-                                               model.type = model.types[m],scale.factor = model.scales[m])
-            writeRaster(x = var.list[[m]],filename = paste0(species.path,"/",model.name,"_abund_variance"),overwrite=T)
-            
-            
-            png(filename = paste0(species.path,"/",model.name,"_abund_stdev.png"),width = png.width,height = png.height,res=600,units="in")
-            plotAbundance(map=var.list[[m]],back.col = NA,legend.text = .8,label.size=.8,
-                          outline=T,outline.lwd=.75,legend.name = "Standard Deviation of Predicted Abundance")
-            AddGrid(legPosition = NA,horiz=legend.horiz,grid=F,depth=T,land.col = "grey30",
-                    axistext.size=.8)
-            dev.off()
-          }
+          var.list[[m]]<-MakeVarianceRasters(model.list = cv.model.list[[m]],raster.stack = raster.stack,
+                                             model.type = model.types[m],scale.factor = model.scales[m])
+          writeRaster(x = var.list[[m]],filename = paste0(species.path,"/",model.name,"_abund_variance"),overwrite=T)
+          
+          
+          png(filename = paste0(species.path,"/",model.name,"_abund_stdev.png"),width = png.width,height = png.height,res=600,units="in")
+          plotAbundance(map=var.list[[m]],back.col = NA,legend.text = .8,label.size=.8,
+                        outline=T,outline.lwd=.75,legend.name = "Standard Deviation of Predicted Abundance")
+          AddGrid(legPosition = NA,horiz=legend.horiz,grid=F,depth=T,land.col = "grey30",
+                  axistext.size=.8)
+          dev.off()
+          
           
           png(filename = paste0(species.path,"/",model.name,"_residuals.png"),width = 6,height = 6,res=600,units="in")
           MakeCrossValidationPlots(error.data = model.errors[[m]],method = "spearman",make.hist = F)
@@ -796,21 +816,19 @@ while(done==F){
               legend.size = .8)
       dev.off()
       
+      #ensemble variance
+      ensemble.var<-GetEnsembleVariance(model.weights = model.weights,variance.list = var.list,abund.list = abund.list,
+                                        ensemble.abund = ensemble.abund)
+      writeRaster(x = ensemble.var,filename = paste0(species.path,"/ensemble_variance"),overwrite=T)
       
-      if(make.variance){
-        ensemble.var<-GetEnsembleVariance(model.weights = model.weights,variance.list = var.list,abund.list = abund.list,
-                                          ensemble.abund = ensemble.abund)
-        writeRaster(x = ensemble.var,filename = paste0(species.path,"/ensemble_variance"),overwrite=T)
-        
-        png(filename = paste0(species.path,"/ensemble_abund_stdev.png"),width = png.width,height = png.height,res=600,units="in")
-        plotAbundance(map=ensemble.var,back.col = NA,legend.text = .8,label.size=.8,
-                      outline=T,outline.lwd=.75,legend.name = "Standard Deviation of Predicted Abundance")
-        AddGrid(legPosition = NA,horiz=legend.horiz,grid=F,depth=T,land.col = "grey30",
-                axistext.size=.8)
-        dev.off()
-      }
+      png(filename = paste0(species.path,"/ensemble_abund_stdev.png"),width = png.width,height = png.height,res=600,units="in")
+      plotAbundance(map=ensemble.var,back.col = NA,legend.text = .8,label.size=.8,
+                    outline=T,outline.lwd=.75,legend.name = "Standard Deviation of Predicted Abundance")
+      AddGrid(legPosition = NA,horiz=legend.horiz,grid=F,depth=T,land.col = "grey30",
+              axistext.size=.8)
+      dev.off()
       
-      
+      # Ensemble deviance table
       MakeDevianceTable(model.names = model.vec,model.types = model.types,dev.list = dev.list,model.weights = model.weights,
                         filename = paste0(species.path,"/deviance_table.html"),nice.names=nice.names2)
       
@@ -831,9 +849,9 @@ while(done==F){
       write.csv(x = error.table,file = paste0(species.path,"/cv_error_data.csv"),row.names = F)
       
       MakeEnsembleXtable(weights = model.weights,preds.table = error.table,converge.vec = model.converge.vec,
-                        abund.check.vec=model.abund.check.vec,scale.facs = model.scales,areas = area.vec,
-                        efh.breaks=model.breaks,cor.method="spearman",
-                        filename = paste0(species.path,"/ensemble_table.html"))
+                         abund.check.vec=model.abund.check.vec,scale.facs = model.scales,areas = area.vec,
+                         efh.breaks=model.breaks,cor.method="spearman",
+                         filename = paste0(species.path,"/ensemble_table.html"))
       
       ensemble.success<-T
     }
