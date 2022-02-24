@@ -1,5 +1,15 @@
 # This script includes functions for fitting GAM and HGAM models
 
+# Setting lists of required packages & installing it
+rpackages <- c("mgcv", "raster", "PresenceAbsence")
+
+# rJava, rgeos, maps
+which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
+
+if(length(which_not_installed) > 1){
+  install.packages(rpackages[which_not_installed], dep = TRUE)
+}
+
 require(mgcv)
 require(raster)
 require(PresenceAbsence)
@@ -7,6 +17,18 @@ require(PresenceAbsence)
 
 # Improved version designed to use the tables produced by the Autodetect functions
 # allows for easily dropping terms for things like term selections and deviance explained
+#' Title
+#'
+#' @param yvar Name of dependent variable for gam models
+#' @param gam.table Data frame of parameters for GAM formula
+#' @param hgam Logical; do you want an hgam formula 
+#'
+#' @return Returns a formula object, or list of formulas for hgam
+#' @export
+#'
+#' @examples G
+#' 
+#' 
 AssembleGAMFormula<-function(yvar,gam.table,hgam=F){
   
   # logic to handle different possibilities to supply for hgam
@@ -65,14 +87,31 @@ AssembleGAMFormula<-function(yvar,gam.table,hgam=F){
 # Select=T will allow the model to reduce smooth terms to less than one degree of freedom, those terms are then discarded. 
 # However, it does not affect non-smooth terms. Select=T can cause models to fit very slowly.
 # reduce=T applies to all terms and will eliminate terms that increase the gcv score in a stepwise-manner
-FitGAM<-function(data,                                       # A data frame including observations and covariates
-                 gam.formula=NULL,                           # specify a formula directly, should include everything
-                 reduce=F,                                   # should the model selection be used to reduce the model
-                 select=F,                                   # should the built in estimation process be allowed to remove terms
-                 verbose=F,                                  # should summary be printed after each iteration
-                 family.gam="poisson",                       # a family that is accepted by the gam function
-                 theta=NA,                                   # an optional set theta value for nb models
-                 link.fx=NA){                                # a link function
+
+
+#' Title
+#'
+#' @param data A data frame including observations and covariates
+#' @param gam.formula GAM formula or appropriate character string, should include everything
+#' @param reduce Logical; should the model selection based on UBRE/GCV be used
+#' @param select Logical; should the built in process be allowed to remove terms with less than one degree of freedom
+#' @param verbose Logical; should summary be printed after each iteration
+#' @param family.gam a family that is accepted by the gam function
+#' @param theta Numeric; an optional set theta value for nb models
+#' @param link.fx character; the name of a valid link function
+#'
+#' @return Returns a fitted GAM model object
+#' @export
+#'
+#' @examples
+FitGAM<-function(data, 
+                 gam.formula=NULL,                           
+                 reduce=F,                                   
+                 select=F,                                   
+                 verbose=F,                                  
+                 family.gam="poisson",                       
+                 theta=NA,                                   
+                 link.fx=NA){                                
   
   # Assemble a formula based on the inputs
   gam.form <- as.formula(gam.formula)
@@ -189,12 +228,25 @@ FitGAM<-function(data,                                       # A data frame incl
 # The ziplss models are different enough to need their own function, but otherwise behaves the same
 # due to some difficulties with the select option, it is only applied to the models individually, and
 # reduce is applied to both
-FitHurdleGAM<-function(data,                                       # A data frame including observations and covariates
-                       density.formula=NULL,                       # specify a formula directly for the abundance component
-                       prob.formula=NULL,                          # specify a formula directly for probability component
-                       select=F,                                   # should default interal term selection be used (prob only)
-                       reduce=F,                                   # should the model selection be used to reduce the model
-                       verbose=F){                                  # should summary be printed after each iteration
+#' Title
+#'
+#' @param data A data frame including observations and covariates
+#' @param density.formula formula for the abundance component
+#' @param prob.formula formula for the probability component
+#' @param reduce Logical; should the model selection based on UBRE/GCV be used
+#' @param select Logical; should the built in process be allowed to remove terms with less than one degree of freedom
+#' @param verbose Logical; should a summary be printed after each iteration
+#'
+#' @return returns a fitted hurdle model object i.e. list of two models
+#' @export
+#'
+#' @examples
+FitHurdleGAM<-function(data,                                        
+                       density.formula=NULL,                       
+                       prob.formula=NULL,                          
+                       select=F,                                   
+                       reduce=F,                                  
+                       verbose=F){                               
   
   
   dens.form0 <- as.formula(density.formula)
@@ -264,6 +316,15 @@ FitHurdleGAM<-function(data,                                       # A data fram
 
 # This is a useful function that returns a table of the terms in a gam, whether they are a one dimensional (linear) term,
 # a two dimensional smooth, or a factor. Also detects the offset.
+#' Title
+#'
+#' @param model A fitted GAM model object
+#' @param hgam character describing how to handle hgams; use "d" for the density model, "p" for the prob model, or "b" or "all" for both
+#'
+#' @return returns a data frame with columns describing the name and type of all model components and relevant smoother parameters
+#' @export
+#'
+#' @examples
 AutodetectGAMTerms<-function(model,hgam="all"){
   
   n.formulas<-1
@@ -364,6 +425,15 @@ AutodetectGAMTerms<-function(model,hgam="all"){
 
 # This function makes a quick and dirty jacknife estimate of the deviance explained by each variable
 # It can be rather slow for complicated models
+#' Title
+#'
+#' @param model a GAM model object
+#' @param data a data frame; usually the same one used to fit the GAM model
+#'
+#' @return a named vector of decimal values indicating the percent contribution
+#' @export
+#'
+#' @examples
 GAMStats<-function(model,                        # a gam model
                    data){                        # the data used to fit the model
   
@@ -465,13 +535,27 @@ GAMStats<-function(model,                        # a gam model
 }
 
 
-# This function makes abundance rasters for the  gams.
-MakeGAMAbundance<-function(model,                 # a gam model fit using mgcv
-                           r.stack,               # a raster stack with the necessary covariates
-                           scale.factor=1,        # a scale factor that will multiply the model predictions
-                           filename="",           # a filename for the output
-                           land=NULL,             # a land raster to mask the output
-                           mask=NULL){            # an additional mask to apply to the output
+# This function makes abundance rasters for the  gams. When an offset is present in the model, generates
+# a map for the mean value of the offset
+#' Title
+#'
+#' @param model a mgcv GAM model object
+#' @param r.stack  raster stack with all the necessary covariates
+#' @param scale.factor numeric; scale factor that will multiply the model predictions
+#' @param filename filename for the output
+#' @param land raster; a mask to be applied to the output usually landmasses
+#' @param mask raster; an additional mask to apply to the output, if needed
+#'
+#' @return raster; usually representing abundance 
+#' @export
+#'
+#' @examples
+MakeGAMAbundance<-function(model,                 
+                           r.stack,               
+                           scale.factor=1,        
+                           filename="",           
+                           land=NULL,             
+                           mask=NULL){            
   
   #correct a common mistake
   if(is.na(filename)|is.null(filename)){filename<-""}
@@ -537,12 +621,25 @@ MakeGAMAbundance<-function(model,                 # a gam model fit using mgcv
 # Use this version if you want the confidence intervals to be based on the cv runs,
 # Has to be very complicated to account for possibility of missing data in various places
 # note, needs additional work to fit gaussian models
-GetGAMEffects<-function(model,                            # a model fit using the "gam" function from mgcv
-                        data,                            # data used to fit the models and cv models
-                        cv.model.list=NULL,              # cv models to be used to determine confidence bounds
-                        vars="all",                      # a vector of model terms to be plotted, or "all"
-                        scale="log",                     # Either log or abundance, what should the outputs be in
-                        scale.factor=1){                 # a factor to multiply results
+#' Title
+#'
+#' @param model a model fit using the "gam" function from mgcv
+#' @param data data frame; data used to fit the models and cv models
+#' @param cv.model.list list;cv models to be used to determine confidence bounds, usually from CrossValidateModel function
+#' @param vars character; a vector of model terms to be plotted, or "all" to return all terms
+#' @param scale character; Either "log" or "abundance", what should the outputs be in
+#' @param scale.factor a factor to multiply results
+#'
+#' @return a list of data frames containing effect estimates and optionally confidence intervals for each term
+#' @export
+#'
+#' @examples
+GetGAMEffects<-function(model,                          
+                        data,                            
+                        cv.model.list=NULL,              
+                        vars="all",                      
+                        scale="log",                     
+                        scale.factor=1){                 
   
   if(is.null(cv.model.list)==F && is.na(cv.model.list)){cv.model.list<-NULL}
   
@@ -602,11 +699,6 @@ GetGAMEffects<-function(model,                            # a model fit using th
   effects.list<-list()
   list.index<-1
   var.table1<-var.table[do.rows,]
-  
-  # if(model$family$family=="ziplss"){
-  #   dens.table<-AutodetectGAMTerms(model=model,hgam="d")
-  #   var.table1<-var.table1[var.table1$term%in%dens.table$term,]
-  # }
   
   #get down to business
   vars2d<-var.table1[var.table1$dims==2,]
