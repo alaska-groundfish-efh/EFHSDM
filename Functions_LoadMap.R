@@ -1,6 +1,14 @@
 # This script contains various functions mostly related to either mapping or plotting the output from other analyses
 # In general, they should be capatible with all types of models, though be careful to set the appropriate options
 
+rpackages <- c("rgdal", "sp","gstat","viridis","raster")
+
+which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
+
+if(length(which_not_installed) > 1){
+  install.packages(rpackages[which_not_installed], dep = TRUE)
+}
+
 
 require(rgdal)
 require(sp)
@@ -10,6 +18,16 @@ require(raster)
 
 # This function quickly sets up the covariate rasters and should be called before the Load Map function
 # It would be a good idea to integrate the two, but I haven't gotten to it
+# also, it is unlikely to useful except for this project
+#' Title
+#'
+#' @param region character; "AI", "GOA", or "EBS"
+#' @param raster.path character; path to the main folder for the EFH project
+#'
+#' @return does not return anything, but adds various things to the global environment
+#' @export
+#'
+#' @examples
 LoadEFHData<-function(region,raster.path="//akc0ss-n086/SEA_Programs/RACE_EFH_variables/Variables"){
         
         region<-toupper(region)
@@ -69,6 +87,18 @@ LoadEFHData<-function(region,raster.path="//akc0ss-n086/SEA_Programs/RACE_EFH_va
 # Note that loading the map requires an appropriate parameters file, described elsewhere.
 # NOte, most of this is somewhat unnecessary as we are now using the akgfmaps package for the 
 # publication quality figures, but it might still be useful for quick and dirty plotting.
+#' Title
+#'
+#' @param region character; "AI", "GOA", or "EBS"
+#' @param parameter.file a csv file containing various mapping paramters
+#' @param covariate.raster the raster stack produced by LoadEFHData
+#' @param coast.file file path for a shapefile of the Alaska landmass, very slow to load
+#' @param GOA.mask file path an additional shapefile more specific to the GOA survey area
+#'
+#' @return does not return anything, but adds various things to the global environment
+#' @export
+#'
+#' @examples
 LoadMap<-function(region,parameter.file="G:/Harris/EFH_copy/Map_Settings.csv",covariate.raster=raster.stack,
                   coast.file="//akc0ss-n086/SEA_Programs/RACE_EFH_variables/shapefiles",
                   GOA.mask="//akc0ss-n086/SEA_Programs/RACE_EFH_variables/shapefiles"){
@@ -135,12 +165,30 @@ LoadMap<-function(region,parameter.file="G:/Harris/EFH_copy/Map_Settings.csv",co
 }
 
 # a quick function to calculate the RMSE, which comes up rather a lot
+#' Title
+#'
+#' @param pred vector of predictions
+#' @param obs vector of observations
+#'
+#' @return returns RMSE of obs and preds
+#' @export
+#'
+#' @examples
 RMSE<-function(pred,obs){
         keep<-which(is.na(pred)==F & is.na(obs)==F)
         return(sqrt(sum((pred[keep]-obs[keep])^2)/length(pred[keep])))
 }
 
 # a quick function to calculate the PDE
+#' Title
+#'
+#' @param pred vector of predictions
+#' @param obs vector of observations
+#'
+#' @return returns the estimate percent deviance explained, assuming a Poisson distribution
+#' @export
+#'
+#' @examples
 PDE<-function(obs,pred){
   term1<-obs*log(obs/mean(obs))
   term1[is.nan(term1)]<-0
@@ -159,6 +207,7 @@ PDE<-function(obs,pred){
 
 # This function adds a map of AK and other features to an existing map, including a legend
 # Has many options for customizing the appearance
+# the whole "AddGrid" system is old and ought to be removed in favor of the newer akgfmaps plotting, when I get the time
 AddGrid<-function(legPosition="bottomleft",                # where should the legend be drawn, NA for no legend
                   horiz=F,                                 # should the legend be in horizontal format
                   legName="Percentiles",                   # Name of legend, if applicable
@@ -201,6 +250,24 @@ AddGrid<-function(legPosition="bottomleft",                # where should the le
 
 
 # A function that provides a quick method of making EFH maps
+#' Title
+#'
+#' @param map a raster with factor values equivalent to EFH
+#' @param map.ext an extent object if one wishes to narrow the plot
+#' @param outline logical; should an outline be drawn around the EFH areas
+#' @param outline.lwd numeric; the thickness of the outline
+#' @param col.vec vector of colors to be used in the map
+#' @param title character; a main title
+#' @param background a color for non-EFH areas
+#' @param ylab character; a y axis label
+#' @param xlab character; a x axis label
+#' @param zlim a vector of length two, which limits the factors
+#' @param label.size numeric; the size of the map labels
+#'
+#' @return does not return anything, but makes a plot
+#' @export
+#'
+#' @examples
 plotEFH<-function(map,                                      # raster with factor values equivalent to EFH
                   map.ext=NULL,                             # an extent object to narrow the plot
                   outline=F,                                # Should an outline be drawn around EFH spots
@@ -347,6 +414,18 @@ plotDots<-function(train.data,                     # data set with lat and lon, 
 # This is a function to quickly make a raster that compares the differences between two EFH rasters
 # the EFH rasters are usually composed of factor values, so you need to know the meaning of said values.
 # Usually, 1 is <5%, 2 is 5-25%, 3 is 25-50%, 4 is 50-75%, and 5 is >75%. 
+#' Title
+#'
+#' @param old raster; map of the original EFH area
+#' @param new raster; map of a new EFH area to be compared to old
+#' @param nonEFH integer; the value corresponding to non-EFH
+#' @param background raster; any raster that can be used to mask the relevant area
+#'
+#' @return returns a new raster, with coding 1 = non-EFH, 2 = EFH in old but not new; 
+#' 3 = EFH in new but not old, and 4 = EFH in both
+#' @export
+#'
+#' @examples
 EFHComparison<-function(old,                    # a EFH raster (with discrete, ordered values)
                         new,                    # a second EFH raster to be compared to the first
                         nonEFH=1,               # a value equal to or less than is considered not EFH
@@ -377,6 +456,19 @@ EFHComparison<-function(old,                    # a EFH raster (with discrete, o
 }
 
 # a function to plot the comparison map produced by the above function
+#' Title
+#'
+#' @param map raster; map of factor values, usually produced by EFHComparison
+#' @param map.ext an extent that can limit the plot area
+#' @param col.vec vector of colors to be used in the map
+#' @param title character; a main title
+#' @param ylab character; a label for the y axis
+#' @param xlab character; a label for the x axis
+#'
+#' @return nothing; but creates a plot
+#' @export
+#'
+#' @examples
 plotComparison<-function(map,                                                       # the EFH comparison raster
                          map.ext=NULL,                                              # an extent to limit the plotting
                          col.vec = c("grey85","#D6556DFF","#43DF71FF","#440154C1"), # colors for the categories
@@ -391,6 +483,7 @@ plotComparison<-function(map,                                                   
 
 # The AUC type plot can be confusing. This makes a simpler representation of the same thing, via a confusion matrix
 # can provide observed and predicted directly, or a data frame with those columns
+# this function is no longer use and can probably be eliminated
 EFHAccuracy<-function(abund=NULL,                     # a vector of observed abundances
                       pred=NULL,                      # a vector of predicted abundances
                       data,                           # a data frame with columns "abund" and "pred"
@@ -429,11 +522,23 @@ EFHAccuracy<-function(abund=NULL,                     # a vector of observed abu
 # this has undergone some recent changes. With the additional of the "sanity check" elsewhere, we no longer recommend
 # supplying the data set. The default threshold of .0513 is the poisson abundance equivalent to a 5% encounter prob.
 # and the project has vacilated between the percentile and cumulative methods quite a bit.
+#' Title
+#'
+#' @param abund.raster raster; map of predicted abundance
+#' @param method character; "cumulative" or "percentile" for method of EFH calculation
+#' @param threshold numeric; a threshold to use with the "percentile" method, default is equivalent to 5% prob in Poisson
+#' @param quantiles vector of quantiles (other than 0 and 1, that are desired)
+#' @param data optional data frame with columns "lat" & "lon" to draw the sample from, instead of entire raster
+#'
+#' @return vector of breaks for the specified quantiles
+#' @export
+#'
+#' @examples
 FindEFHbreaks<-function(abund.raster,                  # an abundance raster
                         method="cumulative",           # a method, currently "cumulative" or "percentile"
                         threshold=.0513,               # a threshold to use with the "percentile" method, default is equivalent to 5% prob
-                        quantiles=c(.05,.25,.5,.75),   # quantiles (other than 0 and 1, that are desired)
-                        data=NULL){                    # a dataframe with columns "lat" & "lon" to draw the sample from
+                        quantiles=c(.05,.25,.5,.75),   # 
+                        data=NULL){                    # 
         
         # format quantiles and correct for any errors
         quants<-sort(unique(c(0,quantiles,1)))
@@ -475,15 +580,34 @@ FindEFHbreaks<-function(abund.raster,                  # an abundance raster
 # works for all models currently in use, including maxnet
 # For quasi-poisson or negbinom, just use type="gam", it'll work
 # Outputs a list with 2 or more elements, so you may need to fish through it to find what you want
-CrossValidateModel<-function(model,           # a fitted model
-                             regmult=1,       # a regularization for maxnet models
-                             model.type,      # the type of model being made ("maxnet","cloglog","hgam","gam")
-                             scale.preds=F,   # should the predictions be scaled (assumes count data for now)
-                             data,            # a data set, presumably the same one used to fit the model
-                             key=NA,          # an identifier for each record, such as hauljoin
-                             species=NA,      # the species or a column in the data set, optional for gams
-                             folds=10,        # number of folds if random CV is to be used, otherwise ignored
-                             group="random"){ # a column or variable name to be used for pre-defined folds in CV, or "random"
+#' Title
+#'
+#' @param model a fitted model from either mgcv::gam or maxnet::maxnet
+#' @param regmult a regularization for maxnet models
+#' @param model.type character; the type of model being made ("maxnet","cloglog","hgam","gam")
+#' @param scale.preds should the predictions be scaled (assumes count data for now)
+#' @param data data frame, presumably the same one used to fit the model
+#' @param key character; an identifier for each record, such as hauljoin
+#' @param species character; the species or a column in the data set, optional for gams
+#' @param folds integer; number of folds if random CV is to be used, otherwise ignored
+#' @param group character; a column or variable name to be used for pre-defined folds in CV, or "random"
+#'
+#' @return a list of 4 elements; 1- data frame with observations, predictions, and CV out-of-bag predictions 
+#'                               2- list of models generated for each CV fold
+#'                               3- scale factor for the original model
+#'                               4- vector of scale factors used for each CV model
+#' @export
+#'
+#' @examples
+CrossValidateModel<-function(model,           
+                             regmult=1,        
+                             model.type,      
+                             scale.preds=F,   
+                             data,            
+                             key=NA,          
+                             species=NA,      
+                             folds=10,        
+                             group="random"){ 
         
         if(model.type!="maxnet"){
                 species<-ifelse(model$family$family=="ziplss",as.character(formula(model)[[1]])[[2]],as.character(formula(model))[[2]])
@@ -682,6 +806,16 @@ CrossValidateModel<-function(model,           # a fitted model
 
 # this function uses the model and the cross validated errors to make some residual plots
 # this is low priority, but could be much better
+#' Title
+#'
+#' @param error.data data frame containing observation, predictions, and CV predictions
+#' @param method character; a method to be passed to the cor function
+#' @param make.hist # should the histograms be plotted, they sometimes fail and may need to be turned off
+#'
+#' @return nothing, but creates some plots
+#' @export
+#'
+#' @examples
 MakeCrossValidationPlots<-function(error.data,           # a data frame, typically from the CrossvalidateModel function
                                    method="pearson",     # a method for the residuals, accepts pearson and spearman
                                    make.hist=T){         # should the histograms be plotted, they sometimes fail and may need to be turned off
@@ -752,123 +886,20 @@ MakeCrossValidationPlots<-function(error.data,           # a data frame, typical
 }
 
 
-# Going to write a function wrapper to make the standard plots, which will save a lot of script space
-# Standard formatting is assumed, so use the individual functions seperately if you want to customize
-MeatgrinderPlots<-function(path=species.path,
-                           file.tag,
-                           data,
-                           width = png.width,
-                           height = png.height,
-                           scale="log",
-                           cv.models=NULL,
-                           model=NULL,
-                           p.model=NULL,
-                           thresh=NULL,
-                           cv.pa.models=NULL,
-                           cv.thresh=NULL,
-                           abund=NULL,
-                           variance=NULL,
-                           stdev=F,
-                           efh=NULL,
-                           percents=NULL,
-                           error=NULL,
-                           comp=NULL,
-                           ...){
-        # Effects plot
-        if(is.null(model)==F){
-                png(filename = paste0(path,"/",file.tag,"_effects.png"),
-                    width = 6,height = 6,units = "in",res = 600)
-                
-                if("maxnet"%in%tolower(file.tag)){
-                        plotMaxnetEffects(model = model,nice.names = nice.names,
-                                          scale=scale,cv.models=cv.models,data=data)
-                }else{
-                        plotGAMEffects2(model = model,p.model = p.model,thresh = thresh,vars = "all",data=data,
-                                        cv.model.list = cv.models,cv.pa.model.list = cv.pa.models,scale=scale,
-                                        output = F,nice.names = nice.names,cv.thresh = cv.thresh,make.plot=T)
-                }
-                dev.off()
-        }
-        
-        # Main abundance plot
-        if(is.null(abund)==F){
-                png(filename = paste0(path,"/",file.tag,"_abundance.png"),
-                    width = width,height = height,res=600,units="in")
-                plotAbundance(map=abund,back.col = NA,legend.text = .8,label.size=.8,
-                              outline=T,outline.lwd=.75)
-                AddGrid(legPosition = NA,horiz=legend.horiz,grid=F,depth=T,land.col = "grey30",
-                        axistext.size=.8)
-                dev.off()
-        }
-        
-        # Variance Plot
-        if(is.null(variance)==F){
-                if(stdev){
-                        variance<-sqrt(variance)
-                        var.name<-"Standard Deviation of Predicted Abundance"
-                        var.path<-"_abund_stdev.png"
-                }else{
-                        var.name<-"Variance of Predicted Abundance"
-                        var.path<-"_abund_variance.png"
-                }
-                png(filename = paste0(path,"/",file.tag,var.path),
-                    width = width,height = height,res=600,units="in")
-                plotAbundance(map=variance,back.col = NA,legend.text = .8,label.size=.8,
-                              outline=T,outline.lwd=.75,legend.name = var.name)
-                AddGrid(legPosition = NA,horiz=legend.horiz,grid=F,depth=T,land.col = "grey30",
-                        axistext.size=.8)
-                dev.off()
-        }
-        
-        # Error plot
-        if(is.null(error)==F){
-                png(filename = paste0(path,"/",file.tag,"_error.png"),width = width,
-                    height = height,res=600,units="in")
-                plotAbundance(map=error,back.col = NA,legend.name = "Absolute Error (Predicted-Observed)",center.scale=T,col.vec=viridis(255),
-                              legend.text = .8,label.size=.8,outline=T,outline.lwd=.75,zmin=NA)
-                AddGrid(legPosition = NA,horiz=legend.horiz,grid=F,depth=T,land.col = "grey30",
-                        axistext.size=.8)
-                dev.off()
-        }
-        
-        # Main EFH plot
-        if(is.null(efh)==F){
-                png(filename = paste0(path,"/",file.tag,"_efh.png"),width = width,
-                    height = height,res=600,units="in")
-                plotEFH(map = efh,label.size = .8,outline=T,outline.lwd=.75)
-                AddGrid(legPosition = legend.pos,horiz=legend.horiz,grid=F,grid.col = "grey70",
-                        depth=T,land.col = "grey30",dlabel.size = .3,dlabels = T,axistext.size = .8,
-                        legend.size = .8)
-                dev.off()
-        }
-        # EFH percents plot
-        if(is.null(percents)==F){
-                png(filename = paste0(path,"/",file.tag,"_efh_percents.png"),
-                    width = width,height = height,res=600,units="in")
-                plotAbundance(map=percents,back.col = NA,legend.text = .8,label.size=.8,col.vec = plasma(n=100,begin=.1,end=.9),
-                              outline=T,outline.lwd=.75,legend.name = "Probability of EFH")
-                AddGrid(legPosition = NA,horiz=legend.horiz,grid=F,depth=T,land.col = "grey30",
-                        axistext.size=.8)
-                dev.off()
-        }
-        
-        # EFH error comparison
-        if(is.null(comp)==F){
-                png(filename = paste0(path,"/",file.tag,"_efh_error_comparison.png"),
-                    width = width,height = height,res=600,units="in")
-                plotComparison(map = comp)
-                AddGrid(legPosition = legend.pos,horiz=legend.horiz,grid=F,
-                        col.vec = c("grey85","#D6556DFF","#43DF71FF","#440154C1"),
-                        depth=T,land.col = "grey30",dlabel.size = .3,dlabels = T,axistext.size = .8,
-                        legend.size = .8,legName = "Potential EFH Errors",
-                        legVals = c("Non-EFH","Over-predicted","Under-predicted","Accurate"))
-                dev.off()
-        }
-}
-
-
 # This function makes a non-parametric estimate of spatial variance based on the cross validation models
 # in order to do this, it needs to hold a lot of data in memory at once, so this can take awhile
+#' Title
+#'
+#' @param model.list list of models produced by the CV folds
+#' @param raster.stack raster stack of the covariates used for the model
+#' @param model.type character; the type of model ("maxnet","cloglog","hgam","gam")
+#' @param scale.factor numeric; a scale factor to be applied
+#' @param efh.break numeric; the EFH breakpoint for the full model, optionally creates an extra map
+#'
+#' @return raster of estimate non-parametric variance in model predictions
+#' @export
+#'
+#' @examples
 MakeVarianceRasters<-function(model.list,            # a list of models for each cv fold
                               raster.stack,          # a stack of covariates for the model
                               model.type,            # the type of model
@@ -963,9 +994,20 @@ MakeVarianceRasters<-function(model.list,            # a list of models for each
 
 # Function to plot effects from an effects list
 # if the cv.models are provided, it will calculate confidence intervals based on that
-plotEffects<-function(effects,                  # a list of data frames with the effects, such as from the GetGAMEffects function
-                      nice.names=NULL,          # a list of names to be used in plotting
-                      vars="all",               # vector of which variables to plot, can be list index # or character match
+#' Title
+#'
+#' @param effects list of data frames with the effects, such as from the GetGAMEffects function
+#' @param nice.names data frame linking abbreviated names to nicer versions to be used in plottingv(optional)
+#' @param vars vector of which variables to plot, or "all"
+#' @param land shapefile used to insert landmasses into map of lat/lon effect
+#'
+#' @return nothing, but creates plots
+#' @export
+#'
+#' @examples
+plotEffects<-function(effects,                  # 
+                      nice.names=NULL,          # 
+                      vars="all",               # 
                       land=NULL){
   
   # check the variable names and restrict things to those requested

@@ -1,11 +1,43 @@
 # This script contains some functions for making the tables for summary stats
 
-library(xtable)
-library(XML)
+rpackages <- c("xtable", "XML")
+
+which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
+
+if(length(which_not_installed) > 1){
+  install.packages(rpackages[which_not_installed], dep = TRUE)
+}
+
+
+require(xtable)
+require(XML)
 # this is a slightly overcomplicated function, but it automatically adjusts the table to whatever data
 # is supplied to it. Basically, first it makes a lot of notes as to where things should go, then it takes
 # a second pass construct the table and put everything in the right place
 # Known issue: does not calculate the degrees of freedom for factors
+#' Title
+#'
+#' @param model a fitted model object produced by mgcv::gam() or maxnet::maxnet()
+#' @param rsq.method character; a method for the cor() function
+#' @param model.type character; the type of model used, does not autodetect options: maxnet, cloglog, hgam, gam
+#' @param regmult numeric; a regularization constant for maxnet models, ignored otherwise
+#' @param scale.factor numeric; a scale factor for abundance predictions
+#' @param efh.break numeric; a breakpoint or threshold for EFH area
+#' @param nice.names data frame; table linking abbreviated covariate names to nicer versions
+#' @param filename character; a file name for the html table produced
+#' @param abund vector of abundance observations
+#' @param train vector of predictions from the model trained ont he full data set
+#' @param test vector of out-of-bag predictions
+#' @param group vector of group labels 
+#' @param forecast vector of predictions from a third group (not used much anymore)
+#' @param ncoefs vector of coefficients used in maxnet models
+#' @param devs vector of deviance explained estimates
+#' @param area numeric; total EFH area
+#'
+#' @return no return value; writes an html table at filename
+#' @export
+#'
+#' @examples
 MakeXtable<-function(model,             # a model object
                      rsq.method="pearson", # a method for calculating the r squared values
                      model.type,        # the type of model, basically just checks if its "maxnet"
@@ -282,6 +314,7 @@ MakeXtable<-function(model,             # a model object
 # This function makes a nice little summary table for each species at the end of a bunch of model runs
 # it is very robust to missing data, but all of the lists and vectors must have the same order of elements
 # (i.e. maxnet first, cloglog second, and so on), or it won't make sense
+# not used in the latest version
 MakeSpeciesxtable<-function(filename,                     # a filename to write the table to
                             rsq.method="pearson",         # a method for calculating the r squared values
                             names,                        # a vector of names for the models to be printed in the table
@@ -381,12 +414,31 @@ MakeSpeciesxtable<-function(filename,                     # a filename to write 
 }
 
 # For now, you need to include each of the elements for the ensemble table to work, so no shortcuts
+# kind of cumbersome and unlikely to be useful for others
+#' Title
+#'
+#' @param model.names vector of names for the models
+#' @param ensemble logical; is an ensemble included
+#' @param weights vector of weights for each model other than the ensemble
+#' @param converge.vec vector of T/F for whether models converged
+#' @param abund.check.vec vector of T/F for whether models passed the abundance check
+#' @param cor.method character; a method for calculating the r squared values
+#' @param preds.table data frame with abundance observations and predictions for each model and the ensemble
+#' @param scale.facs vector of scale factors for each model other than the ensemble
+#' @param efh.breaks vector of efh breaks for each model including the ensemble
+#' @param areas vector of areas for each model, including the ensemble
+#' @param filename character; filename to write the html table to
+#'
+#' @return does not return anything, but instead writes a html table at filename
+#' @export
+#'
+#' @examples
 MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisson","negbin"),
-                             ensemble=T,
+                             ensemble=T, 
                              weights=NULL,
                              converge.vec=NULL,
                              abund.check.vec=NULL,
-                             cor.method="pearson",       # a method for calculating the r squared values
+                             cor.method="pearson",       # 
                              preds.table=NULL,
                              scale.facs=NULL,
                              efh.breaks=NULL,

@@ -2,7 +2,18 @@
 # Maxent is on its way out, and most functions are specifically designed for maxnet, and will require modification
 # to function with maxent
 
-require(dismo)
+#Important note, requires maxnet version 1.2, will not work with 1.4 at the moment
+
+# Setting lists of required packages & installing it
+rpackages <- c("raster", "PresenceAbsence", "maxnet","ENMeval")
+
+# rJava, rgeos, maps
+which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
+
+if(length(which_not_installed) > 1){
+  install.packages(rpackages[which_not_installed], dep = TRUE)
+}
+
 require(raster)
 require(PresenceAbsence)
 require(maxnet)
@@ -22,12 +33,25 @@ require(ENMeval)
 
 # This function fits a maxnet model. Maxnet is somewhat more finicky about NA values and
 # covariate names, so code has been added to make sure those match
-FitMaxnet<-function(data,                        # A data frame containing both the covariates and presence data
-                    species,                     # The column from the data frame that has presence data, does not need to be binary
-                    vars,                        # a vector of names for columns that contain the covariates
-                    reduce=F,                    # removes variables with 0 influence from the model
-                    regmult=1,                   # a  regularization multiplier value
-                    facs=NULL){                  # a vector of names for columns for covariates that should be treated as factors
+#' Title
+#'
+#' @param data a data frame containing the covariates and presence/absence data
+#' @param species character; the name of the column containing the dependent variable
+#' @param vars a vector of names for columns that contain the covariates
+#' @param reduce Logical; removes covariates with 0 influence from the model
+#' @param regmult Numeric; a  regularization multiplier value
+#' @param facs a vector of names for columns for covariates that should be treated as factors
+#'
+#' @return a fitted maxnet model
+#' @export
+#'
+#' @examples
+FitMaxnet<-function(data,                        
+                    species,                     
+                    vars,                        
+                    reduce=F,                    
+                    regmult=1,                   
+                    facs=NULL){                  
   
   presence.vec<-as.integer(data[,species]>0)
   maxnet.data<-data[,c(vars,facs)]
@@ -66,14 +90,29 @@ FitMaxnet<-function(data,                        # A data frame containing both 
 
 # This function makes an abundance/distribution raster from any dismo or maxnet model,
 # Depending on the settings, it will apply various masks and the cloglog transformation
-MakeMaxEntAbundance<-function(model,              # a model fit using either dismo::maxent or maxnet
-                              maxent.stack,       # a stack of covariate rasters, dismo::maxent has special requirements
-                              scale.fac=1,        # a scale factor to mutiple the results, if estimating abundance
-                              land=NULL,          # a land raster to use as a mask
-                              mask=NULL,          # any additional masks that should be applied
-                              type="cloglog",     # the type of output desired (options: "maxnet","cloglog")
-                              clamp=F,            # shoudl the covariates be restricted to the range observe in fitting the model
-                              filename=""){       # a filename to save results, "" writes to active memory
+#' Title
+#'
+#' @param model a fitted maxnet model
+#' @param maxent.stack a raster stack containing all covariates
+#' @param scale.fac numeric; scale factor that will multiply the model predictions
+#' @param land raster; a mask to be applied to the output usually landmasses
+#' @param mask raster; an additional mask to apply to the output, if needed
+#' @param type character; use "maxnet" for prob suitable habitat or "cloglog" for approximate abundance
+#' @param clamp Logical; just leave this as F; shoudl the covariates be restricted to the range observe in fitting the model?
+#' @param filename a filename to save results, "" writes to active memory
+#'
+#' @return a raster map with the desired prediction
+#' @export
+#'
+#' @examples
+MakeMaxEntAbundance<-function(model,              
+                              maxent.stack,       
+                              scale.fac=1,        
+                              land=NULL,         
+                              mask=NULL,         
+                              type="cloglog",  
+                              clamp=F,            
+                              filename=""){     
   
   #correct a common mistake
   if(is.null(filename)||is.na(filename)){filename<-""}
@@ -133,14 +172,29 @@ MakeMaxEntAbundance<-function(model,              # a model fit using either dis
 }
 
 
-GetMaxnetEffects<-function(model,                             # a maxnet model
+#' Title
+#'
+#' @param model a maxnet model
+#' @param data data frame; typically the same data used to fit the model
+#' @param cv.models list;a list of models from cross validation used for confidence intervals
+#' @param vars a vector of the names of model terms to be plotted, or "all"
+#' @param maxnet2d a list of vectors of variables to be treated as 2D; used for consistency with the GAMs
+#' @param add.entropy logical; should be model entropy be added back to the effects, choose F if not estimating abundance
+#' @param scale.factor numeric; a scale factor to multiply abundance predictions
+#' @param scale character; should results be on the scale of the linear predictor"log" or abundance "abund"
+#'
+#' @return a list of data frames containing the estimated covariate effects and variance measures for those effects
+#' @export
+#'
+#' @examples
+GetMaxnetEffects<-function(model,                             
                            data,
-                           cv.models=NULL,                    # a list of models from cross validation used for confidence intervals
-                           vars="all",                        # a vector of model terms to be plotted, or "all"
-                           maxnet2d=NULL,                     # a list of 2d variables
-                           add.entropy=T,                     # should be model entropy be added back to the effects
-                           scale.factor=1,                    # a scale factor to multiply predictions
-                           scale="log"){                      # should results be on the scale of the linear predictor(log) or abundance (abund)
+                           cv.models=NULL,                    # 
+                           vars="all",                        # 
+                           maxnet2d=NULL,                     # 
+                           add.entropy=T,                     #
+                           scale.factor=1,                    # 
+                           scale="log"){                      # 
   
   # check the variable names and restrict things to those requested
   xvars<-names(model$varmax)
@@ -158,32 +212,6 @@ GetMaxnetEffects<-function(model,                             # a maxnet model
       }
     }
     xvars<-xvars[xvars%in%unlist(maxnet2d)==F]
-    # #need a tricksy check to make sure the whole of2d terms made it through
-    # for(j in 1:length(maxnet2d)){
-    #   if(sum(maxnet2d[[j]]%in%xvars2d0)==1){
-    #     spot<-which(maxnet2d[[j]]%in%xvars2d0)
-    #     if(spot==1){
-    #       before<-NULL
-    #     }else{
-    #       before<-1:(spot-1)
-    #     }
-    #     if(spot==length(xvars2d0)){
-    #       after<-NULL
-    #     }else{
-    #       after<-(spot+1):length(xvars2d0)
-    #     }
-    #     xvars2d0<-c(xvars2d0[before],maxnet2d[[j]],xvars2d0[after])
-    #   }
-    # }
-    # 
-    # xvars<-xvars[xvars%in%unlist(maxnet2d)==F]
-    # 
-    # xvars2d<-NULL
-    # for(i in 1:length(maxnet2d)){
-    #   if(sum(maxnet2d[[i]]%in%xvars2d0)==2){
-    #     xvars2d<-c(xvars2d,paste(maxnet2d[[i]],collapse="*"))
-    #   }
-    # }
   }
   
   if(vars!="all"){
@@ -233,9 +261,7 @@ GetMaxnetEffects<-function(model,                             # a maxnet model
       
       xseq<-seq(from=min(data[,x.name]),to=max(data[,x.name]),length.out=40)
       yseq<-seq(from=min(data[,y.name]),to=max(data[,y.name]),length.out=40)
-      #xseq<-seq(from=model$varmin[x.name],to=model$varmax[x.name],length.out = 40)
-      #yseq<-seq(from=model$varmin[y.name],to=model$varmax[y.name],length.out = 40)
-      
+     
       if(x.name%in%names(model$varmax)){
         effect.x<-ent+as.vector(response.plot(model,v=x.name,plot=F,type="link"))
       }else{
@@ -361,8 +387,17 @@ GetMaxnetEffects<-function(model,                             # a maxnet model
 
 # This one just returns the number of coefficients for each variable in a maxnet model
 # if you want things to match the gams, supply a list for maxnet2d
-MaxnetCoefs<-function(model,                           # the maxnet model
-                      maxnet2d=NULL){                  # a list of vectors containing variables that are considered together
+#' Title
+#'
+#' @param model a fitted maxnet model
+#' @param maxnet2d a list of vectors of variables to be treated as 2D; used for consistency with the GAMs
+#'
+#' @return a named vector listing the number of coefficients that apply to each term
+#' @export
+#'
+#' @examples
+MaxnetCoefs<-function(model,                           
+                      maxnet2d=NULL){                  
   # This first section that is to find how many coefficients each covariate uses
   covar.names<-names(model$samplemeans)
   beta.names<-strsplit(names(model$betas),split=c("\\(|\\:|\\^|\\)"))
@@ -395,6 +430,18 @@ MaxnetCoefs<-function(model,                           # the maxnet model
 
 # This function institutes a jackknife estimate of the importance of each covariate for a maxnet model
 # Can sometimes run slowly if there are convergence issues
+#' Title
+#'
+#' @param model a fitted maxnet model
+#' @param maxnet2d a list of vectors of variables to be treated as 2D; used for consistency with the GAMs
+#' @param regmult numeric; a regularization penalty multiplier
+#' @param data data frame; typically the same data used to fit the model
+#' @param species character; the name of the column for the dependent variable in the model
+#'
+#' @return a named vector with estimates of the relative deviance explained by each term
+#' @export
+#'
+#' @examples
 MaxnetStats<-function(model,                 # a maxnet model
                       maxnet2d=NULL,         # a list of terms that are to be considered jointly
                       regmult=1,             # a multiplier for regularization

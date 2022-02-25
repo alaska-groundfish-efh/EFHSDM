@@ -6,12 +6,24 @@
 # Future work may allow for more complex methods
 # One can supply a list of dataset (old way)
 # or one can more sensibly just supply a named vector of RMSE values (better way)
-MakeEnsemble<-function(ensemble.list=NA,               # a list of observed/predicted values from different models
-                       rmse=NA,                        # alternately, provide a named vector of rmse values
-                       names.vec=NA,                   # a vector of names corresponding to the list or rmse vector
-                       minimum=NA,                     # A decimal, drops any model given less weight than this value
-                       model.types=NULL,               # a vector with model types, if not NULL, only one model of each type will advance
-                       mult=1){                        # a multiplier to increase the weight given to the best models
+#' Title
+#'
+#' @param ensemble.list list of data frames from which rmse can be calculated, not recommended
+#' @param rmse named vector of rmse values to calculate weights
+#' @param names.vec vector of names corresponding to the list or rmse vector
+#' @param minimum numeric; drops any model given less weight than this value
+#' @param model.types vector of names of models, only one model of a given type will advance
+#'
+#' @return a named vector with weights for each model
+#' @export
+#'
+#' @examples
+MakeEnsemble<-function(ensemble.list=NA,               
+                       rmse=NA,                        
+                       names.vec=NA,                   
+                       minimum=NA,                     
+                       model.types=NULL ){              
+                                              
   
   # if the rmse vector isn't supplied, compute it from the ensemble.list
   if(any(is.na(rmse))){
@@ -68,16 +80,32 @@ MakeEnsemble<-function(ensemble.list=NA,               # a list of observed/pred
   return(weights)
 }
 
-# this function makes residual plots for the ensemble model
-ValidateEnsemble<-function(pred.list,                  # a list of predictions vs observations for each model
-                           model.weights,              # a set of weights used in the ensemble
-                           method="pearson",           # method for the rsq and residual calculations
-                           output=T,                   # should the output be returned
-                           make.plots=T,               # should the plots be made
-                           key=NA,                     # a identifier such as "hauljoin" to be added to the output
-                           latlon=T,                   # should the lat and lon coordinates be appended to the output
-                           group=NA,                   # a grouping variable to be appended to the output
-                           histogram=F){               # should histograms be plotted (they often don't look nice)
+# this function makes residual plots for the ensemble model and returns a helpful data frame of ensemble predictions
+#' Title
+#'
+#' @param pred.list list of data frames containing observations and predictions from constituent models
+#' @param model.weights named vector of weights for each model
+#' @param method character; method for the cor() function
+#' @param output logical; should the data frame be returned, or just plots
+#' @param make.plots logical; should the plots be output, or just the data frame
+#' @param key character; a column name present in pred.list that works as a case identifier; usually "hauljoin"
+#' @param latlon logical; should lat and lon be included in the output table, must be present in pred.list
+#' @param group character; name of a column to be included in the output table representing CV folds
+#' @param histogram logical; should histograms be plotted (they often don't look nice)
+#'
+#' @return data frame of ensemble observations vs predictions (pred and cvpred are the same for the ensemble)
+#' @export
+#'
+#' @examples
+ValidateEnsemble<-function(pred.list,                  
+                           model.weights,              
+                           method="pearson",            
+                           output=T,                   
+                           make.plots=T,               
+                           key=NA,                     
+                           latlon=T,                   
+                           group=NA,                   
+                           histogram=F){               
   
   ensemble.preds<-data.frame(abund=pred.list[[1]]$abund,pred=0)
   
@@ -151,9 +179,19 @@ ValidateEnsemble<-function(pred.list,                  # a list of predictions v
 # Now, need to make this ensemble into a raster
 # The abundance rasters should be a list, and must match the ordering of the weights
 # After this, use the FindEFHbreaks function and others to generate an efh as normal
-MakeEnsembleAbundance<-function(model.weights,                 # vector of weights
-                                abund.list,                    # A named list of abundance rasters from different models
-                                filename=""){                  # a vector of filenames for the output
+#' Title
+#'
+#' @param model.weights a vector of model weights
+#' @param abund.list list of abundance rasters corresponding to model weights
+#' @param filename character; a file name for the abundance raster
+#'
+#' @return raster formed from weighted average of abund.list
+#' @export
+#'
+#' @examples
+MakeEnsembleAbundance<-function(model.weights,                 
+                                abund.list,                    
+                                filename=""){                  
   
   # intialize a raster with appropriate properties
   good.abund<-which(is.na(abund.list)==F)
@@ -174,6 +212,17 @@ MakeEnsembleAbundance<-function(model.weights,                 # vector of weigh
 
 
 # This function computes the variance in abundance based on a formula from Burnham and Anderson
+#' Title
+#'
+#' @param model.weights a vector of model weights
+#' @param variance.list list of rasters of the variance in model predictions
+#' @param abund.list list of rasters of the predicted abundance from each model
+#' @param ensemble.abund raster of ensemble predicted abundance
+#'
+#' @return raster of ensemble predicted variance in predictions
+#' @export
+#'
+#' @examples
 GetEnsembleVariance<-function(model.weights,variance.list,abund.list,ensemble.abund){
   
   keepers<-which(model.weights>0)
@@ -216,10 +265,21 @@ GetEnsembleVariance<-function(model.weights,variance.list,abund.list,ensemble.ab
 
 # This function takes a list of effects from individual models, and the model weights, and computes an ensemble
 # effect estimate. If CV models are available, then this is used for the CI. 
-GetEnsembleEffects<-function(effects.list,           # a list of effects, such as those produced by GetGAMEffects
-                             model.weights,          # a vector of model weights, must match the order of effects.list
-                             vars="all",             # return "all" effects, or a vector with names of desired effects
-                             scale="log"){           # should effects be in "log" or "abund" scale
+#' Title
+#'
+#' @param effects.list list of lists of data frame, such as those produced from the GetGAMEffects function
+#' @param model.weights vector of numeric weights for each model, must match order of effects.list
+#' @param vars character; vector of desired term names or "all"
+#' @param scale character; should effects be in "log" or "abund" scale
+#'
+#' @return list of data frames containing the estimated covariate effects in the ensemble
+#' @export
+#'
+#' @examples
+GetEnsembleEffects<-function(effects.list,           
+                             model.weights,          
+                             vars="all",             
+                             scale="log"){           
   
   # detect and remove any models that are NA or have zero weight, and the accompanying types
   effects.list1<-list()
