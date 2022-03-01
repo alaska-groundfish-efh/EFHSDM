@@ -7,7 +7,7 @@ which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FA
 if(length(which_not_installed) > 1){
   install.packages(rpackages[which_not_installed], dep = TRUE)
 }
-
+rm(rpackages,which_not_installed)
 
 require(xtable)
 require(XML)
