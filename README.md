@@ -1,25 +1,36 @@
-# EFH_SDM (in progress)
+# EFHSDM (in progress)
+
+Authors:
+
+@jeremyharris7  
+@James-Thorson-NOAA  
+@Ned-Laman-NOAA  
+@MargaretSiple-NOAA  
+@jodipirtle
 
 
 # Statement of purpose
 This package is designed to produce SDMs and SDM visualizations as part of the 2022 EFH 5-year review. It is designed to be moderately flexible and can be expanded in the future, but for now assumes that abundance prediction is the end goal. 
 
-Packages:
-This project requires the following packages. Bear in mind that the maxnet package is still under development and changes occasionally. Additionally, the akgfmaps package must be installed from GitHub.
-Package: xtable, XML, raster, rgdal, gstat, sp, sf, stars, akgfmaps, ggplot, viridis, gridExtra, patchwork, MASS, scales, labeling, maxnet, ENMeval, PresenceAbsence, mgcv.
+## Dependencies
+This project requires the following packages. Bear in mind that the `maxnet` package is still under development and changes occasionally. The `akgfmaps` package must be installed from Sean Rohan's GitHub.
 
+```{r eval=FALSE}
+# Packages
+xtable, XML, raster, rgdal, gstat, sp, sf, stars, akgfmaps, ggplot, viridis, gridExtra, patchwork, MASS, scales, labeling, maxnet, ENMeval, PresenceAbsence, mgcv
+```
 
 ## Roadmap
-The package is broken down in several sections indicated by different files. The general strategy is to use the functions provided in Functions_Maxent and Functions_GamModel to produce models, abundance rasters, effects estimates, and other outputs in a standard-ish format. Then, the scripts Functions_LoadMap and Functions_Ensemble provide more general methods for mapping or plotting model outputs and combining inferences from multiple models.
+Sections of the analysis are included as separate scripts. The general strategy is to use the functions provided in `Functions_Maxent.R` and `Functions_GamModel.R` to produce models, abundance rasters, effects estimates, and other outputs in a standard-ish format. Then, the scripts `Functions_LoadMap.R` and `Functions_Ensemble.R` provide more general methods for mapping or plotting model outputs and combining inferences from multiple models.
 
-The Meatgrinder script provides an example of a workflow that can be used to combine the many functions to make a SDM ensemble and the accompanying maps. However, it contains a great deal of control logic designed to accommodate the needs of the 2022 EFH 5-year Review process which involved running and keeping track of over 200 individual species/lifestages.
+The `Meatgrinder.R` script provides an example of a workflow that combines these functions to make an ensemble SDM and the accompanying maps. It contains control logic designed to accommodate the needs of the 2022 EFH 5-year Review process, which involved running and keeping track of over 200 individual species/lifestages.
 
 
-1) Functions_Maxent.R - this script provides the functions for quickly using maxnet models. 
-2) Functions_GamModel.R - this script provides functions for conducting several operations with GAMs. The code has been tested with binomial, poisson, negative binomial, and ziplss hurdle models. 
-3) Functions_LoadMap.R - this script provides versatile functions for mapping or plotting the model types mentioned above. It also contains some functions used to set up data specific to the EFH program that are unlikely to be broadly useful. 
-4) Functions_Ensemble.R - this script provides functions designed to combine models and model products produced in the previous scripts
-5) Functions_Xtable.R - this script produces a few standard output tables to summarize model or ensemble performance.
+1) `Functions_Maxent.R` - this script provides the functions for quickly using maxnet models. 
+2) `Functions_GamModel.R` - this script provides functions for conducting several operations with GAMs. The code has been tested with binomial, poisson, negative binomial, and ziplss hurdle models. 
+3) `Functions_LoadMap.R` - this script provides versatile functions for mapping or plotting the model types mentioned above. It also contains some functions used to set up data specific to the EFH program that are unlikely to be broadly useful. 
+4) `Functions_Ensemble.R` - this script provides functions designed to combine models and model products produced in the previous scripts
+5) `Functions_Xtable.R` - this script produces a few standard output tables to summarize model or ensemble performance.
 6) Functions_akgfmaps.R - this script provides standard functions to plot maps using the akgfmaps package that are of higher quality than those included elsewhere
 
 Functions may be general or specific to a type of model
@@ -27,45 +38,45 @@ Functions may be general or specific to a type of model
 ### GAM Specific Functions
 
 | Function               |Use                                                                |
-|------------------------|-------------------------------------------------------------------|
-| FitGAM                 | Fitting and term selection for binomial, poisson, and negbin GAMs |
-| FitHurdleGAM           | Fitting and term selection for ziplss hurdle GAMs                 |
-| MakeGAMAbundance       | Produces a prediction raster from a GAM model and covariate stack |
-| GetGAMEffects          | Produces covariate effect estimates and CIs for GAM models        |
-| GAMStats               | Produces jacknife estimates of relative deviance explained (slow) |
+|:-----------------------|:------------------------------------------------------------------|
+| `FitGAM()`             | Fit and term selection for binomial, poisson, and negbin GAMs |
+| `FitHurdleGAM()`       | Fit and term selection for ziplss hurdle GAMs                 |
+| `MakeGAMAbundance()`   | Produce a prediction raster from a GAM model and covariate stack |
+| `GetGAMEffects()`      | Produce covariate effect estimates and CIs for GAM models        |
+| `GAMStats()`           | Produce jacknife estimates of relative deviance explained (slow) |
 
-* Additionally, the functions AutodetectGAMTerms and AssembleGAMFormula are used internally by other
-functions, but are not strictly necessary for all users
+* The functions `AutodetectGAMTerms()` and `AssembleGAMFormula()` are used internally by other
+functions, but are not strictly necessary for all users.
 
 ### Maxnet Specific Functions
 | Function               |Use                                                                |
-|------------------------|-------------------------------------------------------------------|
-| FitMaxnet              | Fitting and term selection for maxnet models                      |
-| GetMaxnetEffects       | Produces covariate effect estimates and CIs for maxnet models     |
-| MakeMaxEntAbundance    | Produces a prediction raster from a GAM model and covariate stack |
-| MaxnetCoefs            | Returns the number of coefficients pertaining to each covariate   |
-| MaxnetStats            | Produces jackknife estimates of relative deviance explained       |
+|:-----------------------|:------------------------------------------------------------------|
+| `FitMaxnet()`              | Fitting and term selection for maxnet models                      |
+| `GetMaxnetEffects()`       | Produces covariate effect estimates and CIs for maxnet models     |
+| `MakeMaxEntAbundance()`    | Produces a prediction raster from a GAM model and covariate stack |
+| `MaxnetCoefs()`            | Returns the number of coefficients pertaining to each covariate   |
+| `MaxnetStats()`            | Produces jackknife estimates of relative deviance explained       |
 
 
-### General FUnctions
+### General Functions
 | Function               |Use                                                                |
-|------------------------|-------------------------------------------------------------------|
-| RMSE                   | Calculated the RMSE for a set of observations and predictions     |
-| PDE                    | Calculated the deviance explained (Poisson) from obs and preds    |
-| CrossValidateModel     | Conducts k-fold cross-validatation of GAM or maxnet models        |
-| FindEFHbreaks          | Returns the EFH breaks for a given abundance map                  |
-| MakeVarianceRasters    | Produces raster of predicted variance based on CV folds (slow)    |
+|:-----------------------|:------------------------------------------------------------------|
+| `RMSE()`                   | Calculated the RMSE for a set of observations and predictions     |
+| `PDE()`                    | Calculated the deviance explained (Poisson) from obs and preds    |
+| `CrossValidateModel()`     | Conducts k-fold cross-validatation of GAM or maxnet models        |
+| `FindEFHbreaks()`          | Returns the EFH breaks for a given abundance map                  |
+| `MakeVarianceRasters()`    | Produces raster of predicted variance based on CV folds (slow)    |
 
 ### Ensemble Functions
-| Function               |Use                                                                |
-|------------------------|-------------------------------------------------------------------|
-| MakeEnsemble           | Calculates the weights for a set a models based on RMSE           |
-| ValidateEnsemble       | Makes some basic validation plots and returns prediction data     |
-| MakeEnsembleAbundance  | Combines multiple rasters into a weighted average                 |
-| GetEnsembleVariance    | Estimates the variance in ensemble predictions                    |
-| GetEnsembleEffects     | Produces covariate effect estimates for an ensemble               |
+| Function       |Use                                                            |
+|:-----------------------|:------------------------------------------------------------------|
+| `MakeEnsemble()`           | Calculates the weights for a set a models based on RMSE           |
+| `ValidateEnsemble()`       | Makes some basic validation plots and returns prediction data     |
+| `MakeEnsembleAbundance()`  | Combines multiple rasters into a weighted average                 |
+| `GetEnsembleVariance()`    | Estimates the variance in ensemble predictions                    |
+| `GetEnsembleEffects()`     | Produces covariate effect estimates for an ensemble               |
 
-Additionally, there are numerous plotting functions. The ones based on akgfmaps are recommended.
+There are numerous plotting functions. The ones based on `akgfmaps` are recommended.
 
 ### Work Flow
 
@@ -141,14 +152,6 @@ poisson.efh<-raster::cut(poisson.abundance,poisson.breaks)
 efh.plot<-MakeAKGFEFHplot(region="goa",efh.map=poisson.efh,title.name="Adult ATF",legend.title="Percentiles")
 print(efh.plot)
 ```
+
 ## Legal disclaimer
-This repository is a software product and is not official communication of the National Oceanic and Atmospheric Administration (NOAA), or the United States Department of Commerce (DOC). All NOAA GitHub project code is provided on an 'as is' basis and the user assumes responsibility for its use. Any claims against the DOC or DOC bureaus stemming from the use of this GitHub project will be governed by all applicable Federal law. Any reference to specific commercial products, processes, or services by service mark, trademark, manufacturer, or otherwise, does not constitute or imply their endorsement, recommendation, or favoring by the DOC. The DOC seal and logo, or the seal and logo of a DOC bureau, shall not be used in any manner to imply endorsement of any commercial product or activity by the DOC or the United States Government.
-
-=======
-# Instructions for running SDMs
-
-# Model structure
-As of the 2022 5-year EFH Review, the SDMs used for EFH consist of MaxEnt models and several GAMs. (insert names of all the GAM structures and a text version of their equations)
-
-# What each script does
-
+>This repository is a software product and is not official communication of the National Oceanic and Atmospheric Administration (NOAA), or the United States Department of Commerce (DOC). All NOAA GitHub project code is provided on an 'as is' basis and the user assumes responsibility for its use. Any claims against the DOC or DOC bureaus stemming from the use of this GitHub project will be governed by all applicable Federal law. Any reference to specific commercial products, processes, or services by service mark, trademark, manufacturer, or otherwise, does not constitute or imply their endorsement, recommendation, or favoring by the DOC. The DOC seal and logo, or the seal and logo of a DOC bureau, shall not be used in any manner to imply endorsement of any commercial product or activity by the DOC or the United States Government.
