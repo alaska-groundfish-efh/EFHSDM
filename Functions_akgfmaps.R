@@ -383,17 +383,17 @@ MakeAKGFDensityplot<-function(region,
 #'
 #' @examples
 MakeAKGFEFHplot<-function(region,
-                         efh.map,
-                         drop=10^8,
-                         survey.area="default",
-                         ext.adjust="default",      # vector of length four, representing xmin,xmax, ymin,ymax, to adjust the extent
-                         legend.pos="default",      # a vector of length two with a location for the legend, use NA to suppress
-                         legend.labels=c("95%","75%","50%","25%"),
-                         legend.title=NA,
-                         col.palette="viridis",
-                         col.palette.limits=c(0,1),
-                         title.name=NA,
-                         title.pos="default"){
+                          efh.map,
+                          drop=10^8,
+                          survey.area="default",
+                          ext.adjust="default",      # vector of length four, representing xmin,xmax, ymin,ymax, to adjust the extent
+                          legend.pos="default",      # a vector of length two with a location for the legend, use NA to suppress
+                          legend.labels=c("95%","75%","50%","25%"),
+                          legend.title=NA,
+                          col.palette="viridis",
+                          col.palette.limits=c(0,1),
+                          title.name=NA,
+                          title.pos="default"){
   
   # start by getting the map
   region<-tolower(region)
@@ -671,3 +671,178 @@ PlotEFHComparison<-function(old=NA,new=NA,main="",background,leg.name=NULL,leg.l
   
   return(out.plot)
 }
+
+
+
+# Improved version of the effects plot that uses ggplot and AKGF to keep the style consistent
+#' Title
+#'
+#' @param effects.list list of data frames describing the effects for each term in a model or ensemble
+#' @param region character; which region is being used, must correpond to an akgfmaps baselayer
+#' @param nice.names data frame linking names to nicer version for publication figures
+#' @param vars character vector with names or list indices to be plotted
+#'
+#' @return list of ggplot objects containing the individual panels and effects
+#' @export
+#'
+#' @examples
+Effectsplot<-function(effects.list,region,nice.names=NULL,vars="all"){
+  
+  # check the variable names and restrict things to those requested
+  if(vars!="all" & is.character(vars)){
+    vars2<-which(names(effects.list)%in%vars)
+  }else{
+    if(vars=="all"){
+      vars2<-1:length(effects.list)
+    }else{
+      vars2<-vars
+    }
+  }
+  
+  if(length(vars2)<length(vars)){
+    missing<-vars[which(vars%in%names(effects.list)==F)]
+    stop("Variables [",paste0(missing,collapse = ", "),"] not found in effects list")
+  }
+  
+  for(i in 1:length(vars2))
+  
+  
+  # if names aren't supplied, use the terms from the model
+  if(is.null(nice.names)){
+    nice.names<-data.frame(var=unlist(strsplit(names(effects.list),"[*]")),
+                           name=unlist(strsplit(names(effects.list),"[*]")))
+  }
+  
+  
+  
+  
+  eff.list<-list()
+  for(j in 1:length(eff.data)){
+    e.data<-eff.data[[j]]
+    
+    # if necessary, transform the coordinates
+    if(nrow(e.data)==1600){
+      xname<-nice.names$name[which(nice.names$var==names(e.data)[1])]
+      yname<-nice.names$name[which(nice.names$var==names(e.data)[2])]
+      
+      if(names(e.data)[1]=="lon"){
+        
+        con.data<-contourLines(x=sort(unique(e.data$lon)),y=sort(unique(e.data$lat)),z=matrix(nrow = 40,ncol=40,data = e.data$effect))
+        
+        con.data2<-data.frame(lon=con.data[[1]]$x,lat=con.data[[1]]$y,effect=con.data[[1]]$level,group=1)
+        label.spots<-data.frame(con.data2[round(nrow(con.data2)/2),1:2],tag=con.data[[1]]$level)
+        for(i in 2:length(con.data)){
+          c.dat<-data.frame(lon=con.data[[i]]$x,lat=con.data[[i]]$y,effect=con.data[[i]]$level,group=i)
+          label.spots<-rbind(label.spots,data.frame(c.dat[round(nrow(c.dat)/2),1:2],tag=con.data[[i]]$level))
+          con.data2<-rbind(con.data2,c.dat)
+        }
+        if(nrow(label.spots)>10){
+          label.spots<-subset(label.spots,tag%%1==0)
+        }
+        
+        #ok, now you can transform it to the right projection
+        e.ef<-st_as_sf(x=con.data2,coords = c("lon","lat"),crs=example.raster@crs)
+        e.ef2<-st_transform(e.ef,st_crs(EBS$akland))
+        
+        spots.sf<-st_as_sf(x=label.spots,coords = c("lon","lat"),crs=example.raster@crs)
+        spots.sf2<-st_transform(spots.sf,st_crs(EBS$akland))
+        
+        spot.data2<-data.frame(st_coordinates(spots.sf2),label=spots.sf2$tag)
+        
+        e.data2<-data.frame(st_coordinates(e.ef2),e.ef2$effect,group=e.ef2$group)
+        names(e.data2)<-c("lon","lat","effect","group")
+        
+        var.plot<-ggplot()+geom_sf(data=EBS$akland,fill="grey70")+
+          geom_sf(data = EBS$bathymetry,col="grey60") +
+          geom_path(data=e.data2,aes(x=lon,y=lat,group=group),size=1)+
+          geom_label(data=spot.data2,aes(x=X,y=Y,label=label),fill=rgb(1,1,1,.9),
+                     label.size=NA,size=4,label.padding=unit(.10,"lines"),nudge_x = -1000)+
+          coord_sf(xlim = EBS$plot.boundary$x, ylim = EBS$plot.boundary$y)+
+          scale_x_continuous(name = "Longitude",breaks = EBS$lon.breaks) +
+          scale_y_continuous(name = "Latitude",breaks = EBS$lat.breaks) +
+          theme_bw()+
+          theme(panel.border = element_rect(color = "black",fill = NA),
+                panel.background = element_rect(fill = NA,color = "black"),
+                axis.title = element_blank(), axis.text = element_text(size = 12),
+                plot.background = element_rect(fill = NA, color = NA))
+        var.plot
+      }else{
+        # for options other than lat.lon
+        
+        con.data<-contourLines(x=sort(unique(e.data[,1])),y=sort(unique(e.data[,2])),
+                               z=matrix(nrow = 40,ncol=40,data = e.data$effect),nlevels = 10)
+        con.data2<-data.frame(x=con.data[[1]]$x,y=con.data[[1]]$y,effect=con.data[[1]]$level,group=1)
+        label.spots<-data.frame(con.data2[round(nrow(con.data2)/2),1:2],tag=con.data[[1]]$level)
+        
+        for(i in 2:length(con.data)){
+          c.dat<-data.frame(x=con.data[[i]]$x,y=con.data[[i]]$y,effect=con.data[[i]]$level,group=i)
+          label.spots<-rbind(label.spots,data.frame(c.dat[round(nrow(c.dat)/2),1:2],tag=con.data[[i]]$level))
+          con.data2<-rbind(con.data2,c.dat)
+        }
+        names(e.data)[1:2]<-c("x","y")
+        
+        var.plot<-ggplot()+geom_path(data=con.data2,aes(x=x,y=y,group=group))+
+          geom_label(data=label.spots,aes(x=x,y=y,label=round(tag,1)),fill="white",label.size=NA)+
+          xlab(xname)+ylab(yname)+
+          theme_bw()+
+          theme(panel.border = element_rect(color = "black",fill = NA),
+                panel.background = element_rect(fill = NA,color = "black"),
+                axis.text = element_text(size = 12),axis.title = element_text(size=12),
+                plot.background = element_rect(fill = NA, color = NA))
+        if(xname=="Current Velocity East (m/s)"){
+          var.plot<-var.plot+geom_vline(xintercept = 0,linetype=3)+geom_hline(yintercept = 0,linetype=3)
+        }
+        if(xname=="Current Velocity East SD (m/s)"){
+          var.plot<-var.plot+geom_abline(intercept = 0,slope = 1,linetype=3)
+        }
+      }
+    }
+    if(nrow(e.data)==100){
+      xname<-nice.names$name[which(nice.names$var==names(eff.data)[j])]
+      
+      # now the single dimension smoothed terms
+      var.plot<-ggplot()+geom_line(data=e.data,aes(x=v.seq,y=effect))+
+        geom_line(data=e.data,aes(x=v.seq,y=upper),linetype=2)+
+        geom_line(data=e.data,aes(x=v.seq,y=lower),linetype=2)+
+        xlab(xname)+ylab("Variable Effect")+
+        theme_bw()+
+        theme(panel.border = element_rect(color = "black",fill = NA),
+              panel.background = element_rect(fill = NA,color = "black"),
+              axis.text = element_text(size = 12),axis.title = element_text(size=12),
+              plot.background = element_rect(fill = NA, color = NA))
+      
+    }
+    if(nrow(e.data)==2){
+      # now the factors
+      xname<-nice.names$name[which(nice.names$var==names(eff.data)[j])]
+      e.data$f.seq<-as.numeric(e.data$f.seq)
+      
+      var.plot<-ggplot()+geom_segment(data=e.data,aes(y=effect,yend=effect,x=f.seq-.35,xend=f.seq+.35),size=2)+
+        geom_segment(data=e.data,aes(y=lower,yend=lower,x=f.seq-.35,xend=f.seq+.35),size=1,linetype=2)+
+        geom_segment(data=e.data,aes(y=upper,yend=upper,x=f.seq-.35,xend=f.seq+.35),size=1,linetype=2)+
+        xlab(xname)+ylab("Variable Effect")+
+        scale_x_continuous(breaks=(e.data$f.seq))+
+        theme_bw()+
+        theme(panel.border = element_rect(color = "black",fill = NA),
+              panel.background = element_rect(fill = NA,color = "black"),
+              axis.text = element_text(size = 12),axis.title = element_text(size=12),
+              plot.background = element_rect(fill = NA, color = NA))
+    }
+    
+    #save the plot for later
+    eff.list[[j]]<-var.plot
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
