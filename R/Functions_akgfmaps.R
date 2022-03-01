@@ -759,12 +759,14 @@ Effectsplot<-function(effects.list,region=NA,crs=NA,nice.names=NULL,vars="all"){
         e.data2<-data.frame(st_coordinates(e.ef2),e.ef2$effect,group=e.ef2$group)
         names(e.data2)<-c("lon","lat","effect","group")
         
+        ext.adjust<-ifelse(region=="goa",c(200000,-100000),c(0,0))
+        
         var.plot<-ggplot()+geom_sf(data=MAP$akland,fill="grey70")+
           geom_sf(data = MAP$bathymetry,col="grey60") +
           geom_path(data=e.data2,aes(x=lon,y=lat,group=group),size=1)+
           geom_label(data=spot.data2,aes(x=X,y=Y,label=label),fill=rgb(1,1,1,.9),
                      label.size=NA,size=4,label.padding=unit(.10,"lines"),nudge_x = -1000)+
-          coord_sf(xlim = MAP$plot.boundary$x, ylim = MAP$plot.boundary$y)+
+          coord_sf(xlim = MAP$plot.boundary$x+ext.adjust, ylim = MAP$plot.boundary$y)+
           scale_x_continuous(name = "Longitude",breaks = MAP$lon.breaks) +
           scale_y_continuous(name = "Latitude",breaks = MAP$lat.breaks) +
           theme_bw()+
@@ -807,9 +809,9 @@ Effectsplot<-function(effects.list,region=NA,crs=NA,nice.names=NULL,vars="all"){
       xname<-nice.names$name[which(nice.names$var==names(effects.list2)[j])]
       
       # now the single dimension smoothed terms
-      var.plot<-ggplot()+geom_line(data=e.data,aes(x=v.seq,y=effect))+
-        geom_line(data=e.data,aes(x=v.seq,y=upper),linetype=2)+
-        geom_line(data=e.data,aes(x=v.seq,y=lower),linetype=2)+
+      var.plot<-ggplot()+geom_line(data=e.data,aes(x=x,y=effect))+
+        geom_line(data=e.data,aes(x=x,y=upper),linetype=2)+
+        geom_line(data=e.data,aes(x=x,y=lower),linetype=2)+
         xlab(xname)+ylab("Variable Effect")+
         theme_bw()+
         theme(panel.border = element_rect(color = "black",fill = NA),
@@ -820,13 +822,13 @@ Effectsplot<-function(effects.list,region=NA,crs=NA,nice.names=NULL,vars="all"){
     if(nrow(e.data)<10){
       # now the factors
       xname<-nice.names$name[which(nice.names$var==names(effects.list2)[j])]
-      e.data$f.seq<-as.numeric(e.data$f.seq)
+      e.data$x<-as.numeric(as.character(e.data$x))
       
-      var.plot<-ggplot()+geom_segment(data=e.data,aes(y=effect,yend=effect,x=f.seq-.35,xend=f.seq+.35),size=2)+
-        geom_segment(data=e.data,aes(y=lower,yend=lower,x=f.seq-.35,xend=f.seq+.35),size=1,linetype=2)+
-        geom_segment(data=e.data,aes(y=upper,yend=upper,x=f.seq-.35,xend=f.seq+.35),size=1,linetype=2)+
+      var.plot<-ggplot()+geom_segment(data=e.data,aes(y=effect,yend=effect,x=x-.35,xend=x+.35),size=2)+
+        geom_segment(data=e.data,aes(y=lower,yend=lower,x=x-.35,xend=x+.35),size=1,linetype=2)+
+        geom_segment(data=e.data,aes(y=upper,yend=upper,x=x-.35,xend=x+.35),size=1,linetype=2)+
         xlab(xname)+ylab("Variable Effect")+
-        scale_x_continuous(breaks=(e.data$f.seq))+
+        scale_x_continuous(breaks=(e.data$x))+
         theme_bw()+
         theme(panel.border = element_rect(color = "black",fill = NA),
               panel.background = element_rect(fill = NA,color = "black"),
