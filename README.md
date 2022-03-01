@@ -1,10 +1,11 @@
 # EFHSDM (in progress)
 
 Authors:
-@jeremyharris7
-@James-Thorson-NOAA
-@Ned-Laman-NOAA
-@MargaretSiple-NOAA
+
+@jeremyharris7  
+@James-Thorson-NOAA  
+@Ned-Laman-NOAA  
+@MargaretSiple-NOAA  
 @jodipirtle
 
 
