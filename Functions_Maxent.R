@@ -2,8 +2,6 @@
 # Maxent is on its way out, and most functions are specifically designed for maxnet, and will require modification
 # to function with maxent
 
-#Important note, requires maxnet version 1.2, will not work with 1.4 at the moment
-
 # Setting lists of required packages & installing it
 rpackages <- c("raster", "PresenceAbsence", "maxnet","ENMeval")
 
@@ -13,6 +11,7 @@ which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FA
 if(length(which_not_installed) > 1){
   install.packages(rpackages[which_not_installed], dep = TRUE)
 }
+rm(rpackages,which_not_installed)
 
 require(raster)
 require(PresenceAbsence)
@@ -263,12 +262,12 @@ GetMaxnetEffects<-function(model,
       yseq<-seq(from=min(data[,y.name]),to=max(data[,y.name]),length.out=40)
      
       if(x.name%in%names(model$varmax)){
-        effect.x<-ent+as.vector(response.plot(model,v=x.name,plot=F,type="link"))
+        effect.x<-ent+as.vector(response.plot(model,v=x.name,plot=F,type="link")$pred)
       }else{
         effect.x<-log(.01)
       }
       if(y.name%in%names(model$varmax)){
-        effect.y<-ent+as.vector(response.plot(model,v=y.name,plot=F,type="link"))
+        effect.y<-ent+as.vector(response.plot(model,v=y.name,plot=F,type="link")$pred)
       }else{
         effect.y<-log(.01)
       }
@@ -299,7 +298,7 @@ GetMaxnetEffects<-function(model,
     for(i in 1:length(xvars)){
       # calculate the main effects
       dat<-data.frame(x=seq(from=model$varmin[xvars[i]],to=model$varmax[xvars[i]],length.out = 100))
-      suppressWarnings(dat$effect<-ent+as.vector(response.plot(model,v=xvars[i],plot=F,type="link")))
+      suppressWarnings(dat$effect<-ent+as.vector(response.plot(model,v=xvars[i],plot=F,type="link")$pred))
       
       if(scale=="abund"){
         dat$effect<-exp(dat$effect)*scale.factor
@@ -312,7 +311,7 @@ GetMaxnetEffects<-function(model,
         cv.dat<-matrix(data=NA,nrow=100,ncol=length(cv.models))
         for(f in 1:length(cv.models)){
           if(is.na(cv.models[[f]])==F){
-            suppressWarnings(cv.dat[,f]<-response.plot(cv.models[[f]],type = "link",v = xvars[i],plot=F)
+            suppressWarnings(cv.dat[,f]<-response.plot(cv.models[[f]],type = "link",v = xvars[i],plot=F)$pred
                              +cv.models[[f]]$entropy*as.integer(add.entropy))
           }else{
             cv.dat[,f]<-NA
@@ -342,7 +341,7 @@ GetMaxnetEffects<-function(model,
       # calculate the main effects
       dat<-data.frame(model$levels[xfacs[i]])
       names(dat)<-"x"
-      suppressWarnings(dat$effect<-ent+as.vector(response.plot(model,v=xfacs[i],plot=F,type="link")))
+      suppressWarnings(dat$effect<-ent+as.vector(response.plot(model,v=xfacs[i],plot=F,type="link")$pred))
       
       if(scale=="abund"){
         dat$effect<-exp(dat$effect)*scale.factor
@@ -355,7 +354,7 @@ GetMaxnetEffects<-function(model,
         for(f in 1:length(cv.models)){
           if(is.na(cv.models[[f]])==F){
             cv.dat[,f]<-response.plot(cv.models[[f]],type = "link",
-                                      v = xfacs[i],plot=F,levels = dat$x)+ent
+                                      v = xfacs[i],plot=F,levels = dat$x)$pred+ent
           }else{
             cv.dat[,f]<-NA
           }
