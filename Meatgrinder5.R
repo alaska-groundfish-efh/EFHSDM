@@ -14,7 +14,7 @@ region<-F
 # set species.vec and region.vec to NA in order to run everything
 species.vec<-NA                              # use the column abbreviations to select specific species
 region.vec<-NA
-stop.early<-T                                                  # useful if you want to stop and check results
+stop.early<-F                                                  # useful if you want to stop and check results
 update.table<-T
 rerun<-F
 
@@ -616,7 +616,6 @@ while(done==F){
       dev.list<-list()
       cv.model.list<-list()
       area.vec<-vector(length=length(model.vec))
-      acc.vec<-vector(length=length(model.vec))
       pred.data<-data.frame(x=NA)
       model.breaks<-vector(length=length(model.vec))
       abund.list<-list()
@@ -691,8 +690,6 @@ while(done==F){
           MakeCrossValidationPlots(error.data = model.errors[[m]],method = "spearman",make.hist = F)
           dev.off()
           
-          acc.vec[m]<-EFHAccuracy(abund = model.errors[[m]]$abund,pred = model.errors[[m]]$cvpred,efh.break = m.breaks[2])
-          
           #More plots
           png(filename = paste0(species.path,"/",model.name,"_abundance.png"),width = png.width,height = png.height,res=600,units="in")
           plotAbundance(map=abund.list[[m]],back.col = NA,legend.text = .8,label.size=.8,
@@ -736,7 +733,6 @@ while(done==F){
           cv.model.list[[m]]<-get(paste0(model.name,".cv.models"))
           area.vec[m]<-NA
           var.list[[m]]<-NA
-          acc.vec[m]<-NA
         }
       }
       print("Constructing the ensemble")
@@ -892,7 +888,6 @@ while(done==F){
        maxnet.preds,cloglog.preds,hpoisson.preds,poisson.preds,negbin.preds,ensemble.preds,
        max.stats,cloglog.dev,hpoisson.dev,poisson.dev,negbin.dev,
        maxnet.area,cloglog.area,hpoisson.area,poisson.area,negbin.area,ensemble.area,
-       maxnet.acc,cloglog.acc,hpoisson.acc,poisson.acc,negbin.acc,acc.vec,
        maxnet.effects,cloglog.effects,hpoisson.effects,poisson.effects,negbin.effects,
        maxnet.converge,cloglog.converge,hpoisson.converge,poisson.converge,negbin.converge,ensemble.success,model.converge.vec,
        maxnet.abund.check,cloglog.abund.check,hpoisson.abund.check,poisson.abund.check,negbin.abund.check,

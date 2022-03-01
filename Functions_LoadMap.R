@@ -16,6 +16,7 @@ require(gstat)
 require(viridis)
 require(raster)
 
+# Deprecated: Likely to be deleted soon
 # This function quickly sets up the covariate rasters and should be called before the Load Map function
 # It would be a good idea to integrate the two, but I haven't gotten to it
 # also, it is unlikely to useful except for this project
@@ -80,13 +81,14 @@ LoadEFHData<-function(region,raster.path="//akc0ss-n086/SEA_Programs/RACE_EFH_va
   assign(x="covars.vec",value=names(raster_stack), envir=.GlobalEnv)
 }
 
-
+# Deprecated: Likely to be deleted soon
 # This function loads the various map parameters used to make plots of different regions.
 # The function assigns various values directly to the global environment, rather than
 # returning them.
 # Note that loading the map requires an appropriate parameters file, described elsewhere.
 # NOte, most of this is somewhat unnecessary as we are now using the akgfmaps package for the 
 # publication quality figures, but it might still be useful for quick and dirty plotting.
+
 #' Title
 #'
 #' @param region character; "AI", "GOA", or "EBS"
@@ -205,9 +207,42 @@ PDE<-function(obs,pred){
 }
 
 
+# Deprecated: Likely to be deleted soon
 # This function adds a map of AK and other features to an existing map, including a legend
 # Has many options for customizing the appearance
 # the whole "AddGrid" system is old and ought to be removed in favor of the newer akgfmaps plotting, when I get the time
+#' Title
+#'
+#' @param legPosition 
+#' @param horiz 
+#' @param legName 
+#' @param legVals 
+#' @param legend.size 
+#' @param col.vec 
+#' @param depth 
+#' @param dlevels 
+#' @param dlabels 
+#' @param dlabel.size 
+#' @param bathy 
+#' @param grid 
+#' @param ext 
+#' @param map.grid 
+#' @param grid.col 
+#' @param xticks 
+#' @param yticks 
+#' @param xaxis 
+#' @param yaxis 
+#' @param axistext.size 
+#' @param coast 
+#' @param land.col 
+#' @param border.col 
+#' @param plot.yaxis 
+#' @param plot.xaxis 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 AddGrid<-function(legPosition="bottomleft",                # where should the legend be drawn, NA for no legend
                   horiz=F,                                 # should the legend be in horizontal format
                   legName="Percentiles",                   # Name of legend, if applicable
@@ -248,7 +283,7 @@ AddGrid<-function(legPosition="bottomleft",                # where should the le
   }
 }
 
-
+# Deprecated: Likely to be deleted soon in favor of the AKGF version
 # A function that provides a quick method of making EFH maps
 #' Title
 #'
@@ -295,9 +330,33 @@ plotEFH<-function(map,                                      # raster with factor
   }
 }
 
-
+# Deprecated: Likely to be deleted soon in favor of the AKGF version
 # This function primarily provides abundance or cpue type maps
 # However, it does a decent job with any raster that is on a continuous scale, and is highly customizable
+#' Title
+#'
+#' @param map 
+#' @param map.ext 
+#' @param outline 
+#' @param outline.lwd 
+#' @param col.vec 
+#' @param legend.name 
+#' @param legend.text 
+#' @param legend 
+#' @param title 
+#' @param zmin 
+#' @param zquant 
+#' @param zmax 
+#' @param center.scale 
+#' @param back.col 
+#' @param ylab 
+#' @param xlab 
+#' @param label.size 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotAbundance<-function(map,                                # A raster of abundances, or a similar metric
                         map.ext=NULL,                       # an optional extent object to narrow the plot
                         outline=F,                          # should an outline be drawn around the study area
@@ -347,10 +406,37 @@ plotAbundance<-function(map,                                # A raster of abunda
   }
 }
 
-
+# Deprecated: Likely to be deleted soon in favor of AKGF version
 # This function plots the sample locations for a species
 # because you need to interleave different pieces, all the parameters for the AddGrid function are needed
 # Will expand to add background
+#' Title
+#'
+#' @param train.data 
+#' @param test.data 
+#' @param species 
+#' @param figure.name 
+#' @param legPosition 
+#' @param background 
+#' @param background.file 
+#' @param coast 
+#' @param back.col 
+#' @param train.col 
+#' @param test.col 
+#' @param point.size 
+#' @param text.size 
+#' @param legendtext.size 
+#' @param axistext.size 
+#' @param horiz 
+#' @param title 
+#' @param dlabels 
+#' @param dlevels 
+#' @param dlabel.size 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plotDots<-function(train.data,                     # data set with lat and lon, used for training
                    test.data=NA,                   # data set with lat and lon used for tests (optional)
                    species,                        # species name or index number for the data
@@ -455,6 +541,7 @@ EFHComparison<-function(old,                    # a EFH raster (with discrete, o
   return(out.raster)
 }
 
+# Deprecated: Likely to be deleted soon in favor of AKGF version
 # a function to plot the comparison map produced by the above function
 #' Title
 #'
@@ -480,43 +567,6 @@ plotComparison<-function(map,                                                   
        ext = map.ext, legend = FALSE, ylab = ylab, xlab = xlab)
 }
 
-
-# The AUC type plot can be confusing. This makes a simpler representation of the same thing, via a confusion matrix
-# can provide observed and predicted directly, or a data frame with those columns
-# this function is no longer use and can probably be eliminated
-EFHAccuracy<-function(abund=NULL,                     # a vector of observed abundances
-                      pred=NULL,                      # a vector of predicted abundances
-                      data,                           # a data frame with columns "abund" and "pred"
-                      efh.break,                      # a threshold that defines EFH
-                      print.out=T){
-  
-  if(is.null(abund)){abund<-data$abund}
-  if(is.null(pred)){pred<-data$pred}
-  
-  # convert to binary EFH or non-EFH
-  obs.efh<-as.integer(abund>efh.break)
-  pred.efh<-as.integer(pred>efh.break)
-  
-  n.nas<-sum(is.na(pred.efh))
-  denom<-length(obs.efh)-n.nas
-  
-  # find the %s for different kinds of errors
-  t.pos<-round(sum(as.integer(obs.efh==1 & pred.efh==1),na.rm=T)/denom*100,1)
-  t.neg<-round(sum(as.integer(obs.efh==0 & pred.efh==0),na.rm=T)/denom*100,1)
-  f.pos<-round(sum(as.integer(obs.efh==0 & pred.efh==1),na.rm=T)/denom*100,1)
-  f.neg<-round(sum(as.integer(obs.efh==1 & pred.efh==0),na.rm=T)/denom*100,1)
-  
-  if(print.out){
-    print(paste0("True Positives = ",t.pos," %"))
-    print(paste0("True Negatives = ",t.neg," %"))
-    print(paste0("False Positives = ",f.pos," %"))
-    print(paste0("False Negatives = ",f.neg," %"))
-    print(paste0("Total # of Samples = ",length(obs.efh)))
-    print(paste0("Total NA Predictions = ",n.nas))
-    print(paste0("Overall Accuracy = ",t.pos+t.neg," %"))
-  }
-  return(t.pos+t.neg)
-}
 
 # This function finds the break points used for EFH for a given abundance raster, given settings
 # this has undergone some recent changes. With the additional of the "sanity check" elsewhere, we no longer recommend
