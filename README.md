@@ -136,7 +136,7 @@ abundance.plot <- MakeAKGFDensityplot(region = "goa", density.map = poisson.abun
 # Display abundance plot. Note: this may take a minute to render!
 print(abundance.plot)
 
-png("AbundancePlot.png",width = 8,height = 7,units = 'in',res = 120)
+png("AbundancePlot.png",width = 8,height = 3.5,units = 'in',res = 120)
 abundance.plot
 dev.off()
 ```
@@ -172,7 +172,7 @@ Make the EFH map
 print(efh.plot)
 
 # Note: If the map does not appear in a Plot window in R, you can see it by writing the file to a .png:
-png("EFHMap.png",width = 8,height = 7,units = 'in',res = 120)
+png("EFHMap.png",width = 8,height = 3.5,units = 'in',res = 120)
 efh.plot
 dev.off()
 ```
