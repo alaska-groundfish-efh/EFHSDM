@@ -2,12 +2,10 @@
 # It assumes some data formats from other functions in this "package"
 
 
-# This function calculates the weights for an ensemble model using a very simple rmse method
-# Future work may allow for more complex methods
-# One can supply a list of dataset (old way)
-# or one can more sensibly just supply a named vector of RMSE values (better way)
-#' Title
-#'
+
+#' Make model ensemble
+#' @description Make an ensemble model vector with weights for each model
+#' @details This function calculates the weights for an ensemble model using a very simple rmse method. Future work may allow for more complex methods. One can supply a list of dataset (old way), or one can more sensibly just supply a named vector of RMSE values (better way)
 #' @param ensemble.list list of data frames from which rmse can be calculated, not recommended
 #' @param rmse named vector of rmse values to calculate weights
 #' @param names.vec vector of names corresponding to the list or rmse vector
@@ -80,9 +78,8 @@ MakeEnsemble<-function(ensemble.list=NA,
   return(weights)
 }
 
-# this function makes residual plots for the ensemble model and returns a helpful data frame of ensemble predictions
-#' Title
-#'
+#' Validate ensemble
+#' @description This function makes residual plots for the ensemble model and returns a helpful data frame of ensemble predictions
 #' @param pred.list list of data frames containing observations and predictions from constituent models
 #' @param model.weights named vector of weights for each model
 #' @param method character; method for the cor() function
@@ -176,11 +173,9 @@ ValidateEnsemble<-function(pred.list,
 }
 
 
-# Now, need to make this ensemble into a raster
-# The abundance rasters should be a list, and must match the ordering of the weights
-# After this, use the FindEFHbreaks function and others to generate an efh as normal
-#' Title
-#'
+#' Make ensemble abundance
+#' @description Make the ensemble into a raster.
+#' @details The abundance rasters should be a list, and must match the ordering of the weights. After this, use the FindEFHbreaks function and others to generate an EFH map as normal.
 #' @param model.weights a vector of model weights
 #' @param abund.list list of abundance rasters corresponding to model weights
 #' @param filename character; a file name for the abundance raster
@@ -211,9 +206,9 @@ MakeEnsembleAbundance<-function(model.weights,
 }
 
 
-# This function computes the variance in abundance based on a formula from Burnham and Anderson
-#' Title
+#' Get ensemble variance
 #'
+#' @description This function computes the variance in abundance based on a formula from Burnham and Anderson
 #' @param model.weights a vector of model weights
 #' @param variance.list list of rasters of the variance in model predictions
 #' @param abund.list list of rasters of the predicted abundance from each model
@@ -263,10 +258,9 @@ GetEnsembleVariance<-function(model.weights,variance.list,abund.list,ensemble.ab
   return(out.raster)
 }
 
-# This function takes a list of effects from individual models, and the model weights, and computes an ensemble
-# effect estimate. If CV models are available, then this is used for the CI.
-#' Title
+#' Get ensemble effects
 #'
+#' @description This function takes a list of effects from individual models, and the model weights, and computes an ensemble effect estimate. If CV models are available, then this is used for the CI.
 #' @param effects.list list of lists of data frame, such as those produced from the GetGAMEffects function
 #' @param model.weights vector of numeric weights for each model, must match order of effects.list
 #' @param vars character; vector of desired term names or "all"
