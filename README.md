@@ -86,69 +86,81 @@ The functions are typically called top to bottom. Begin by fitting a model using
 
 ### Simplified Vignette
 
-First, begin by loading the data and the covariate rasters. For example purposes, we will used only the last  years of data and only a few covariates. We will also reduce the resolution of the rasters.
+First, make sure you are connected to the VPN and have access to the `Y:/` drive.
+
+Begin by loading the data and the covariate rasters. For example purposes, we will used only the last  years of data and only a few covariates. We will also reduce the resolution of the rasters.
 
 
+Load the functions used for SDMs
 ```{r include=F}
-# Load all the "Functions" files
-efh_fns <- paste0("R/",list.files(path = here::here("R"), pattern = "Functions_"))
+efh_fns <- paste0("R/", list.files(path = here::here("R"), pattern = "Functions_"))
 sapply(efh_fns, source, .GlobalEnv)
 ```
+
+Load the rasters
 ``` r
-region.data<-read.csv("Y:/RACE_EFH_Variables/Trawl_Models/GOA/all_GOA_data_2021.csv")
-region.data<-subset(region.data,year>=2012)
-region.data$sponge<-as.integer(region.data$sponge>0)
-region.data$logarea<-log(region.data$area)
+region.data <- read.csv("Y:/RACE_EFH_Variables/Trawl_Models/GOA/all_GOA_data_2021.csv")
+region.data <- subset(region.data, year >= 2012)
+region.data$sponge <- as.integer(region.data$sponge > 0)
+region.data$logarea <- log(region.data$area)
 
 bathy <- raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Bathy")
 btemp <- raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Btemp")
-btemp<-crop(x = btemp,y=bathy)
-lat <- raster::init(bathy, v ='y')
-lat <- raster::mask(lat, bathy,overwrite = F)
-lon <- raster::init(bathy, v ='x')
-lon <- raster::mask(lon, bathy,overwrite = F)
+btemp <- crop(x = btemp, y = bathy)
+lat <- raster::init(bathy, v = "y")
+lat <- raster::mask(lat, bathy, overwrite = F)
+lon <- raster::init(bathy, v = "x")
+lon <- raster::mask(lon, bathy, overwrite = F)
 slope <- raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Slope")
 sponge <- raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Spongefactor")
 
-raster.stack <-raster::stack(lon,lat,bathy,btemp,slope,sponge)
-names(raster.stack) <-c("lon","lat","bdepth","btemp","slope","sponge")
+raster.stack <- raster::stack(lon, lat, bathy, btemp, slope, sponge)
+names(raster.stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
 ```
 
 Next we will fit a basic Poisson model and generate an abundance map
 ``` r
-gam.form<-formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) + s(btemp, bs='tp',m=1,k=4) + s(slope, bs='tp',m=1,k=4) + offset(logarea)")
-poisson.model<-FitGAM(gam.formula=gam.form,data=region.data,family.gam="poisson")
+gam.form <- formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) + s(btemp, bs='tp',m=1,k=4) + s(slope, bs='tp',m=1,k=4) + offset(logarea)")
+
+# Note: to change the species/lifestage in this example, you can use any of the names in the columns of the region.data object:
+names(region.data[-c(1:29,185)])
+
+poisson.model <- FitGAM(gam.formula = gam.form, data = region.data, family.gam = "poisson")
 ```
 
 Now we can make a map
 ``` r
-poisson.abundance<-MakeGAMAbundance(poisson.model,raster.stack)
-abundance.plot<-MakeAKGFDensityplot(region="goa",density.map=poisson.abundance,buffer=.98,title.name="Adult ATF",legend.title="Abundance")
+poisson.abundance <- MakeGAMAbundance(poisson.model, raster.stack)
+abundance.plot <- MakeAKGFDensityplot(region = "goa", density.map = poisson.abundance, buffer = .98, title.name = "Adult ATF", legend.title = "Abundance")
+
+# Display abundance plot. Note: this may take a minute to render!
 print(abundance.plot)
 ```
 
 Get the covariate effects
 ``` r
-poisson.effects<-GetGAMEffects(poisson.model,data=region.data)
+poisson.effects <- GetGAMEffects(poisson.model, data = region.data)
 plotEffects(poisson.effects)
 ```
 
 Crossvalidate the model
 ``` r
-poisson.cv<-CrossValidateModel(model=poisson.model,data=region.data,folds=10,model.type="gam",key="hauljoin")
-poisson.preds<-poisson.cv[[1]]
+poisson.cv <- CrossValidateModel(model = poisson.model, data = region.data, folds = 10, model.type = "gam", key = "hauljoin")
+poisson.preds <- poisson.cv[[1]]
 head(poisson.preds)
-RMSE(obs=poisson.preds$abund,pred=poisson.preds$cvpred)
-PDE(obs=poisson.preds$abund,pred=poisson.preds$cvpred)
+RMSE(obs = poisson.preds$abund, pred = poisson.preds$cvpred)
+PDE(obs = poisson.preds$abund, pred = poisson.preds$cvpred)
 
 ```
+
 And find the EFH
 ``` r
-poisson.breaks<-FindEFHbreaks(poisson.abundance,method="percentile")
-poisson.efh<-raster::cut(poisson.abundance,poisson.breaks)
-efh.plot<-MakeAKGFEFHplot(region="goa",efh.map=poisson.efh,title.name="Adult ATF",legend.title="Percentiles")
+poisson.breaks <- FindEFHbreaks(poisson.abundance, method = "percentile")
+poisson.efh <- raster::cut(poisson.abundance, poisson.breaks)
+efh.plot <- MakeAKGFEFHplot(region = "goa", efh.map = poisson.efh, title.name = "Adult ATF", legend.title = "Percentiles")
 print(efh.plot)
 ```
+
 
 ## Legal disclaimer
 >This repository is a software product and is not official communication of the National Oceanic and Atmospheric Administration (NOAA), or the United States Department of Commerce (DOC). All NOAA GitHub project code is provided on an 'as is' basis and the user assumes responsibility for its use. Any claims against the DOC or DOC bureaus stemming from the use of this GitHub project will be governed by all applicable Federal law. Any reference to specific commercial products, processes, or services by service mark, trademark, manufacturer, or otherwise, does not constitute or imply their endorsement, recommendation, or favoring by the DOC. The DOC seal and logo, or the seal and logo of a DOC bureau, shall not be used in any manner to imply endorsement of any commercial product or activity by the DOC or the United States Government.
