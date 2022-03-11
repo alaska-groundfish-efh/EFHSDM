@@ -90,12 +90,9 @@ First, begin by loading the data and the covariate rasters. For example purposes
 
 
 ```{r include=F}
-source("C:/Users/jeremy.harris/Work/EFH_SDM_code/EFH_SDM/Functions_LoadMap.R")
-source("C:/Users/jeremy.harris/Work/EFH_SDM_code/EFH_SDM/Functions_Maxent.R")
-source("C:/Users/jeremy.harris/Work/EFH_SDM_code/EFH_SDM/Functions_GamModel.R")
-source("C:/Users/jeremy.harris/Work/EFH_SDM_code/EFH_SDM/Functions_Xtable.R")
-source("C:/Users/jeremy.harris/Work/EFH_SDM_code/EFH_SDM/Functions_Ensemble.R")
-source("C:/Users/jeremy.harris/Work/EFH_SDM_code/EFH_SDM/Functions_akgfmaps.R")
+# Load all the "Functions" files
+efh_fns <- paste0("R/",list.files(path = here::here("R"), pattern = "Functions_"))
+sapply(efh_fns, source, .GlobalEnv)
 ```
 ``` r
 region.data<-read.csv("Y:/RACE_EFH_Variables/Trawl_Models/GOA/all_GOA_data_2021.csv")
