@@ -91,13 +91,13 @@ First, make sure you are connected to the VPN and have access to the `Y:/` drive
 Begin by loading the data and the covariate rasters. For example purposes, we will used only the last  years of data and only a few covariates. We will also reduce the resolution of the rasters. *Note that this means that the map you produce will look different from the final map produced in the 2022 EFH 5-year Review.*
 
 
-Load the functions used for SDMs
+#### Load the functions used for SDMs
 ```{r include=F}
 efh_fns <- paste0("R/", list.files(path = here::here("R"), pattern = "Functions_"))
 sapply(efh_fns, source, .GlobalEnv)
 ```
 
-Load the rasters
+#### Load the rasters
 ``` r
 region.data <- read.csv("Y:/RACE_EFH_Variables/Trawl_Models/GOA/all_GOA_data_2021.csv")
 region.data <- subset(region.data, year >= 2012)
@@ -118,7 +118,7 @@ raster.stack <- raster::stack(lon, lat, bathy, btemp, slope, sponge)
 names(raster.stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
 ```
 
-Next we will fit a basic Poisson model and generate an abundance map
+#### Next we will fit a basic Poisson model and generate an abundance map
 ``` r
 gam.form <- formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) + s(btemp, bs='tp',m=1,k=4) + s(slope, bs='tp',m=1,k=4) + offset(logarea)")
 
@@ -128,7 +128,7 @@ names(region.data[-c(1:29,185)])
 poisson.model <- FitGAM(gam.formula = gam.form, data = region.data, family.gam = "poisson")
 ```
 
-Now we can make a map
+#### Make the abundance map
 ``` r
 poisson.abundance <- MakeGAMAbundance(poisson.model, raster.stack)
 abundance.plot <- MakeAKGFDensityplot(region = "goa", density.map = poisson.abundance, buffer = .98, title.name = "Adult ATF", legend.title = "Abundance")
@@ -143,13 +143,13 @@ dev.off()
 ![Raster of ATF abundance](https://github.com/alaska-groundfish-efh/EFHSDM/blob/main/inst/readme_images/AbundancePlot.png)
 
 
-Get the covariate effects
+#### Get the covariate effects
 ``` r
 poisson.effects <- GetGAMEffects(poisson.model, data = region.data)
 plotEffects(poisson.effects)
 ```
 
-Crossvalidate the model
+#### Crossvalidate the model
 ``` r
 poisson.cv <- CrossValidateModel(model = poisson.model, data = region.data, folds = 10, model.type = "gam", key = "hauljoin")
 poisson.preds <- poisson.cv[[1]]
@@ -159,14 +159,14 @@ PDE(obs = poisson.preds$abund, pred = poisson.preds$cvpred)
 
 ```
 
-And find the EFH
+#### And find the EFH
 ``` r
 poisson.breaks <- FindEFHbreaks(poisson.abundance, method = "percentile")
 poisson.efh <- raster::cut(poisson.abundance, poisson.breaks)
 efh.plot <- MakeAKGFEFHplot(region = "goa", efh.map = poisson.efh, title.name = "Adult ATF", legend.title = "Percentiles")
 ```
 
-Make the EFH map 
+#### Make the EFH map 
 ``` r
 # See note below; sometimes rendering this plot takes up too much memory in R and you have to save it to a file to see it.
 print(efh.plot)
