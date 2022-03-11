@@ -82,13 +82,13 @@ There are numerous plotting functions. The ones based on `akgfmaps` are recommen
 
 First one will need to prepare any data and covariate rasters. Data should be organized in a data frame with columns for species and any covariates, offsets, etc. Rasters should be combined into a stack. 
 
-The functions are typically called top to bottom. Begin by fitting a model using FitGAM, FitHurdleGAM, or FitMaxnet. The resulting model is used with a MakeGAMAbundance (or MakeMaxEntAbundance) to create an abundance raster, GetGAMEffects to estimate covariate effects, and GAMStats to obtain covariate contributions. Then one follows with the generic CrossValidateMdoel to produce CV models and output a useful data frame of both in-bag and out-of-bag predictions. This data frame can be used to calculate PDE and RMSE. MakeVarianceRasters produces a variance map. FindEFHbreaks gives the abundance thresholds that define each EFH quantile. The final EFH map is made by passing the EFHbreaks
+The functions are typically called top to bottom. Begin by fitting a model using FitGAM, FitHurdleGAM, or FitMaxnet. The resulting model is used with a MakeGAMAbundance (or MakeMaxEntAbundance) to create an abundance raster, GetGAMEffects to estimate covariate effects, and GAMStats to obtain covariate contributions. Then one follows with the generic CrossValidateMdoel to produce CV models and output a useful data frame of both in-bag and out-of-bag predictions. This data frame can be used to calculate PDE and RMSE. MakeVarianceRasters produces a variance map. FindEFHbreaks gives the abundance thresholds that define each EFH quantile. The final EFH map is made by passing the EFHbreaks to the cut function from the raster package. 
 
 ### Simple example
 
 First, make sure you are connected to the VPN and have access to the `Y:/` drive.
 
-Begin by loading the data and the covariate rasters. For example purposes, we will used only the last  years of data and only a few covariates. We will also reduce the resolution of the rasters. *Note that this means that the map you produce will look different from the final map produced in the 2022 EFH 5-year Review.*
+Begin by loading the data and the covariate rasters. For example purposes, we will used only the last  years of data and only a few covariates. *Note that this means that the map you produce will look different from the final map produced in the 2022 EFH 5-year Review.*
 
 
 #### Load the functions used for SDMs
@@ -177,6 +177,28 @@ efh.plot
 dev.off()
 ```
 ![Raster of ATF EFH](https://github.com/alaska-groundfish-efh/EFHSDM/blob/main/inst/readme_images/EFHMap.png)
+
+#### Ensembles
+An ensemble is not presented here, as it would take too long and be too complex to organize in this document. However, here is a pseudo-code illustration of how an ensemble can be constructed from previously constructed poisson and maxnet models.
+
+First one performs all the steps shown above from both models. Then use the RMSE values to get the weights.
+
+*MakeEnsemble(rmse = c(maxnet.rmse, poisson.rmse))*
+
+Fit estimates of the ensemble can also be calculated, though the ensemble itself can not be easily crossvalidated:
+
+*ValidateEnsemble(pred.list = list(maxnet.preds, poisson.preds), model.weights = ensemble.weights)*
+
+Then make a new abundance raster, which is just the weighted average of the consistuent abundance rasters:
+
+*MakeEnsembleAbundance(model.weights = ensemble.weights, abund.list = list(maxnet.abundance, poisson.abundance))*
+
+EFH can be made in exactly the same way as for the consistuent models:
+
+*FindEFHbreaks(ensemble.abundance, method = "percentile")*
+
+*cut(ensemble.abundance, ensemble.breaks)*
+
 
 ## Legal disclaimer
 >This repository is a software product and is not official communication of the National Oceanic and Atmospheric Administration (NOAA), or the United States Department of Commerce (DOC). All NOAA GitHub project code is provided on an 'as is' basis and the user assumes responsibility for its use. Any claims against the DOC or DOC bureaus stemming from the use of this GitHub project will be governed by all applicable Federal law. Any reference to specific commercial products, processes, or services by service mark, trademark, manufacturer, or otherwise, does not constitute or imply their endorsement, recommendation, or favoring by the DOC. The DOC seal and logo, or the seal and logo of a DOC bureau, shall not be used in any manner to imply endorsement of any commercial product or activity by the DOC or the United States Government.
