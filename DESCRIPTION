@@ -7,7 +7,7 @@ Authors@R:
       person(c("Edward", "A."), "Laman", "ned.laman@noaa.gov", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID")),
       person(c("James", "T."), "Thorson", "james.thorson@noaa.gov", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID")),
+           comment = c(ORCID = "0000-0001-7415-1010")),
       person("Jodi", "Pirtle", "jodi.pirtle@noaa.gov", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID")),
       person(c("Margaret","C."), "Siple", "margaret.siple@noaa.gov", role = c("aut", "cre"),
