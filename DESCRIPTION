@@ -3,7 +3,7 @@ Title: Build and Map Species Distributions for Essential Fish Habitat
 Version: 0.0.0.9000
 Authors@R: 
     c(person("Jeremy", "Harris", "jeremy.harris@noaa.gov", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID")),
+           comment = c(ORCID = "0000-0001-5465-6409")),
       person(c("Edward", "A."), "Laman", "ned.laman@noaa.gov", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID")),
       person(c("James", "T."), "Thorson", "james.thorson@noaa.gov", role = c("aut", "cre"),
