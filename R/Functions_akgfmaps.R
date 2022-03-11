@@ -34,10 +34,10 @@ require(labeling)
 # highdensity<-ai.catch[ai.catch$a_rex>=quantile(ai.catch$a_rex[ai.catch$a_rex>0],.9),c("lon","lat")]
 #
 
-# makes a pretty good dotplot; needs additional testing with areas other than "bs.all", "goa", and "ai".
-# also, settings are set to work with 8x8 300 res output, so results may vary when making different size figures
-#' Title
+#' Make dotplot with akfgmaps
 #'
+#' @description makes a pretty good dotplot; needs additional testing with areas other than "bs.all", "goa", and "ai".
+#' @details Settings are set to work with 8x8 in 300 res output, so results may vary when making different size figures.
 #' @param presence data frame with coordinates (lon/lat) for presence locations
 #' @param absence data frame with coordinates (lon/lat) for absence locations
 #' @param highdensity data frame with coordinates (lon/lat) for high density locations
@@ -226,10 +226,9 @@ MakeAKGFDotplot<-function(presence,
 }
 
 
-# Makes a pretty good map of any continuous variable
-
-#' Title
+#' Map a continuous variable
 #'
+#' @description Makes a pretty good map of any continuous variable
 #' @param region character; which region is being used, must correpond to an akgfmaps baselayer
 #' @param density.map raster or sf; a map to be plotted
 #' @param buffer numeric; a value between 0 and 1 that can be used to remove outlying value that mess up the color scale
@@ -364,10 +363,9 @@ MakeAKGFDensityplot<-function(region,
 }
 
 
-#
-#' Title
-#'
-#' @param region character; which region is being used, must correpond to an akgfmaps baselayer
+#' Make EFH map with akgfmaps
+#' @description Create EFH map for a species/lifestage combination
+#' @param region character; which region is being used, must correspond to an akgfmaps baselayer
 #' @param efh.map raster of factors to be interpretted as EFH
 #' @drop a buffer that prevents outlining of small isolated pixels, makes it look nicer
 #' @param survey.area sf or raster layer to use, if the desired survey area is different from akgfmaps
@@ -513,11 +511,8 @@ MakeAKGFEFHplot<-function(region,
   return(efhplot)
 }
 
-#######################################################################
-# this function makes a canned version of the EFH comparison plots. Could use some more work, and is a little less
-# flexible than other functions at current.
-#' Title
-#'
+#' Plot EFH comparison maps
+#' @description This function makes a canned version of the EFH comparison plots. Could use some more work, and is a little less flexible than other functions at current.
 #' @param old raster of EFH values
 #' @param new new raster of EFH values
 #' @param main character; title for the figure
@@ -676,9 +671,9 @@ PlotEFHComparison<-function(old=NA,new=NA,main="",background,leg.name=NULL,leg.l
 
 
 
-# Improved version of the effects plot that uses ggplot and AKGF to keep the style consistent
-#' Title
+#' Effects plot
 #'
+#' @description Improved version of the effects plot that uses ggplot and AKGF to keep the style consistent.
 #' @param effects.list list of data frames describing the effects for each term in a model or ensemble
 #' @param region character; required region to be used with lon/lat map, must correpond to an akgfmaps baselayer,
 #' @param crs CRS for lat/lon coordinates if different from akgf
