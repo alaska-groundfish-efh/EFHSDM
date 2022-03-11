@@ -84,11 +84,11 @@ First one will need to prepare any data and covariate rasters. Data should be or
 
 The functions are typically called top to bottom. Begin by fitting a model using FitGAM, FitHurdleGAM, or FitMaxnet. The resulting model is used with a MakeGAMAbundance (or MakeMaxEntAbundance) to create an abundance raster, GetGAMEffects to estimate covariate effects, and GAMStats to obtain covariate contributions. Then one follows with the generic CrossValidateMdoel to produce CV models and output a useful data frame of both in-bag and out-of-bag predictions. This data frame can be used to calculate PDE and RMSE. MakeVarianceRasters produces a variance map. FindEFHbreaks gives the abundance thresholds that define each EFH quantile. The final EFH map is made by passing the EFHbreaks
 
-### Simplified Vignette
+### Simple example
 
 First, make sure you are connected to the VPN and have access to the `Y:/` drive.
 
-Begin by loading the data and the covariate rasters. For example purposes, we will used only the last  years of data and only a few covariates. We will also reduce the resolution of the rasters.
+Begin by loading the data and the covariate rasters. For example purposes, we will used only the last  years of data and only a few covariates. We will also reduce the resolution of the rasters. *Note that this means that the map you produce will look different from the final map produced in the 2022 EFH 5-year Review.*
 
 
 Load the functions used for SDMs
@@ -135,7 +135,13 @@ abundance.plot <- MakeAKGFDensityplot(region = "goa", density.map = poisson.abun
 
 # Display abundance plot. Note: this may take a minute to render!
 print(abundance.plot)
+
+png("AbundancePlot.png",width = 8,height = 7,units = 'in',res = 120)
+abundance.plot
+dev.off()
 ```
+![Raster of ATF abundance](https://github.com/alaska-groundfish-efh/EFHSDM/blob/main/inst/readme_images/AbundancePlot.png)
+
 
 Get the covariate effects
 ``` r
@@ -158,9 +164,19 @@ And find the EFH
 poisson.breaks <- FindEFHbreaks(poisson.abundance, method = "percentile")
 poisson.efh <- raster::cut(poisson.abundance, poisson.breaks)
 efh.plot <- MakeAKGFEFHplot(region = "goa", efh.map = poisson.efh, title.name = "Adult ATF", legend.title = "Percentiles")
-print(efh.plot)
 ```
 
+Make the EFH map 
+``` r
+# See note below; sometimes rendering this plot takes up too much memory in R and you have to save it to a file to see it.
+print(efh.plot)
+
+# Note: If the map does not appear in a Plot window in R, you can see it by writing the file to a .png:
+png("EFHMap.png",width = 8,height = 7,units = 'in',res = 120)
+efh.plot
+dev.off()
+```
+![Raster of ATF EFH](https://github.com/alaska-groundfish-efh/EFHSDM/blob/main/inst/readme_images/EFHMap.png)
 
 ## Legal disclaimer
 >This repository is a software product and is not official communication of the National Oceanic and Atmospheric Administration (NOAA), or the United States Department of Commerce (DOC). All NOAA GitHub project code is provided on an 'as is' basis and the user assumes responsibility for its use. Any claims against the DOC or DOC bureaus stemming from the use of this GitHub project will be governed by all applicable Federal law. Any reference to specific commercial products, processes, or services by service mark, trademark, manufacturer, or otherwise, does not constitute or imply their endorsement, recommendation, or favoring by the DOC. The DOC seal and logo, or the seal and logo of a DOC bureau, shall not be used in any manner to imply endorsement of any commercial product or activity by the DOC or the United States Government.
