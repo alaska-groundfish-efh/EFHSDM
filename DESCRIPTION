@@ -2,20 +2,19 @@ Package: EFHSDM
 Title: Build and Map Species Distributions for Essential Fish Habitat
 Version: 0.0.0.9000
 Authors@R: 
-    c(person("Jeremy", "Harris", "jeremy.harris@noaa.gov", role = c("aut", "cre"),
+    c(person("Jeremy", "Harris", email = "jeremy.harris@noaa.gov", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-5465-6409")),
-      person(c("Edward", "A."), "Laman", "ned.laman@noaa.gov", role = c("aut", "cre"),
+      person(c("Edward", "A."), "Laman", email = "ned.laman@noaa.gov", role = c("aut"),
            comment = c(ORCID = "0000-0003-2663-9243")),
-      person(c("James", "T."), "Thorson", "james.thorson@noaa.gov", role = c("aut", "cre"),
+      person(c("James", "T."), "Thorson", email = "james.thorson@noaa.gov", role = c("aut"),
            comment = c(ORCID = "0000-0001-7415-1010")),
-      person("Jodi", "Pirtle", "jodi.pirtle@noaa.gov", role = c("aut", "cre"),
+      person("Jodi", "Pirtle", ,email = "jodi.pirtle@noaa.gov", role = c("aut"),
            comment = c(ORCID = "0000-0002-4421-8234")),
-      person(c("Margaret","C."), "Siple", "margaret.siple@noaa.gov", role = c("aut", "cre"),
+      person(c("Margaret","C."), "Siple", email = "margaret.siple@noaa.gov", role = c("aut", "com"),
            comment = c(ORCID = "0000-0002-4260-9856"))     
            )
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Description: This package fits species distribution models (SDMs) to groundfish and crab data from the Eastern Bering Sea, Aleutian Islands, and Gulf of Alaska. These SDMs were used in the 2022 EFH 5-Year Review. 
+License: `use_mit_license()`
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
