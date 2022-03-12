@@ -32,7 +32,9 @@ require(ENMeval)
 
 # This function fits a maxnet model. Maxnet is somewhat more finicky about NA values and
 # covariate names, so code has been added to make sure those match
-#' Title
+
+#' Fit MaxEnt model
+#' @description Fit a MaxEnt model for presence/absence
 #'
 #' @param data a data frame containing the covariates and presence/absence data
 #' @param species character; the name of the column containing the dependent variable
@@ -45,16 +47,16 @@ require(ENMeval)
 #' @export
 #'
 #' @examples
-FitMaxnet<-function(data,                        
-                    species,                     
-                    vars,                        
-                    reduce=F,                    
-                    regmult=1,                   
-                    facs=NULL){                  
-  
+FitMaxnet<-function(data,
+                    species,
+                    vars,
+                    reduce=F,
+                    regmult=1,
+                    facs=NULL){
+
   presence.vec<-as.integer(data[,species]>0)
   maxnet.data<-data[,c(vars,facs)]
-  
+
   if(length(facs)>0){
     for(f in facs){
       maxnet.data[,f]<-as.factor(maxnet.data[,f])
@@ -70,14 +72,14 @@ FitMaxnet<-function(data,
     presence.vec<-presence.vec[-unique(drops)]
     maxnet.data<-maxnet.data[-unique(drops),]
   }
-  
+
   maxnet.model<-maxnet(p = presence.vec,data = maxnet.data,regmult = regmult)
-  
+
   # remove variables that aren't contributing
   if(reduce){
     m.coefs<-MaxnetCoefs(maxnet.model)
     badvars<-names(m.coefs)[which(m.coefs==0)]
-    
+
     if(length(badvars)>0){
       badcols<-which(names(maxnet.data)%in%badvars)
       maxnet.data2<-maxnet.data[,-badcols]
@@ -87,10 +89,10 @@ FitMaxnet<-function(data,
   return(maxnet.model)
 }
 
-# This function makes an abundance/distribution raster from any dismo or maxnet model,
-# Depending on the settings, it will apply various masks and the cloglog transformation
-#' Title
+
+#' Make abundance/distribution raster from MaxEnt model
 #'
+#' @description Make an abundance/distribution raster from any dismo or maxnet model. Depending on the settings, it will apply various masks and the cloglog transformation.
 #' @param model a fitted maxnet model
 #' @param maxent.stack a raster stack containing all covariates
 #' @param scale.fac numeric; scale factor that will multiply the model predictions
@@ -104,29 +106,29 @@ FitMaxnet<-function(data,
 #' @export
 #'
 #' @examples
-MakeMaxEntAbundance<-function(model,              
-                              maxent.stack,       
-                              scale.fac=1,        
-                              land=NULL,         
-                              mask=NULL,         
-                              type="cloglog",  
-                              clamp=F,            
-                              filename=""){     
-  
+MakeMaxEntAbundance<-function(model,
+                              maxent.stack,
+                              scale.fac=1,
+                              land=NULL,
+                              mask=NULL,
+                              type="cloglog",
+                              clamp=F,
+                              filename=""){
+
   #correct a common mistake
   if(is.null(filename)||is.na(filename)){filename<-""}
-  
+
   # Identify the type and make the main prediction
   type=tolower(type)
   # Somewhat counterintuitive, but this is the type if using the cloglog link to make an abundance estimate
   if(type=="cloglog"){
     # since ENMeval 2.0, they got rid of the useful function and I need to make the predictions the long way
     dat<-getValues(maxent.stack)
-    
+
     # using predict with maxnet will quietly remove the NAs, so need to track them manually
     na.spots<-which(apply(X = dat,MARGIN = 1,FUN = function(x){return(any(is.na(x)))}))
     dat.spots<-which(seq(1:nrow(dat))%in%na.spots==F)
-    
+
     preds<-predict(model,dat[dat.spots,],type="link")
     preds2<-exp(preds+model$ent)*scale.fac
     new.vals<-vector(length=nrow(dat))
@@ -137,11 +139,11 @@ MakeMaxEntAbundance<-function(model,
   # this makes a habitat suitability map from a maxnet model
   if(type=="maxnet"){
     dat<-getValues(maxent.stack)
-    
+
     # using predict with maxnet will quietly remove the NAs, so need to track them manually
     na.spots<-which(apply(X = dat,MARGIN = 1,FUN = function(x){return(any(is.na(x)))}))
     dat.spots<-which(seq(1:nrow(dat))%in%na.spots==F)
-    
+
     preds<-predict(model,dat[dat.spots,],type="cloglog")
     new.vals<-vector(length=nrow(dat))
     new.vals[na.spots]<-NA
@@ -152,11 +154,11 @@ MakeMaxEntAbundance<-function(model,
   if(compareRaster(x = habitat.prediction,land,stopiffalse = F)==F){
     habitat.prediction<-extend(x=habitat.prediction,y=land)
   }
-  
+
   # For some reason, the crs info isn't always carrying over
   habitat.prediction@crs<-maxent.stack@crs
   if(filename!=""){writeRaster(x = habitat.prediction,filename = filename, overwrite = TRUE)}
-  
+
   # Apply additional masks if necessary
   if(is.null(land)==F){
     habitat.prediction<-raster::mask(habitat.prediction, land, inverse = T, overwrite = TRUE,
@@ -171,8 +173,9 @@ MakeMaxEntAbundance<-function(model,
 }
 
 
-#' Title
+#' Get MaxEnt effects
 #'
+#' @description Grab the estimated covariate effects and variances for all the effects.
 #' @param model a maxnet model
 #' @param data data frame; typically the same data used to fit the model
 #' @param cv.models list;a list of models from cross validation used for confidence intervals
@@ -186,25 +189,25 @@ MakeMaxEntAbundance<-function(model,
 #' @export
 #'
 #' @examples
-GetMaxnetEffects<-function(model,                             
+GetMaxnetEffects<-function(model,
                            data,
-                           cv.models=NULL,                    # 
-                           vars="all",                        # 
-                           maxnet2d=NULL,                     # 
+                           cv.models=NULL,                    #
+                           vars="all",                        #
+                           maxnet2d=NULL,                     #
                            add.entropy=T,                     #
-                           scale.factor=1,                    # 
-                           scale="log"){                      # 
-  
+                           scale.factor=1,                    #
+                           scale="log"){                      #
+
   # check the variable names and restrict things to those requested
   xvars<-names(model$varmax)
   xfacs<-names(model$samplemeans)[names(model$samplemeans)%in%xvars==F]
-  
+
   xvars2d<-NULL
   #now, remove the ones that overlap with the 2d variables
   if(length(maxnet2d)>0){
     #check that specified vars are actually in the model
     xvars2d0<-xvars[xvars%in%unlist(maxnet2d)]
-    
+
     for(j in 1:length(maxnet2d)){
       if(sum(maxnet2d[[j]]%in%xvars2d0)>0){
         xvars2d<-c(xvars2d,paste(maxnet2d[[j]],collapse="*"))
@@ -212,7 +215,7 @@ GetMaxnetEffects<-function(model,
     }
     xvars<-xvars[xvars%in%unlist(maxnet2d)==F]
   }
-  
+
   if(vars!="all"){
     if(length(maxnet2d)>0){
       xvars2d<-xvars2d[xvars2d%in%vars]
@@ -224,12 +227,12 @@ GetMaxnetEffects<-function(model,
   }
   allvars<-c(xvars2d,xvars,xfacs)
   ntot<-length(allvars)
-  
+
   if(ntot==0){
     warning("Warning: Variables ",vars," not found in model")
     return(list(data.frame(NA,effect=ifelse(scale=="log",log(.01),0))))
   }
-  
+
   # if names aren't supplied, use the terms from the model
   if(is.null(nice.names)){
     xvar2dnames<-unlist(strsplit(xvars2d,"[*]"))
@@ -246,21 +249,21 @@ GetMaxnetEffects<-function(model,
       v<-v+1
     }
   }
-  
+
   # Set up the parameters for the plots
   ent<-model$entropy*as.integer(add.entropy)
   names.vec<-NULL
   out.list<-list()
   list.index<-1
-  
+
   if(length(xvars2d)>0){
     for(i in 1:length(xvars2d)){
       x.name<-strsplit(xvars2d[i],split="[*]")[[1]][1]
       y.name<-strsplit(xvars2d[i],split="[*]")[[1]][2]
-      
+
       xseq<-seq(from=min(data[,x.name]),to=max(data[,x.name]),length.out=40)
       yseq<-seq(from=min(data[,y.name]),to=max(data[,y.name]),length.out=40)
-     
+
       if(x.name%in%names(model$varmax)){
         effect.x<-ent+as.vector(response.plot(model,v=x.name,plot=F,type="link")$pred)
       }else{
@@ -271,7 +274,7 @@ GetMaxnetEffects<-function(model,
       }else{
         effect.y<-log(.01)
       }
-      
+
       # this is too big though, so shrink it to 40x40 for compatibility with the GAMS
       if(length(effect.x)==1){
         effect.x<-rep(effect.x,40)
@@ -293,19 +296,19 @@ GetMaxnetEffects<-function(model,
       list.index<-list.index+1
     }
   }
-  
+
   if(length(xvars)>0){
     for(i in 1:length(xvars)){
       # calculate the main effects
       dat<-data.frame(x=seq(from=model$varmin[xvars[i]],to=model$varmax[xvars[i]],length.out = 100))
       suppressWarnings(dat$effect<-ent+as.vector(response.plot(model,v=xvars[i],plot=F,type="link")$pred))
-      
+
       if(scale=="abund"){
         dat$effect<-exp(dat$effect)*scale.factor
       }else{
         dat$effect<-dat$effect+log(scale.factor)
       }
-      
+
       # if supplied, calculate the cv effects in a loop
       if(is.null(cv.models)==F){
         cv.dat<-matrix(data=NA,nrow=100,ncol=length(cv.models))
@@ -323,11 +326,11 @@ GetMaxnetEffects<-function(model,
           cv.dat<-cv.dat+log(scale.factor)
         }
         colnames(cv.dat)<-paste0("CV",1:length(cv.models))
-        
+
         uppers<-apply(X = cv.dat,MARGIN = 1,FUN = "quantile",probs=.95,na.rm=T)
         lowers<-apply(X = cv.dat,MARGIN = 1,FUN = "quantile",probs=.05,na.rm=T)
         cv.var<-apply(X = cv.dat,MARGIN = 1,FUN = var,na.rm=T)
-        
+
         out.list[[list.index]]<-data.frame(dat,var=cv.var,upper=uppers,lower=lowers,cv.dat)
         list.index<-list.index+1
       }else{
@@ -342,7 +345,7 @@ GetMaxnetEffects<-function(model,
       dat<-data.frame(model$levels[xfacs[i]])
       names(dat)<-"x"
       suppressWarnings(dat$effect<-ent+as.vector(response.plot(model,v=xfacs[i],plot=F,type="link")$pred))
-      
+
       if(scale=="abund"){
         dat$effect<-exp(dat$effect)*scale.factor
       }else{
@@ -365,11 +368,11 @@ GetMaxnetEffects<-function(model,
           cv.dat<-cv.dat+log(scale.factor)
         }
         colnames(cv.dat)<-paste0("CV",1:length(cv.models))
-        
+
         uppers<-apply(X = cv.dat,MARGIN = 1,FUN = "quantile",probs=.95,na.rm=T)
         lowers<-apply(X = cv.dat,MARGIN = 1,FUN = "quantile",probs=.05,na.rm=T)
         cv.var<-apply(X = cv.dat,MARGIN = 1,FUN = var,na.rm=T)
-        
+
         out.list[[list.index]]<-data.frame(dat,var=cv.var,upper=uppers,lower=lowers,cv.dat)
         list.index<-list.index+1
       }else{
@@ -383,11 +386,10 @@ GetMaxnetEffects<-function(model,
 }
 
 
-
-# This one just returns the number of coefficients for each variable in a maxnet model
-# if you want things to match the gams, supply a list for maxnet2d
-#' Title
+#' Get MaxEnt coefficients
 #'
+#' @description Get the number of coefficients for each variable in a maxnet model
+#' @details If you want things to match the gams, supply a list for maxnet2d
 #' @param model a fitted maxnet model
 #' @param maxnet2d a list of vectors of variables to be treated as 2D; used for consistency with the GAMs
 #'
@@ -395,21 +397,21 @@ GetMaxnetEffects<-function(model,
 #' @export
 #'
 #' @examples
-MaxnetCoefs<-function(model,                           
-                      maxnet2d=NULL){                  
+MaxnetCoefs<-function(model,
+                      maxnet2d=NULL){
   # This first section that is to find how many coefficients each covariate uses
   covar.names<-names(model$samplemeans)
   beta.names<-strsplit(names(model$betas),split=c("\\(|\\:|\\^|\\)"))
-  
+
   if(length(maxnet2d)>0){
     coef.vec2<-vector(length=length(maxnet2d))
     vars1d<-covar.names[covar.names%in%unlist(maxnet2d)==F]
     maxnet2d.name<-unlist(lapply(X = maxnet2d,FUN = function(x){paste(x,collapse="*")}))
-    
+
     for(i in 1:length(maxnet2d)){
       coef2d1<-unlist(lapply(X=beta.names,FUN=function(x,y){y%in%x},y=maxnet2d[[i]][1]))
       coef2d2<-unlist(lapply(X=beta.names,FUN=function(x,y){y%in%x},y=maxnet2d[[i]][2]))
-      
+
       coef.vec2[i]<-sum((coef2d1+coef2d2)>0)
       names(coef.vec2)<-maxnet2d.name
     }
@@ -417,7 +419,7 @@ MaxnetCoefs<-function(model,
     coef.vec2<-NULL
     vars1d<-covar.names
   }
-  
+
   coef.vec<-vector(length=length(vars1d))
   for(i in 1:length(vars1d)){
     coef.vec[i]<-sum(unlist(lapply(X=beta.names,FUN=function(x,y){y%in%x},y=vars1d[i])))
@@ -427,10 +429,8 @@ MaxnetCoefs<-function(model,
 }
 
 
-# This function institutes a jackknife estimate of the importance of each covariate for a maxnet model
-# Can sometimes run slowly if there are convergence issues
-#' Title
-#'
+#' Get MaxEnt stats
+#' @description This function institutes a jackknife estimate of the importance of each covariate for a maxnet model. Can sometimes run slowly if there are convergence issues.
 #' @param model a fitted maxnet model
 #' @param maxnet2d a list of vectors of variables to be treated as 2D; used for consistency with the GAMs
 #' @param regmult numeric; a regularization penalty multiplier
@@ -446,10 +446,10 @@ MaxnetStats<-function(model,                 # a maxnet model
                       regmult=1,             # a multiplier for regularization
                       data,                  # the data used to fit that model
                       species){              # the species or column of data for the dependent variable
-  
+
   # This first section that is to find how many coefficients each covariate uses
   covar.names<-names(model$samplemeans)
-  
+
   if(length(maxnet2d)>0){
     coef.vec2<-vector(length=length(maxnet2d))
     vars1d<-covar.names[covar.names%in%unlist(maxnet2d)==F]
@@ -457,12 +457,12 @@ MaxnetStats<-function(model,                 # a maxnet model
   }else{
     vars1d<-covar.names
   }
-  
+
   #detect factors, and remove them from the vars1d vector
   min.names<-names(model$varmin)
   facs<-vars1d[vars1d%in%min.names==F]
   vars1d<-vars1d[vars1d%in%min.names]
-  
+
   pb <- txtProgressBar(min = 0, max = length(c(maxnet2d,vars1d,facs)), style = 3)
   pb.i<-1
   # This part makes the estimate of deviance explained for each covariate
@@ -472,7 +472,7 @@ MaxnetStats<-function(model,                 # a maxnet model
     for(i in 1:length(maxnet2d)){
       #print(paste0("testing deviance for ",maxnet2d.name[i]))
       d.covars<-covar.names[covar.names%in%maxnet2d[[i]]==F]
-      
+
       try(test.model<-FitMaxnet(data=data,species = species,vars = d.covars,facs = facs,regmult = regmult))
       if(exists("test.model")){
         dev.vec2d[i]<-test.model$dev.ratio[length(test.model$dev.ratio)]
@@ -489,7 +489,7 @@ MaxnetStats<-function(model,                 # a maxnet model
     dev.vec2d<-NULL
     maxnet2d.name<-NULL
   }
-  
+
   # 1D covariates
   dev.vec<-rep(NA,length=length(vars1d))
   for(i in 1:length(vars1d)){
@@ -506,7 +506,7 @@ MaxnetStats<-function(model,                 # a maxnet model
     }
   }
   names(dev.vec)<-vars1d
-  
+
   # factors
   fac.vec<-rep(NA,length=length(facs))
   for(i in 1:length(facs)){
@@ -523,14 +523,14 @@ MaxnetStats<-function(model,                 # a maxnet model
     }
   }
   close(pb)
-  
+
   names(fac.vec)<-facs
-  
+
   out.dev.vec<-c(dev.vec2d,dev.vec,fac.vec)
   if(sum(is.na(out.dev.vec))==0){
     dev.lost<-1-out.dev.vec/model$dev.ratio[length(model$dev.ratio)]
     dev.exp<-dev.lost/sum(dev.lost,na.rm=T)*100
-    
+
     #sometimes you end up with negative deviance, so correct that
     if(min(dev.exp)<0){
       dev.exp<-dev.exp-min(dev.exp)
