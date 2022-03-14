@@ -491,7 +491,6 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
 
 
 
-<<<<<<< HEAD
 #' Title
 #'
 #' @param model.names character vector with names for the models, should match order of dev.list
@@ -502,18 +501,8 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
 #' @param filename a filename to use for saving the output
 #'
 #' @return does not return anything, but writes two tables at based on the supplied filename
-=======
-#' Make deviance table
-#'
-#' @param model.names
-#' @param model.types
-#' @param nice.names
-#' @param dev.list
-#' @param model.weights
-#' @param filename
 #'
 #' @return
->>>>>>> dad8863ee4a3158a2f3b7642a4c4611b651cdfa2
 #' @export
 #'
 #' @examples
