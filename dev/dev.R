@@ -39,10 +39,25 @@ usethis::use_package("gstat", type = "Imports", min_version = NULL)
 #usethis::use_package("mgcv", type = "Imports", min_version = NULL)
 #usethis::use_package("raster", type = "Imports", min_version = NULL)
 
+#Maxent dependencies
+#usethis::use_package("raster", type = "Imports", min_version = NULL)
+usethis::use_package("PresenceAbsence", type = "Imports", min_version = NULL)
+usethis::use_package("maxnet", type = "Imports", min_version = NULL)
+usethis::use_package("ENMeval", type = "Imports", min_version = NULL)
+
+# Xtable dependencies
+usethis::use_package("xtable", type = "Imports", min_version = NULL)
+usethis::use_package("XML", type = "Imports", min_version = NULL)
+
 
 # Packages in development
 usethis::use_dev_package("akgfmaps", type = "Imports", remote = "git::https://github.com/sean-rohan-NOAA/akgfmaps.git@master")
 #devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
+
+
+# Ignore meatgrinder file -------------------------------------------------
+usethis::use_build_ignore(files = "R/Meatgrinder5.R")
+
 
 # Datasets ----------------------------------------------------------------
 
