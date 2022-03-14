@@ -22,3 +22,26 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+Imports: 
+    ggplot2,
+    akgfmaps (>= 1.7.4),
+    viridis,
+    stars,
+    sf,
+    gridExtra,
+    patchwork,
+    MASS,
+    scales,
+    labeling,
+    mgcv,
+    raster,
+    PresenceAbsence,
+    rgdal,
+    sp,
+    gstat,
+    maxnet,
+    ENMeval,
+    xtable,
+    XML
+Remotes: 
+    git::https://github.com/sean-rohan-NOAA/akgfmaps.git@master

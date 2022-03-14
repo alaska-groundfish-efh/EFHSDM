@@ -1,29 +1,29 @@
 # this script will make some more generalized functions for mapping things with the akgfmaps package
 
-rpackages <- c("viridis", "stars", "sf", "gridExtra", "patchwork", "MASS", "scales", "labeling", "ggplot2")
-
-which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
-
-if (length(which_not_installed) > 1) {
-  install.packages(rpackages[which_not_installed], dep = TRUE)
-}
-
-if ("akgfmaps" %in% rownames(installed.packages()) == F) {
-  devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
-}
-rm(rpackages, which_not_installed)
-
-require(ggplot2)
-require(akgfmaps)
-require(viridis)
-require(stars)
-require(sf)
-require(gridExtra)
-require(patchwork)
-require(MASS)
-require(scales)
-require(labeling)
+# rpackages <- c("viridis", "stars", "sf", "gridExtra", "patchwork", "MASS", "scales", "labeling", "ggplot2")
 #
+# which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
+#
+# if (length(which_not_installed) > 1) {
+#   install.packages(rpackages[which_not_installed], dep = TRUE)
+# }
+#
+# if ("akgfmaps" %in% rownames(installed.packages()) == F) {
+#   devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
+# }
+# rm(rpackages, which_not_installed)
+
+# require(ggplot2)
+# require(akgfmaps)
+# require(viridis)
+# require(stars)
+# require(sf)
+# require(gridExtra)
+# require(patchwork)
+# require(MASS)
+# require(scales)
+# require(labeling)
+# #
 # example.raster<-raster("Y:/RACE_EFH_variables/Trawl_Models/AI/Adult_arrowtooth_flounder/ensemble_abundance")
 # dataCRS<-example.raster@crs
 #

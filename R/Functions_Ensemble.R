@@ -1,8 +1,6 @@
 # This script includes functions useful for making an ensemble from other models
 # It assumes some data formats from other functions in this "package"
-
-
-
+#
 #' Make model ensemble
 #' @description Make an ensemble model vector with weights for each model
 #' @details This function calculates the weights for an ensemble model using a very simple rmse method. Future work may allow for more complex methods. One can supply a list of dataset (old way), or one can more sensibly just supply a named vector of RMSE values (better way)

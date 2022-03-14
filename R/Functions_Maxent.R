@@ -3,20 +3,20 @@
 # to function with maxent
 
 # Setting lists of required packages & installing it
-rpackages <- c("raster", "PresenceAbsence", "maxnet","ENMeval")
-
-# rJava, rgeos, maps
-which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
-
-if(length(which_not_installed) > 1){
-  install.packages(rpackages[which_not_installed], dep = TRUE)
-}
-rm(rpackages,which_not_installed)
-
-require(raster)
-require(PresenceAbsence)
-require(maxnet)
-require(ENMeval)
+# rpackages <- c("raster", "PresenceAbsence", "maxnet","ENMeval")
+#
+# # rJava, rgeos, maps
+# which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
+#
+# if(length(which_not_installed) > 1){
+#   install.packages(rpackages[which_not_installed], dep = TRUE)
+# }
+# rm(rpackages,which_not_installed)
+#
+# require(raster)
+# require(PresenceAbsence)
+# require(maxnet)
+# require(ENMeval)
 
 ####################################################################################################################################
 ##################################################MAXENT MODEL######################################################################

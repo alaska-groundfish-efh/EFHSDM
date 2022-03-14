@@ -1,19 +1,19 @@
 # This script includes functions for fitting GAM and HGAM models
 
 # Setting lists of required packages & installing it
-rpackages <- c("mgcv", "raster", "PresenceAbsence")
-
-# rJava, rgeos, maps
-which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
-
-if (length(which_not_installed) > 1) {
-  install.packages(rpackages[which_not_installed], dep = TRUE)
-}
-rm(rpackages, which_not_installed)
-
-require(mgcv)
-require(raster)
-require(PresenceAbsence)
+# rpackages <- c("mgcv", "raster", "PresenceAbsence")
+#
+# # rJava, rgeos, maps
+# which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
+#
+# if (length(which_not_installed) > 1) {
+#   install.packages(rpackages[which_not_installed], dep = TRUE)
+# }
+# rm(rpackages, which_not_installed)
+#
+# require(mgcv)
+# require(raster)
+# require(PresenceAbsence)
 
 
 #' Make a GAM formula
