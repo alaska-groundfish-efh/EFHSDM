@@ -1,20 +1,20 @@
 # This script contains various functions mostly related to either mapping or plotting the output from other analyses
 # In general, they should be capatible with all types of models, though be careful to set the appropriate options
-
-rpackages <- c("rgdal", "sp","gstat","viridis","raster")
-
-which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
-
-if(length(which_not_installed) > 1){
-  install.packages(rpackages[which_not_installed], dep = TRUE)
-}
-rm(rpackages,which_not_installed)
-
-require(rgdal)
-require(sp)
-require(gstat)
-require(viridis)
-require(raster)
+#
+# rpackages <- c("rgdal", "sp","gstat","viridis","raster")
+#
+# which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
+#
+# if(length(which_not_installed) > 1){
+#   install.packages(rpackages[which_not_installed], dep = TRUE)
+# }
+# rm(rpackages,which_not_installed)
+#
+# require(rgdal)
+# require(sp)
+# require(gstat)
+# require(viridis)
+# require(raster)
 
 
 #' Load EFH data
@@ -209,6 +209,7 @@ PDE<-function(obs,pred){
 
 
 #' Add grid
+#'
 #' @description Add a map of Alaska and other features to an existing map
 #' @details This function adds a map of AK and other features to an existing map, including a legend. It has many options for customizing the appearance. The whole "AddGrid" system is old and ought to be removed in favor of the newer akgfmaps plotting, when I get the time. Deprecated: Likely to be deleted soon.
 #' @param legPosition
