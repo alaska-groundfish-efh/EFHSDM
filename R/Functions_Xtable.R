@@ -11,12 +11,11 @@ rm(rpackages,which_not_installed)
 
 require(xtable)
 require(XML)
-# this is a slightly overcomplicated function, but it automatically adjusts the table to whatever data
-# is supplied to it. Basically, first it makes a lot of notes as to where things should go, then it takes
-# a second pass construct the table and put everything in the right place
-# Known issue: does not calculate the degrees of freedom for factors
-#' Title
+
+#' Make deviance explained table
 #'
+#' @description Make a table of deviance explained for a model object.
+#' @details This is a slightly over-complicated function, but it automatically adjusts the table to whatever data is supplied to it. Basically, first it makes a lot of notes as to where things should go, then it takes a second pass construct the table and put everything in the right place. Known issue: does not calculate the degrees of freedom for factors.
 #' @param model a fitted model object produced by mgcv::gam() or maxnet::maxnet()
 #' @param rsq.method character; a method for the cor() function
 #' @param model.type character; the type of model used, does not autodetect options: maxnet, cloglog, hgam, gam
@@ -311,10 +310,11 @@ MakeXtable<-function(model,             # a model object
 }
 
 
-# For now, you need to include each of the elements for the ensemble table to work, so no shortcuts
-# kind of cumbersome and unlikely to be useful for others
-#' Title
+
+#' Make deviance explained table (for ensemble)
 #'
+#' @description Make an HTML table of deviance explained for a model ensemble.
+#' @details For now, you need to include each of the elements for the ensemble table to work, so no shortcuts. It is kind of cumbersome and unlikely to be useful for others. May soon be deprecated.
 #' @param model.names vector of names for the models
 #' @param ensemble logical; is an ensemble included
 #' @param weights vector of weights for each model other than the ensemble
@@ -491,6 +491,7 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
 
 
 
+<<<<<<< HEAD
 #' Title
 #'
 #' @param model.names character vector with names for the models, should match order of dev.list
@@ -501,6 +502,18 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
 #' @param filename a filename to use for saving the output
 #'
 #' @return does not return anything, but writes two tables at based on the supplied filename
+=======
+#' Make deviance table
+#'
+#' @param model.names
+#' @param model.types
+#' @param nice.names
+#' @param dev.list
+#' @param model.weights
+#' @param filename
+#'
+#' @return
+>>>>>>> dad8863ee4a3158a2f3b7642a4c4611b651cdfa2
 #' @export
 #'
 #' @examples
