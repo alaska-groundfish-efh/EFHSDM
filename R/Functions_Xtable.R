@@ -12,7 +12,7 @@ rm(rpackages,which_not_installed)
 require(xtable)
 require(XML)
 
-#' Make deviance explained table
+#' Make a table with constituent model statistics
 #'
 #' @description Make a table of deviance explained for a model object.
 #' @details This is a slightly over-complicated function, but it automatically adjusts the table to whatever data is supplied to it. Basically, first it makes a lot of notes as to where things should go, then it takes a second pass construct the table and put everything in the right place. Known issue: does not calculate the degrees of freedom for factors.
@@ -311,9 +311,9 @@ MakeXtable<-function(model,             # a model object
 
 
 
-#' Make deviance explained table (for ensemble)
+#' Make a table of summary statistics (for ensemble)
 #'
-#' @description Make an HTML table of deviance explained for a model ensemble.
+#' @description Make an HTML table of summary stats and fit metrics for a model ensemble.
 #' @details For now, you need to include each of the elements for the ensemble table to work, so no shortcuts. It is kind of cumbersome and unlikely to be useful for others. May soon be deprecated.
 #' @param model.names vector of names for the models
 #' @param ensemble logical; is an ensemble included
@@ -491,8 +491,10 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
 
 
 
-#' Title
+#' Make a deviance table
 #'
+#' @description Make an HTML table of deviance explained for a model ensemble.
+#' @details Makes a simple html table of deviance explained values for models and the ensemble.
 #' @param model.names character vector with names for the models, should match order of dev.list
 #' @param model.types character vector with types of model, should match order of dev.list
 #' @param nice.names dataframe matching abbreviated names to nicer versions
@@ -501,8 +503,6 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
 #' @param filename a filename to use for saving the output
 #'
 #' @return does not return anything, but writes two tables at based on the supplied filename
-#'
-#' @return
 #' @export
 #'
 #' @examples
