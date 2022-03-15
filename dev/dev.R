@@ -60,5 +60,13 @@ usethis::use_build_ignore(files = "R/Meatgrinder5.R")
 
 
 # Datasets ----------------------------------------------------------------
+# Set up sysdata.rda, which includes data that should be automatically loaded with the package and will not be avail to users outside the package
 
-use_data() #FILL IN with example datasets that need to be stored with the pkg
+# These are all in the current example; more will probably need to be added
+region_data_all <- read.csv("Y:/RACE_EFH_Variables/Trawl_Models/GOA/all_GOA_data_2021.csv")
+GOA_bathy <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Bathy")
+GOA_btemp <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Btemp")
+GOA_slope <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Slope")
+GOA_sponge <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Spongefactor")
+
+save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, file = here::here("R","sysdata.rda"))
