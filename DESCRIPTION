@@ -44,7 +44,6 @@ Imports:
     xtable,
     XML
 Remotes: 
-    git::https://github.com/sean-rohan-NOAA/akgfmaps.git@master
+    git::https://github.com/afsc-gap-products/akgfmaps.git@master
 Depends: 
     R (>= 2.10)
-LazyData: true
