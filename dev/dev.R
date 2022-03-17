@@ -4,14 +4,14 @@
 # Documentation -----------------------------------------------------------
 # Package-level documentation
 use_package_doc(open = rlang::is_interactive())
+usethis::use_vignette("EFHSDM") # package-level vignette
 
 # Function documentation
+#usethis::use_vignette()
+
+# Build documentation
 devtools::document()
-
-# Vignettes
-usethis::use_vignette("EFHSDM")
 devtools::build_vignettes()
-
 
 # Dependencies ------------------------------------------------------------
 # ***Need to add everything that gets called w library() or require() here.
@@ -69,4 +69,9 @@ GOA_btemp <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/B
 GOA_slope <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Slope")
 GOA_sponge <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Spongefactor")
 
-save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, file = here::here("R","sysdata.rda"))
+usethis::use_data(region_data_all)
+usethis::use_data(GOA_bathy)
+usethis::use_data(GOA_btemp)
+usethis::use_data(GOA_slope)
+usethis::use_data(GOA_sponge)
+#save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, file = here::here("R","sysdata.rda"))
