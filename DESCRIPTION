@@ -47,3 +47,5 @@ Remotes:
     git::https://github.com/afsc-gap-products/akgfmaps.git@master
 Depends: 
     R (>= 2.10)
+LazyData: 
+    true
