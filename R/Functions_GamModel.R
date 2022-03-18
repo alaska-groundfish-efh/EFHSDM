@@ -652,7 +652,7 @@ MakeGAMAbundance <- function(model,
   if (length(gam.factors) > 0) {
     for (t in 1:length(gam.factors)) {
       range <- raster::subset(x = r.stack, subset = which(names(r.stack) == gam.factors[t]))
-      gam.factors2[[t]] <- sort(unique(na.omit(getValues(range))))
+      gam.factors2[[t]] <- sort(unique(na.omit(raster::getValues(range))))
     }
     names(gam.factors2) <- gam.factors
   } else {
@@ -661,12 +661,20 @@ MakeGAMAbundance <- function(model,
 
   # Detect the link function and make the predictions
   pred.type <- ifelse(model$family$link == "cloglog", "link", "response")[1]
-  predict.raster <- predict(r.stack, model,
-    factors = gam.factors2, progress = "text",
-    fun = predict, na.rm = TRUE, overwrite = TRUE,
-    type = pred.type, newdata.guaranteed = TRUE
-  )
 
+  # predict raster function malfunctions if ziplss model has no factors, so need a special case
+  if(model$family$family == "ziplss" & is.null(gam.factors2)){
+    r.vals<-as.data.frame(raster::getValues(r.stack))
+    if ("offset" %in% model.terms$type) {
+      r.vals<-cbind(r.vals,data.frame(off.val))
+      names(r.vals[ncol(r.vals)])<-off.name
+    }
+    pred.vals<-mgcv::predict.gam(model,newdata=r.vals,type="response")
+    predict.raster<-raster::setValues(x = raster::raster(r.stack),values = pred.vals)
+  }else{
+    predict.raster <- raster::predict(r.stack, model,factors = gam.factors2, progress = "text",
+                              overwrite = TRUE,type = pred.type, newdata.guaranteed = TRUE)
+  }
   # Detects and apply the cloglog approximation if appropriate
   if (model$family$link[1] == "cloglog") {
     predict.raster <- exp(predict.raster)
@@ -681,14 +689,14 @@ MakeGAMAbundance <- function(model,
   # now apply masks if appropriate
   if (is.null(land) == F) {
     predict.raster <- raster::mask(predict.raster, land,
-      inverse = TRUE, overwrite = TRUE,
-      filename = filename
+                                   inverse = TRUE, overwrite = TRUE,
+                                   filename = filename
     )
   }
   if (is.null(mask) == F) {
     predict.raster <- raster::mask(predict.raster, mask,
-      overwrite = TRUE,
-      filename = filename
+                                   overwrite = TRUE,
+                                   filename = filename
     )
   }
   return(predict.raster)
@@ -767,9 +775,9 @@ GetGAMEffects <- function(model,
   colnames(average.dat) <- c(average.vars, fac.vars, off.var)
 
   # fix the factors
-  if (length(fac.vars) > 1) {
+  if (length(fac.vars) > 0) {
     for (f in 1:length(fac.vars)) {
-      average.dat[, fac.vars[f]] <- factor(average.dat[, fac.vars[f]], levels = levels(data[, fac.vars[f]]))
+      average.dat[, fac.vars[f]] <- factor(average.dat[, fac.vars[f]], levels = levels(as.factor(data[, fac.vars[f]])))
     }
   }
 
@@ -794,11 +802,11 @@ GetGAMEffects <- function(model,
       )
       names(v2.data)[1:2] <- term2d
 
-      v2.preds <- as.numeric(predict(model, type = "terms", newdata = v2.data, terms = paste0("s(", term2d[1], ",", term2d[2], ")"))[, 1])
+      v2.preds <- as.numeric(mgcv::predict.gam(model, type = "terms", newdata = v2.data, terms = paste0("s(", term2d[1], ",", term2d[2], ")"))[, 1])
 
       # special handling for ziplss models
       if (model$family$family == "ziplss") {
-        v2.probs <- as.numeric(predict(model, type = "terms", newdata = v2.data, terms = paste0("s.1(", term2d[1], ",", term2d[2], ")"))[, 1])
+        v2.probs <- as.numeric(mgcv::predict.gam(model, type = "terms", newdata = v2.data, terms = paste0("s.1(", term2d[1], ",", term2d[2], ")"))[, 1])
         v2.preds <- exp(v2.preds) * (1 - exp(-exp(v2.probs))) / (1 - dpois(0, exp(v2.preds)))
         v2.preds <- log(v2.preds)
       }
@@ -849,8 +857,8 @@ GetGAMEffects <- function(model,
 
 
       # first get the main effect
-      main.pred <- as.numeric(predict(model, newdata = v.data, type = "terms", terms = v.name))
-      se.pred <- as.numeric(predict(model, newdata = v.data, type = "terms", terms = v.name, se.fit = T)[[2]])
+      main.pred <- as.numeric(mgcv::predict.gam(model, newdata = v.data, type = "terms", terms = v.name))
+      se.pred <- as.numeric(mgcv::predict.gam(model, newdata = v.data, type = "terms", terms = v.name, se.fit = T)[[2]])
       # special handling for ziplss models
       if (term1d %in% p.only) {
         main.pred <- main.pred[1:nrow(v.data)]
@@ -858,7 +866,7 @@ GetGAMEffects <- function(model,
       }
       if (model$family$family == "ziplss") {
         main.pred[-10 > main.pred] <- log(.01)
-        main.prob <- as.numeric(predict(model, type = "terms", newdata = v.data, terms = paste0("s.1(", term1d, ")"))[, 1])
+        main.prob <- as.numeric(mgcv::predict.gam(model, type = "terms", newdata = v.data, terms = paste0("s.1(", term1d, ")"))[, 1])
         main.pred <- exp(main.pred) * (1 - exp(-exp(main.prob))) / (1 - dpois(0, exp(main.pred)))
         main.pred <- log(main.pred)
       }
@@ -874,16 +882,16 @@ GetGAMEffects <- function(model,
         effect.dat <- matrix(nrow = 100, ncol = length(cv.model.list))
         for (f in 1:length(cv.model.list)) {
           if (is.na(cv.model.list[[f]]) == F) {
-            cv.pred <- as.numeric(predict(cv.model.list[[f]],
-              newdata = v.data, type = "terms",
-              terms = v.name
+            cv.pred <- as.numeric(mgcv::predict.gam(cv.model.list[[f]],
+                                          newdata = v.data, type = "terms",
+                                          terms = v.name
             ))
             if (term1d %in% p.only) {
               cv.pred <- cv.pred[1:nrow(v.data)]
             }
             if (model$family$family == "ziplss") {
               cv.pred[-10 > cv.pred] <- log(.01)
-              cv.prob <- as.numeric(predict(cv.model.list[[f]], type = "terms", newdata = v.data, terms = paste0("s.1(", term1d, ")"))[, 1])
+              cv.prob <- as.numeric(mgcv::predict.gam(cv.model.list[[f]], type = "terms", newdata = v.data, terms = paste0("s.1(", term1d, ")"))[, 1])
               cv.pred <- exp(cv.pred) * (1 - exp(-exp(cv.prob))) / (1 - dpois(0, exp(cv.pred)))
               cv.pred <- log(cv.pred)
             }
@@ -936,8 +944,8 @@ GetGAMEffects <- function(model,
       names(f.data)[1] <- termf
 
       # first get the main effect
-      main.pred <- as.numeric(predict(model, newdata = f.data, type = "terms", terms = fac.name))
-      se.pred <- as.numeric(predict(model, newdata = f.data, type = "terms", terms = fac.name, se.fit = T)[[2]])
+      main.pred <- as.numeric(mgcv::predict.gam(model, newdata = f.data, type = "terms", terms = fac.name))
+      se.pred <- as.numeric(mgcv::predict.gam(model, newdata = f.data, type = "terms", terms = fac.name, se.fit = T)[[2]])
 
       # special handling for ziplss models
       if (termf %in% p.only) {
@@ -946,7 +954,7 @@ GetGAMEffects <- function(model,
       }
       if (model$family$family == "ziplss") {
         main.pred[-10 > main.pred] <- log(.01)
-        main.prob <- as.numeric(predict(model, type = "terms", newdata = f.data, terms = paste0("as.factor(", termf, ").1"))[, 1])
+        main.prob <- as.numeric(mgcv::predict.gam(model, type = "terms", newdata = f.data, terms = paste0("as.factor(", termf, ").1"))[, 1])
         main.pred <- exp(main.pred) * (1 - exp(-exp(main.prob))) / (1 - dpois(0, exp(main.pred)))
         main.pred <- log(main.pred)
       }
@@ -961,16 +969,16 @@ GetGAMEffects <- function(model,
         effect.dat <- matrix(nrow = length(main.pred), ncol = length(cv.model.list))
         for (f in 1:length(cv.model.list)) {
           if (is.na(cv.model.list[[f]]) == F) {
-            cv.pred <- as.numeric(predict(cv.model.list[[f]],
-              newdata = f.data, type = "terms",
-              terms = fac.name
+            cv.pred <- as.numeric(mgcv::predict.gam(cv.model.list[[f]],
+                                          newdata = f.data, type = "terms",
+                                          terms = fac.name
             ))
             if (termf %in% p.only) {
               cv.pred <- cv.pred[1:nrow(f.data)]
             }
             if (model$family$family == "ziplss") {
               cv.pred[-10 > cv.pred] <- log(.01)
-              cv.prob <- as.numeric(predict(cv.model.list[[f]], type = "terms", newdata = f.data, terms = paste0("as.factor(", termf, ").1"))[, 1])
+              cv.prob <- as.numeric(mgcv::predict.gam(cv.model.list[[f]], type = "terms", newdata = f.data, terms = paste0("as.factor(", termf, ").1"))[, 1])
               cv.pred <- exp(cv.pred) * (1 - exp(-exp(cv.prob))) / (1 - dpois(0, exp(cv.pred)))
               cv.pred <- log(cv.pred)
             }

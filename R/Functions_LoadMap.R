@@ -39,9 +39,9 @@ LoadEFHData<-function(region,raster.path="//akc0ss-n086/SEA_Programs/RACE_EFH_va
   slope <- raster::raster(paste0(raster.path,"/Variables_",region,"_1km/Slope"))
   tmax <- raster::raster(paste0(raster.path,"/Variables_",region,"_1km/Tmax"))
   btemp <- raster::raster(paste0(raster.path,"/Variables_",region,"_1km/Btemp"))
-  btemp<-crop(x = btemp,y=bathy)
+  btemp<-raster::crop(x = btemp,y=bathy)
   BPI <- raster::raster(paste0(raster.path,"/Variables_",region,"_1km/BPI"))
-  BPI<-crop(x = BPI,y=bathy)
+  BPI<-raster::crop(x = BPI,y=bathy)
 
   AspectE <- raster::raster(paste0(raster.path,"/Variables_",region,"_1km/Aspect_East"))
   AspectN <- raster::raster(paste0(raster.path,"/Variables_",region,"_1km/Aspect_North"))
@@ -152,13 +152,13 @@ LoadMap<-function(region,parameter.file="G:/Harris/EFH_copy/Map_Settings.csv",co
   assign(x = "world.grid", value = wrld_grd_proj2, envir =.GlobalEnv)
 
   alaska.coast <- rgdal::readOGR(dsn = coast.file, layer = "namerica_dcw", verbose = F)
-  alaska.raster<-raster(covariate.raster)
-  alaska.raster2<-rasterize(alaska.coast,alaska.raster)
+  alaska.raster<-raster::raster(covariate.raster)
+  alaska.raster2<-raster::rasterize(alaska.coast,alaska.raster)
 
   if(region=="GOA"){
-    mask1<-readOGR(dsn = GOA.mask, layer = "completeGOAgrid", verbose = F)
-    mask2<-raster(covariate.raster)
-    mask3<-rasterize(mask1,mask2)
+    mask1<-rgdal::readOGR(dsn = GOA.mask, layer = "completeGOAgrid", verbose = F)
+    mask2<-raster::raster(covariate.raster)
+    mask3<-raster::rasterize(mask1,mask2)
     assign("GOA.mask",value=mask3,envir=.GlobalEnv)
   }
 
@@ -277,7 +277,7 @@ AddGrid<-function(legPosition="bottomleft",                # where should the le
   legend(legPosition, legend = legVals, pch = 15, col = col.vec, bty = "n", pt.cex = 2 ,
          title = legName, cex = legend.size,horiz=horiz)
   if(depth==T){
-    contour(raster.stack[["bdepth"]], levels = dlevels, col = rgb(0,0,0,.6),
+    raster::contour(raster.stack[["bdepth"]], levels = dlevels, col = rgb(0,0,0,.6),
             lwd = 0.05, drawlabels = dlabels, add = TRUE,labcex=dlabel.size)
   }
 }
@@ -312,19 +312,19 @@ plotEFH<-function(map,                                      # raster with factor
                   zlim=NA,                                  # a vector of length two, limiting the factors
                   label.size=1){                            # multiplier for axis labels
 
-  if(is.null(map.ext)){map.ext<-extent(map)}
+  if(is.null(map.ext)){map.ext<-raster::extent(map)}
 
   suppressWarnings(if(is.na(zlim)==T){
-    zlim = c(2-as.integer(is.null(background)==F), maxValue(map))
+    zlim = c(2-as.integer(is.null(background)==F), raster::maxValue(map))
   })
 
-  plot(map, main = title, xaxt = "n", yaxt = "n", box = F, col = c(background,col.vec),
+  raster::plot(map, main = title, xaxt = "n", yaxt = "n", box = F, col = c(background,col.vec),
        ext = map.ext, legend = FALSE, ylab = ylab, xlab = xlab, horiz = TRUE,
        zlim = zlim,cex.lab=label.size)
   if(outline==T){
-    dummy<-setValues(map,values = as.integer(getValues(map)>=2))
-    dummy2<-setValues(map,values = as.integer(is.na(getValues(map))))
-    contour(x = dummy2,add=T,drawlabels=F,lwd=outline.lwd,levels=.25,method="simple")
+    dummy<-raster::setValues(map,values = as.integer(raster::getValues(map)>=2))
+    dummy2<-raster::setValues(map,values = as.integer(is.na(raster::getValues(map))))
+    raster::contour(x = dummy2,add=T,drawlabels=F,lwd=outline.lwd,levels=.25,method="simple")
   }
 }
 
@@ -372,17 +372,17 @@ plotAbundance<-function(map,                                # A raster of abunda
                         label.size=1){                      # multiplier for axis label size
 
   abund.raster<-map
-  if(is.null(map.ext)){map.ext<-extent(map)}
+  if(is.null(map.ext)){map.ext<-raster::extent(map)}
 
   # if no zmax supplied, sample the raster and choose the 95th percentile, so this rules out the rare
   # extreme predictions that tend to screw up the scale
   if(is.na(zmax)){
 
-    sample <- sampleRandom(map,min(10000,ncell(map)), na.rm = TRUE)
+    sample <- raster::sampleRandom(map,min(10000,ncell(map)), na.rm = TRUE)
     zmax <- quantile(sample[is.finite(sample)], probs = zquant, na.rm = TRUE, names = FALSE)
   }
   if(is.na(zmin)){
-    sample <- sampleRandom(map,min(10000,ncell(map)), na.rm = TRUE)
+    sample <- raster::sampleRandom(map,min(10000,ncell(map)), na.rm = TRUE)
     zmin <- quantile(sample[is.finite(sample)], probs = 1-zquant, na.rm = TRUE, names = FALSE)
   }
   if(center.scale==T){
@@ -390,16 +390,16 @@ plotAbundance<-function(map,                                # A raster of abunda
     zmin<--zmax
   }
 
-  abund.raster[getValues(abund.raster)>zmax]<-zmax
-  abund.raster[getValues(abund.raster)<zmin]<-zmin
+  abund.raster[raster::getValues(abund.raster)>zmax]<-zmax
+  abund.raster[raster::getValues(abund.raster)<zmin]<-zmin
 
-  plot(abund.raster, main = title, xaxt = "n", yaxt = "n", box = F, col = col.vec, ext = map.ext,
+  raster::plot(abund.raster, main = title, xaxt = "n", yaxt = "n", box = F, col = col.vec, ext = map.ext,
        legend.shrink = 0.5, axis.args = list(cex.axis = legend.text*.8),cex.lab=label.size,legend=legend,
        legend.args = list(text = legend.name, cex = legend.text,cex.lab = legend.text, side = 1, line = 2),
        horiz = TRUE, ylab = ylab, xlab = xlab,zlim = c(zmin, zmax),colNA=back.col)
   if(outline==T){
-    dummy<-setValues(map,values = as.integer(is.na(getValues(abund.raster))))
-    contour(x = dummy,add=T,drawlabels=F,lwd=outline.lwd,levels=.25,method="simple")
+    dummy<-raster::setValues(map,values = as.integer(is.na(raster::getValues(abund.raster))))
+    raster::contour(x = dummy,add=T,drawlabels=F,lwd=outline.lwd,levels=.25,method="simple")
   }
 }
 
@@ -471,7 +471,7 @@ plotDots<-function(train.data,                     # data set with lat and lon, 
   }
 
   # needs to plot background, then the land, then the dots last
-  plot(background$bdepth,col=back.col,xaxt = "n", yaxt = "n",legend = FALSE, ylab = "Latitude",
+  raster::plot(background$bdepth,col=back.col,xaxt = "n", yaxt = "n",legend = FALSE, ylab = "Latitude",
        xlab = "Longitude",main=title,cex.lab=text.size)
 
   AddGrid(legPosition =NA,depth=T,land.col="grey30",dlevels=dlevels,dlabels=dlabels,
@@ -510,26 +510,26 @@ EFHComparison<-function(old,                    # a EFH raster (with discrete, o
                         background){            # a raster that can be used as a mask for the relevant area
 
   # this assigns a default value of 1 to anywhere not an NA
-  out.raster<-cut(background,breaks=c(-Inf,Inf))
+  out.raster<-raster::cut(background,breaks=c(-Inf,Inf))
 
   # find which areas are EFH in each version
-  old2<-cut(x = old,breaks=c(0,nonEFH+.5,Inf))
-  new2<-cut(x = new,breaks=c(0,nonEFH+.5,Inf))
+  old2<-raster::cut(x = old,breaks=c(0,nonEFH+.5,Inf))
+  new2<-raster::cut(x = new,breaks=c(0,nonEFH+.5,Inf))
 
-  vals<-getValues(out.raster)
+  vals<-raster::getValues(out.raster)
 
-  both<-which(getValues(old2)==2 & getValues(new2)==2)
-  justold<-which(getValues(old2)==2 &
-                   ((getValues(new2)==1)| is.na(getValues(new2))))
-  justnew<-which(((getValues(old2)==1)| is.na(getValues(old2))) &
-                   getValues(new2)==2)
+  both<-which(raster::getValues(old2)==2 & raster::getValues(new2)==2)
+  justold<-which(raster::getValues(old2)==2 &
+                   ((raster::getValues(new2)==1)| is.na(raster::getValues(new2))))
+  justnew<-which(((raster::getValues(old2)==1)| is.na(raster::getValues(old2))) &
+                   raster::getValues(new2)==2)
 
   #assign new values to each category
   vals[justold]<-2
   vals[justnew]<-3
   vals[both]<-4
 
-  out.raster<-setValues(x = out.raster,values = vals)
+  out.raster<-raster::setValues(x = out.raster,values = vals)
   return(out.raster)
 }
 
@@ -555,7 +555,7 @@ plotComparison<-function(map,                                                   
                          ylab = "Latitude", xlab = "Longitude"){                    # labels for the axes
 
   if(is.null(map.ext)){map.ext<-extent(map)}
-  plot(map, main = title, xaxt = "n", yaxt = "n", box = F, col = col.vec,
+  raster::plot(map, main = title, xaxt = "n", yaxt = "n", box = F, col = col.vec,
        ext = map.ext, legend = FALSE, ylab = ylab, xlab = xlab)
 }
 
@@ -586,7 +586,7 @@ FindEFHbreaks<-function(abund.raster,                  # an abundance raster
 
   # choose an EFH method
   if(method=="percentile"){
-    sample <- na.omit(getValues(abund.raster))
+    sample <- na.omit(raster::getValues(abund.raster))
     sample[sample <= threshold] <- NA
     breaks <- quantile(sample, probs = quants, na.rm = TRUE, names = FALSE)
     breaks[1]<-0
@@ -595,7 +595,7 @@ FindEFHbreaks<-function(abund.raster,                  # an abundance raster
   if(method=="cumulative"){
     # Decide whether to sample at given locations or use the whole thing
     if(is.null(data)){
-      vals<-na.omit(sort(getValues(abund.raster)))
+      vals<-na.omit(sort(raster::getValues(abund.raster)))
       vals2<-cumsum(vals)/sum(vals)
     }else{
       vals<-na.omit(sort(raster::extract(abund.raster,data.frame(data$lon,data$lat))))
@@ -607,7 +607,6 @@ FindEFHbreaks<-function(abund.raster,                  # an abundance raster
     while(length(unique(na.omit(breaks)))!=length(quants)){
       for(j in 2:(length(quants)-1)){
         breaks[j]<-vals[which(vals2>quants[j])[1]]
-
       }
       vals<-vals[-length(vals)]
       vals2<-cumsum(vals)/sum(vals)
@@ -738,16 +737,16 @@ CrossValidateModel<-function(model,
     error.data$abund[start.vec[i]:end.vec[i]]<-test.data[,species]
 
     if(model.type=="maxnet"){
-      preds<-exp(predict(object = model,newdata=test.data,response="link")+model$entropy)
-      probs<-predict(object = model,newdata=test.data,type="cloglog")
+      preds<-exp(maxnet::predict(object = model,newdata=test.data,response="link")+model$entropy)
+      probs<-maxnet::predict(object = model,newdata=test.data,type="cloglog")
       # then on to the cv model
       vars0<-names(model$samplemeans)
       facs<-vars0[vars0%in%names(model$varmax)==F]
 
       try(cv.model<-FitMaxnet(data = train.data,species = species,vars = names(model$varmax),facs = facs,regmult = regmult))
       if(exists("cv.model")){
-        cvpreds<-exp(predict(object = cv.model,newdata=test.data,response="link")+cv.model$entropy)
-        cvprobs<-predict(object = cv.model,newdata=test.data,type="cloglog")
+        cvpreds<-exp(maxnet::predict(object = cv.model,newdata=test.data,response="link")+cv.model$entropy)
+        cvprobs<-maxnet::predict(object = cv.model,newdata=test.data,type="cloglog")
       }else{
         cvpreds<-rep(NA,times=nrow(test.data))
         cvprobs<-rep(NA,times=nrow(test.data))
@@ -755,14 +754,14 @@ CrossValidateModel<-function(model,
       }
     }
     if(model.type=="cloglog"){
-      preds<-exp(predict(object = model,newdata=test.data,type="link"))
-      probs<-predict(object = model,newdata=test.data,type="response")
+      preds<-exp(mgcv::predict.gam(object = model,newdata=test.data,type="link"))
+      probs<-mgcv::predict.gam(object = model,newdata=test.data,type="response")
 
       try(cv.model<-FitGAM(data = train.data,reduce=F,family.gam = "binomial",select=F,
                            link.fx = "cloglog",gam.formula = formula(model),verbose = F))
       if(exists("cv.model")){
-        cvpreds<-exp(predict(object = cv.model,newdata=test.data,type="link"))
-        cvprobs<-predict(object = cv.model,newdata=test.data,type="response")
+        cvpreds<-exp(mgcv::predict.gam(object = cv.model,newdata=test.data,type="link"))
+        cvprobs<-mgcv::predict.gam(object = cv.model,newdata=test.data,type="response")
       }else{
         cvpreds<-rep(NA,times=nrow(test.data))
         cvprobs<-rep(NA,times=nrow(test.data))
@@ -770,14 +769,14 @@ CrossValidateModel<-function(model,
       }
     }
     if(model.type=="hgam"){
-      preds<-predict(object = model,newdata=test.data,type="response")
-      probs<-1-exp(-exp(predict(model,newdata=test.data)[,2]))
+      preds<-mgcv::predict.gam(object = model,newdata=test.data,type="response")
+      probs<-1-exp(-exp(mgcv::predict.gam(model,newdata=test.data)[,2]))
 
       try(cv.model<-FitHurdleGAM(density.formula = formula(model)[[1]],prob.formula = formula(model)[[2]],
                                  data = train.data,reduce = F,verbose = F,select = F))
       if(exists("cv.model")){
-        cvpreds<-predict(object = cv.model,newdata=test.data,type="response")
-        cvprobs<-1-exp(-exp(predict(cv.model,newdata=test.data)[,2]))
+        cvpreds<-mgcv::predict.gam(object = cv.model,newdata=test.data,type="response")
+        cvprobs<-1-exp(-exp(mgcv::predict.gam(cv.model,newdata=test.data)[,2]))
 
       }else{
         cvpreds<-rep(NA,times=nrow(test.data))
@@ -789,17 +788,17 @@ CrossValidateModel<-function(model,
       if(strsplit(model$family$family,split="[()]")[[1]][1]=="Negative Binomial"){
         gamfam<-"nb"
         theta<-as.numeric(strsplit(model$family[[1]],split="[()]")[[1]][2])
-        probs<-1-dnbinom(0,mu = predict(model,newdata=test.data,type="response"),size = theta)
+        probs<-1-dnbinom(0,mu = mgcv::predict.gam(model,newdata=test.data,type="response"),size = theta)
       }else{
         gamfam<-model$family$family
-        probs<-(1-dpois(0,predict(object = model,newdata=test.data,type="response")))
+        probs<-(1-dpois(0,mgcv::predict.gam(object = model,newdata=test.data,type="response")))
       }
-      preds<-predict(object = model,newdata=test.data,type="response")
+      preds<-mgcv::predict.gam(object = model,newdata=test.data,type="response")
 
       try(cv.model<-FitGAM(data = train.data,reduce=F,family.gam = gamfam,select=F,
                            link.fx = model$family$link,gam.formula = formula(model),verbose = F))
       if(exists("cv.model")){
-        cvpreds<-predict(object = cv.model,newdata=test.data,type="response")
+        cvpreds<-mgcv::predict.gam(object = cv.model,newdata=test.data,type="response")
         if(strsplit(model$family$family,split="[()]")[[1]][1]=="Negative Binomial"){
           cvtheta<-as.numeric(strsplit(cv.model$family[[1]],split="[()]")[[1]][2])
           cvprobs<-1-dnbinom(0,mu = cvpreds,size = cvtheta)
@@ -950,9 +949,9 @@ MakeVarianceRasters<-function(model.list,            # a list of models for each
 
 
   # to speed things up and preserve memory, we're going to separate out the NAs
-  data.spots<-which(is.na(getValues(raster.stack[[1]]))==F)
-  for(r in 2:nlayers(raster.stack)){
-    spots<-which(is.na(getValues(raster.stack[[r]]))==F)
+  data.spots<-which(is.na(raster::getValues(raster.stack[[1]]))==F)
+  for(r in 2:raster::nlayers(raster.stack)){
+    spots<-which(is.na(raster::getValues(raster.stack[[r]]))==F)
     data.spots<-data.spots[data.spots%in%spots]
   }
   data<-extract(raster.stack,data.spots)
@@ -999,34 +998,34 @@ MakeVarianceRasters<-function(model.list,            # a list of models for each
   # loop through and get predictions for each model
   for(m in 1:length(model.list2)){
     if(model.type=="maxnet"){
-      out.data[,m]<-exp(predict(model.list2[[m]],newdata=data,type="link")+model.list2[[m]]$entropy)
+      out.data[,m]<-exp(maxnet::predict(model.list2[[m]],newdata=data,type="link")+model.list2[[m]]$entropy)
     }
     if(model.type=="cloglog"){
-      out.data[,m]<-exp(predict(object = model.list2[[m]],newdata=data,type="link"))
+      out.data[,m]<-exp(mgcv::predict.gam(object = model.list2[[m]],newdata=data,type="link"))
     }
     if(model.type=="hgam"){
-      out.data[,m]<-predict(object = model.list2[[m]],newdata=data,type="response")
+      out.data[,m]<-mgcv::predict.gam(object = model.list2[[m]],newdata=data,type="response")
     }
     if(model.type=="gam"){
-      out.data[,m]<-predict(object = model.list2[[m]],newdata=data,type="response")
+      out.data[,m]<-mgcv::predict.gam(object = model.list2[[m]],newdata=data,type="response")
     }
     setTxtProgressBar(pb, m)
   }
   close(pb)
   # now tally things up
 
-  raster.template<-raster(raster.stack)
+  raster.template<-raster::raster(raster.stack)
 
   variances<-apply(X = out.data*scale.factor,MARGIN = 1,FUN = var)
-  var.vec<-rep(NA,times=ncell(raster.stack))
+  var.vec<-rep(NA,times=raster::ncell(raster.stack))
   var.vec[data.spots]<-variances
-  var.raster<-setValues(raster.template,values = var.vec)
+  var.raster<-raster::setValues(raster.template,values = var.vec)
 
   if(is.na(efh.break)==F){
     percents<-apply(X = out.data>efh.break,MARGIN = 1,FUN = sum)/ncol(out.data)
-    per.vec<-rep(NA,times=ncell(raster.stack))
+    per.vec<-rep(NA,times=raster::ncell(raster.stack))
     per.vec[data.spots]<-percents
-    per.raster<-setValues(raster.template,values = per.vec)
+    per.raster<-raster::setValues(raster.template,values = per.vec)
     return(list(var.raster,per.raster))
   }else{
     return(var.raster)
