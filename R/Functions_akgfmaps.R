@@ -62,6 +62,7 @@
 #' @param pres.size size for presence dots
 #' @param hd.size size for high density dots
 #' @importFrom akgfmaps get_base_layers
+#' @importFrom magrittr %>%
 #'
 #' @return a ggplot with the desired figure
 #' @export
@@ -274,6 +275,7 @@ MakeAKGFDotplot <- function(presence,
 #' @param title.pos vector of length two with coordinates for for the legend, use NA to suppress
 #' @param barheight numeric; height of the bar in the legend
 #' @importFrom akgfmaps get_base_layers
+#' @importFrom magrittr %>%
 #'
 #' @return a ggplot object of the map
 #' @export
@@ -434,6 +436,8 @@ MakeAKGFDensityplot <- function(region,
 #' @param col.palette.limits vector of length two giving start and end points for the color palette
 #' @param title.name character; a title for the figure, or NA to suppress
 #' @param title.pos vector of length two with coordinates for for the legend, use NA to suppress
+#' @importFrom akgfmaps get_base_layers
+#' @importFrom magrittr %>%
 #'
 #' @return raster of EFH quantiles (subareas)
 #' @export
@@ -605,6 +609,8 @@ MakeAKGFEFHplot <- function(region,
 #' @param ext.adjust.x vector length 2 to adjust the horizontal extent
 #' @param ext.adjust.y vector length 2 to adjust the vertical extent
 #' @param nonEFH integer; the value corresponding to non-EFH in the old and new rasters
+#' @importFrom akgfmaps get_base_layers
+#' @importFrom magrittr %>%
 #'
 #' @return ggplot object with the comparison map
 #' @export
@@ -790,6 +796,8 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
 #' @param crs CRS for lat/lon coordinates if different from akgf
 #' @param nice.names data frame linking names to nicer version for publication figures
 #' @param vars character vector with names or list indices to be plotted
+#' @importFrom akgfmaps get_base_layers
+#' @importFrom magrittr %>%
 #'
 #' @return list of ggplot objects containing the individual panels and effects
 #' @export
