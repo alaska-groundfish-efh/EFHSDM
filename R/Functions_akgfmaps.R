@@ -205,16 +205,19 @@ MakeAKGFDotplot <- function(presence,
   dotplot <- ggplot2::ggplot() +
     ggplot2::geom_sf(data = survey.sf, fill = "grey95") +
     ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
-    ggplot2::ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
-    geom_sf(data = MAP$bathymetry, color = "grey60")
+    ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
+    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60")
 
   # add the dots
   if (is.na(absence) == F) {
-    dotplot <- dotplot + ggplot2::geom_sf(data = abs.sf, alpha = .25, size = abs.size, shape = abs.shape, aes(color = factor(abs.fac)))
+    dotplot <- dotplot +
+      ggplot2::geom_sf(data = abs.sf, alpha = .25, size = abs.size, shape = abs.shape, aes(color = factor(abs.fac)))
   }
-  dotplot <- dotplot + ggplot2::geom_sf(data = pres.sf, size = pres.size, aes(color = factor(pres.fac)), shape = pres.shape, stroke = .8)
+  dotplot <- dotplot +
+    ggplot2::geom_sf(data = pres.sf, size = pres.size, aes(color = factor(pres.fac)), shape = pres.shape, stroke = .8)
   if (is.na(highdensity) == F) {
-    dotplot <- dotplot + ggplot2::geom_sf(data = high.sf, size = hd.size, shape = hd.shape, aes(color = factor(hd.fac)))
+    dotplot <- dotplot +
+      ggplot2::geom_sf(data = high.sf, size = hd.size, shape = hd.shape, aes(color = factor(hd.fac)))
   }
 
   # add the themes
@@ -368,7 +371,7 @@ MakeAKGFDensityplot <- function(region,
   }
 
   # often helps to remove some of the high points
-  density.sf$density[density.sf$density > quantile(density.sf$density, buffer, na.rm = T)] <- quantile(density.sf$density, buffer, na.rm = T)
+  density.sf$density[density.sf$density > quantile(density.sf$density, buffer, na.rm = T)] <- stats::quantile(density.sf$density, buffer, na.rm = T) # MCS: I think this is the stats::quantile() but it could be a raster thing?
 
   # set up the basic map, will add more customization later
   densityplot <- ggplot2::ggplot() +

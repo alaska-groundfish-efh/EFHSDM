@@ -379,11 +379,11 @@ plotAbundance<-function(map,                                # A raster of abunda
   if(is.na(zmax)){
 
     sample <- raster::sampleRandom(map,min(10000,ncell(map)), na.rm = TRUE)
-    zmax <- quantile(sample[is.finite(sample)], probs = zquant, na.rm = TRUE, names = FALSE)
+    zmax <- stats::quantile(sample[is.finite(sample)], probs = zquant, na.rm = TRUE, names = FALSE)
   }
   if(is.na(zmin)){
     sample <- raster::sampleRandom(map,min(10000,ncell(map)), na.rm = TRUE)
-    zmin <- quantile(sample[is.finite(sample)], probs = 1-zquant, na.rm = TRUE, names = FALSE)
+    zmin <- stats::quantile(sample[is.finite(sample)], probs = 1-zquant, na.rm = TRUE, names = FALSE)
   }
   if(center.scale==T){
     zmax<-max(abs(zmin),abs(zmax))
