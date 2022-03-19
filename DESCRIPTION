@@ -42,7 +42,8 @@ Imports:
     maxnet,
     ENMeval,
     xtable,
-    XML
+    XML,
+    magrittr
 Remotes: 
     git::https://github.com/afsc-gap-products/akgfmaps.git@master
 Depends: 
