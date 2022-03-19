@@ -25,6 +25,7 @@ usethis::use_package("patchwork", type = "Imports", min_version = NULL)
 usethis::use_package("MASS", type = "Imports", min_version = NULL)
 usethis::use_package("scales", type = "Imports", min_version = NULL)
 usethis::use_package("labeling", type = "Imports", min_version = NULL)
+usethis::use_package("magrittr", type = "Imports", min_version = NULL)
 
 #GamModel dependencies
 usethis::use_package("mgcv", type = "Imports", min_version = NULL) #used by multiple fns
