@@ -1,0 +1,395 @@
+---
+title: "BasicsOfFiveYearReview"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{BasicsOfFiveYearReview}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This is an example vignette for the EFHSDM package. It provides an simplified example that includes several types of SDMs and an example of how to construct a weighted ensemble average. 
+<!-- Note, revise these lines once the data is loading correctly -->
+
+```{r setup}
+library(EFHSDM)
+library(akgfmaps)
+```
+
+# Load the data and add more info
+
+```{r eval=F}
+region.data <- region_data_all
+
+bathy <- GOA_bathy
+btemp <- GOA_btemp
+btemp <- raster::crop(x = btemp, y = bathy)
+slope <- GOA_slope
+sponge <- GOA_sponge
+
+region.data$j_rebs <- region.data$j_rebs + region.data$j_rough + region.data$j_bspot
+region.data$a_rebs <- region.data$a_rebs + region.data$a_rough + region.data$a_bspot
+
+region.data$sponge <- as.integer(region.data$sponge > 0)
+region.data$coral <- as.integer(region.data$coral > 0)
+region.data$pen <- as.integer(region.data$pen > 0)
+
+region.data$logarea <- log(region.data$area)
+
+lat <- raster::init(GOA_bathy, v = "y")
+lat <- raster::mask(lat, GOA_bathy, overwrite = F)
+lon <- raster::init(GOA_bathy, v = "x")
+lon <- raster::mask(lon, GOA_bathy, overwrite = F)
+
+raster.stack <- raster::stack(lon, lat, bathy, btemp, slope, sponge)
+names(raster.stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
+
+nice.names <- data.frame(
+  stringsAsFactors = F,
+  var = c(
+    "lon", "lat", "bdepth", "slope", "aspectE", "aspectN", "curve", "btemp", "speed", "tmax", "BPI", "phi", "vitalrate",
+    "color", "sponge", "coral", "pen", "area", "bcurrentU", "bcurrentV", "bcurrentUSD", "bcurrentVSD", "lon*lat",
+    "bcurrentU*bcurrentV", "bcurrentUSD*bcurrentVSD", "aspectE*aspectN", "rocky"
+  ),
+  name = c(
+    "Longitude", "Latitude", "Depth (m)", "Slope (degrees)", "Slope Eastness", "Slope Northness",
+    "Terrain Curvature", "Temperature (C)", "Current speed (m/s)",
+    "Tidal Maximum (cm/s)", "BPI", "Sediment Grain size (phi)", "Growth Potential (g/g/day)",
+    "Ocean color", "Sponge presence", "Coral presence", "Pennatulacean presence", "Area Swept",
+    "Current Velocity East (m/s)", "Current Velocity North (m/s)", "Current Velocity East SD (m/s)",
+    "Current Velocity North SD (m/s)", "Position (lon,lat)", "Current Velocity (east,north)",
+    "Current Velocity SD", "Slope Aspect (east,north)", "Bottom Rockiness (%)"
+  )
+)
+
+species <- "a_atf"
+figure.name <- "Adult arrowtooth flounder"
+```
+
+For the example, we will restrict the dataset to the last ten years, note that some species were not adequately identified until a particular year and the dataset should be subsetted accordingly.
+
+```{r eval=F}
+start.year <- 2012
+
+species.data <- subset(region.data, year >= start.year)
+
+# Assign the CV folds from here; the EFH project used the RACE code to assign seed
+set.seed(10110)
+
+random.folds <- rep(LETTERS[1:10], length.out = nrow(species.data))
+species.data$Folds <- sample(random.folds, size = nrow(species.data), replace = F)
+
+# a good start is to map the presence data
+hd <- quantile(species.data[species.data[, species] > 0, species], .9)
+
+MakeAKGFDotplot(
+  presence = species.data[species.data[, species] > 0, ],
+  absence = species.data[species.data[, species] == 0, ],
+  highdensity = species.data[species.data[, species] >= hd, ],
+  dataCRS = raster.stack@crs, region = "goa", title.name = figure.name
+)
+
+gam.form <- formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) +
+                    s(btemp, bs='tp',m=1,k=4) + s(slope, bs='tp',m=1,k=4) + as.factor(sponge) + offset(logarea)")
+```
+
+
+# Start running the MaxEnt model
+
+ In practice, one should try several different values for `regmult`, and test the best one. For now we'll just use `1`. Also note that `maxnet` models frequently fail to converge.
+
+```{r eval=F}
+maxnet.model <- FitMaxnet(
+  data = species.data, species = species,
+  vars = c("lon", "lat", "btemp", "bdepth", "slope"), facs = "sponge",
+  regmult = 1, reduce = T
+)
+
+# the results of a maxnet model should always be scaled, if one wishes to make abundance predictions
+maxnet.scale <- mean(species.data[, species]) / mean(exp(predict(maxnet.model, newdata = species.data, type = "link") +
+  maxnet.model$ent))
+
+maxnet.abund <- MakeMaxEntAbundance(
+  model = maxnet.model, maxent.stack = raster.stack,
+  scale.fac = maxnet.scale, type = "cloglog"
+)
+
+# Now crossvalidate and get fit metrics
+maxnet.cv <- CrossValidateModel(
+  model = maxnet.model, data = species.data, species = species, group = "Folds",
+  model.type = "maxnet", key = "hauljoin", scale.preds = T, regmult = 1
+)
+maxnet.errors <- maxnet.cv[[1]]
+maxnet.cv.models <- maxnet.cv[[2]]
+
+maxnet.rmse <- RMSE(pred = maxnet.errors$cvpred, obs = maxnet.errors$abund)
+
+# get the effects and confidence intervals
+maxnet.effects <- GetMaxnetEffects(
+  model = maxnet.model, cv.models = maxnet.cv.models,
+  vars = "all", add.entropy = T, scale = "log", data = species.data,
+  maxnet2d = list(c("lon", "lat")), scale.factor = maxnet.scale
+)
+```
+
+We could go through and get deviance and variance estimates for the model now, but it's better to wait and see which models actually are included in the ensemble, in order to save on processing time.
+
+# Cloglong paGAM
+
+```{r eval=F}
+cloglog.model <- FitGAM(
+  gam.formula = gam.form, data = species.data,
+  family.gam = "binomial", link.fx = "cloglog", reduce = T, select = T,
+  verbose = F
+)
+
+# this type of model should also always be scaled if abundance prediction is desired
+cloglog.scale <- mean(species.data[, species]) / mean(exp(predict(cloglog.model, type = "link")))
+
+cloglog.abund <- MakeGAMAbundance(
+  model = cloglog.model, r.stack = raster.stack, scale.factor = cloglog.scale,
+  filename = ""
+)
+
+cloglog.cv <- CrossValidateModel(
+  model = cloglog.model, model.type = "cloglog", data = species.data, scale.preds = T,
+  species = species, group = "Folds", key = "hauljoin"
+)
+cloglog.errors <- cloglog.cv[[1]]
+cloglog.cv.models <- cloglog.cv[[2]]
+
+cloglog.effects <- GetGAMEffects(
+  model = cloglog.model, data = species.data, vars = "all", scale = "log",
+  cv.model.list = cloglog.cv.models, scale.factor = cloglog.scale
+)
+
+cloglog.rmse <- RMSE(pred = cloglog.errors$cvpred, obs = cloglog.errors$abund)
+```
+
+#Hurdle GAM
+
+ziplss GAMs require a separate formula for the probability part of the model, and it should leave off the dependent variable
+```{r eval=F}
+prob.form <- formula("~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) +
+                    s(btemp, bs='tp',m=1,k=4) + s(slope, bs='tp',m=1,k=4) + as.factor(sponge) + offset(logarea)")
+
+hpoisson.model <- FitHurdleGAM(
+  density.formula = gam.form, prob.formula = prob.form,
+  data = species.data, verbose = F, select = T, reduce = T
+)
+
+# scaling a hurdle model is optional, but we choose to do it for consistency
+hpoisson.scale <- mean(species.data[, species]) / mean(predict(hpoisson.model, type = "response"))
+hpoisson.abund <- MakeGAMAbundance(
+  model = hpoisson.model, r.stack = raster.stack, scale.factor = hpoisson.scale,
+  filename = ""
+)
+
+hpoisson.cv <- CrossValidateModel(
+  model = hpoisson.model, model.type = "hgam", data = species.data,
+  species = species, group = "Folds", key = "hauljoin", scale.preds = T
+)
+
+hpoisson.errors <- hpoisson.cv[[1]]
+hpoisson.cv.models <- hpoisson.cv[[2]]
+
+hpoisson.effects <- GetGAMEffects(
+  model = hpoisson.model, data = species.data, cv.model.list = hpoisson.cv.models,
+  scale.factor = hpoisson.scale, vars = "all", scale = "log"
+)
+
+hpoisson.rmse <- RMSE(pred = hpoisson.errors$cvpred, obs = hpoisson.errors$abund)
+```
+
+# Poisson GAM
+
+```{r eval=F}
+poisson.model <- FitGAM(
+  gam.formula = gam.form, data = species.data, verbose = F,
+  reduce = T, select = T, family.gam = "poisson"
+)
+
+# by definition, the mean of a poisson model will always be equal to the mean of the data, so the scale is always 1
+poisson.scale <- mean(species.data[, species]) / mean(predict(poisson.model, type = "response"))
+
+poisson.abund <- MakeGAMAbundance(
+  model = poisson.model, r.stack = raster.stack, scale.factor = poisson.scale,
+  filename = ""
+)
+
+poisson.cv <- CrossValidateModel(
+  model = poisson.model, model.type = "gam", species = species, data = species.data,
+  group = "Folds", key = "hauljoin", scale.preds = T
+)
+poisson.errors <- poisson.cv[[1]]
+poisson.cv.models <- poisson.cv[[2]]
+
+
+poisson.effects <- GetGAMEffects(
+  model = poisson.model, data = species.data, vars = "all", scale = "log",
+  cv.model.list = poisson.cv.models, scale.factor = poisson.scale
+)
+
+poisson.rmse <- RMSE(pred = poisson.errors$cvpred, obs = poisson.errors$abund)
+```
+
+# Negative binomial GAM
+
+```{r eval=F}
+negbin.model <- FitGAM(
+  gam.formula = gam.form, data = species.data, verbose = F, select = T,
+  reduce = T, family.gam = "nb"
+)
+
+# again, scaling the negbin model is optional, but
+negbin.scale <- mean(species.data[, species]) / mean(predict(negbin.model, type = "response"))
+negbin.abund <- MakeGAMAbundance(
+  model = negbin.model, r.stack = raster.stack, scale.factor = negbin.scale,
+  filename = ""
+)
+
+negbin.cv <- CrossValidateModel(
+  model = negbin.model, model.type = "gam", species = species, data = species.data,
+  group = "Folds", key = "hauljoin", scale.preds = T
+)
+
+negbin.errors <- negbin.cv[[1]]
+negbin.cv.models <- negbin.cv[[2]]
+
+
+negbin.effects <- GetGAMEffects(
+  model = negbin.model, data = species.data, vars = "all", scale = "log",
+  cv.model.list = negbin.cv.models, scale.factor = negbin.scale
+)
+
+negbin.rmse <- RMSE(pred = negbin.errors$cvpred, obs = negbin.errors$abund)
+```
+
+# Model ensemble
+
+All of the models converged and passed the abundance check, so we will test all of them in the ensemble.
+
+```{r eval=F}
+# assemble some things
+rmse.vec <- c(maxnet = maxnet.rmse, cloglog = cloglog.rmse, hpoisson = hpoisson.rmse, poisson = poisson.rmse, negbin = negbin.rmse)
+
+# by default, the ensemble will include only one of each type
+model.types <- c("maxnet", "cloglog", "hgam", "gam", "gam")
+
+model.weights <- MakeEnsemble(rmse = rmse.vec, minimum = .1, model.types = model.types)
+
+##############################
+# so now we know there are four models, we can go back and get the relevant features
+# Like the variance maps (Note, this step takes awhile ~ 45 minutes; you might want to skip it)
+maxnet.variance <- MakeVarianceRasters(
+  model.list = maxnet.cv.models, raster.stack = raster.stack,
+  model.type = "maxnet", scale.factor = maxnet.scale
+)
+cloglog.variance <- MakeVarianceRasters(
+  model.list = cloglog.cv.models, raster.stack = raster.stack,
+  model.type = "cloglog", scale.factor = cloglog.scale
+)
+hpoisson.variance <- MakeVarianceRasters(
+  model.list = hpoisson.cv.models, raster.stack = raster.stack,
+  model.type = "hgam", scale.factor = hpoisson.scale
+)
+poisson.variance <- MakeVarianceRasters(
+  model.list = poisson.cv.models, raster.stack = raster.stack,
+  model.type = "gam", scale.factor = poisson.scale
+)
+
+##############################
+# and the deviance estimates
+# in order to keep the deviance estimates consistent with the GAM, specify a "maxnet2d" argument as a list
+maxnet.devs <- MaxnetStats(
+  model = maxnet.model, data = species.data, species = species, regmult = 1,
+  maxnet2d = list(c("lon", "lat"))
+)
+maxnet.coefs <- MaxnetCoefs(maxnet.model, maxnet2d = list(c("lon", "lat")))
+
+cloglog.devs <- GAMStats(model = cloglog.model, data = species.data)
+hpoisson.devs <- GAMStats(model = hpoisson.model, data = species.data)
+poisson.devs <- GAMStats(model = poisson.model, data = species.data)
+
+# take a weighted average for the ensemble deviance explained
+dev.dat <- rbind(
+  maxnet.devs,
+  c(cloglog.devs, slope = 0), # slope was dropped from the cloglog model, so it explains 0
+  hpoisson.devs,
+  poisson.devs
+)
+apply(dev.dat, MARGIN = 2, FUN = "weighted.mean", w = model.weights[model.weights > 0], na.rm = T)
+
+##############################
+# now make the actual ensemble map
+# the list of abundances ought to include all non-zero weight models
+abund.list <- list(maxnet = maxnet.abund, cloglog = cloglog.abund, hpoisson = hpoisson.abund, poisson = poisson.abund)
+
+ensemble.abund <- MakeEnsembleAbundance(model.weights = model.weights, abund.list = abund.list)
+
+MakeAKGFDensityplot(
+  region = "goa", density.map = ensemble.abund, buffer = .98, legend.title = "Abundance",
+  title.name = figure.name
+)
+
+# this finds the ensemble efh breaks
+# the threshold .0513 is equivalent to 5% encounter probability under a poisson distribution
+ensemble.breaks <- FindEFHbreaks(
+  abund.raster = ensemble.abund, method = "percentile", threshold = .0513,
+  data = species.data, quantiles = c(.05, .25, .5, .75)
+)
+
+##############################
+# and the efh map
+ensemble.efh <- raster::cut(ensemble.abund, breaks = ensemble.breaks)
+
+MakeAKGFEFHplot(region = "goa", efh.map = ensemble.efh, title.name = figure.name)
+
+# this gives the area of the 95% EFH in km2
+sum(raster::getValues(ensemble.efh) > 1, na.rm = T)
+
+############################
+# this calculates the ensemble effects from the effects lists produced earlier
+effects.list <- list(maxnet.effects, cloglog.effects, hpoisson.effects, poisson.effects)
+ensemble.effects <- GetEnsembleEffects(
+  effects.list = effects.list, model.weights = model.weights,
+  vars = "all", scale = "log"
+)
+
+ensemble.plots <- Effectsplot(
+  effects.list = ensemble.effects, region = "goa", crs = raster.stack@crs,
+  nice.names = nice.names, vars = "all"
+)
+gridExtra::grid.arrange(grobs = ensemble.plots, ncol = 3, nrow = 2)
+
+
+# this makes a useful data frame of the ensemble predictions
+errors.list <- list(maxnet = maxnet.errors, cloglog = cloglog.errors, hpoisson = hpoisson.errors, poisson = poisson.errors)
+
+ensemble.preds <- ValidateEnsemble(
+  pred.list = errors.list, model.weights = model.weights, output = T, make.plots = T,
+  key = "hauljoin", latlon = T, group = "Folds", method = "spearman"
+)
+
+##############################
+# ensemble variance & cv map
+var.list <- list(maxnet = maxnet.variance, cloglog = cloglog.variance, hpoisson = hpoisson.variance, poisson = poisson.variance)
+ensemble.var <- GetEnsembleVariance(
+  model.weights = model.weights, variance.list = var.list, abund.list = abund.list,
+  ensemble.abund = ensemble.abund
+)
+
+ensemble.cv <- sqrt(ensemble.var) / ensemble.abund
+MakeAKGFDensityplot(
+  region = "goa", density.map = ensemble.cv, buffer = .98, legend.title = "CV of abundance",
+  title.name = figure.name
+)
+
+# All Done. This covers the essentials produced during the 2022 EFH 5-year Review.
+```

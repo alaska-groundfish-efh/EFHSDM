@@ -7,7 +7,7 @@ use_package_doc(open = rlang::is_interactive())
 usethis::use_vignette("EFHSDM") # package-level vignette
 
 # Function documentation
-#usethis::use_vignette()
+usethis::use_vignette("BasicsOfFiveYearReview")
 
 # Build documentation
 devtools::document()

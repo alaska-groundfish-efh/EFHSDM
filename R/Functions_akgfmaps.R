@@ -52,6 +52,7 @@
 #' @param abs.size size for absence dots
 #' @param pres.size size for presence dots
 #' @param hd.size size for high density dots
+#' @importFrom akgfmaps get_base_layers
 #'
 #' @return a ggplot with the desired figure
 #' @export
@@ -82,11 +83,12 @@ MakeAKGFDotplot <- function(presence,
                             hd.size = 1) {
   # start by getting the map
   region <- tolower(region)
+  #browser()
   if (region %in% c(
     "ebs", "bs.all", "sebs", "bs.south", "ecs", "ebs.ecs", "ai",
     "ai.west", "ai.central", "ai.east", "goa", "goa.west", "goa.east"
   )) {
-    MAP <- akgfmaps::get_base_layers(select.region = region, set.crs = "auto")
+    MAP <- akgfmaps::get_base_layers(select.region = region, set.crs = "auto",use.survey.bathymetry = TRUE)
   } else {
     stop("region not recognized")
   }
@@ -259,6 +261,7 @@ MakeAKGFDotplot <- function(presence,
 #' @param title.name character; a title for the figure, or NA to suppress
 #' @param title.pos vector of length two with coordinates for for the legend, use NA to suppress
 #' @param barheight numeric; height of the bar in the legend
+#' @importFrom akgfmaps get_base_layers
 #'
 #' @return a ggplot object of the map
 #' @export
@@ -283,7 +286,7 @@ MakeAKGFDensityplot <- function(region,
     "ebs", "bs.all", "sebs", "bs.south", "ecs", "ebs.ecs", "ai",
     "ai.west", "ai.central", "ai.east", "goa", "goa.west", "goa.east"
   )) {
-    MAP <- get_base_layers(select.region = region, set.crs = "auto")
+    MAP <- akgfmaps::get_base_layers(select.region = region, set.crs = "auto")
   } else {
     stop("region not recognized")
   }

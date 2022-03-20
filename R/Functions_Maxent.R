@@ -83,7 +83,7 @@ FitMaxnet<-function(data,
     if(length(badvars)>0){
       badcols<-which(names(maxnet.data)%in%badvars)
       maxnet.data2<-maxnet.data[,-badcols]
-      maxnet.model<-maxnet(p = presence.vec,data = maxnet.data2,regmult = regmult)
+      maxnet.model<-maxnet::maxnet(p = presence.vec,data = maxnet.data2,regmult = regmult)
     }
   }
   return(maxnet.model)
