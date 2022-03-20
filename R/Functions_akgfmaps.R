@@ -136,11 +136,11 @@ MakeAKGFDotplot <- function(presence,
       survey.sf <- sf::st_transform(survey.area, sf::st_crs(MAP$akland))
     }
     if (class(survey.area)[1] == "RasterLayer") {
-      survey.sf0 <- stars::st_as_stars(is.na(survey.area)) %>%
-        sf::st_as_sf(merge = TRUE) %>% # this is the raster to polygons part
-        sf::st_cast("POLYGON") # cast the polygons to polylines
+      survey.sf1<-stars::st_as_stars(is.na(survey.area))
+      survey.sf2<-sf::st_as_sf(survey.sf1,merge = TRUE)
+      survey.sf3<-sf::st_cast("POLYGON") # cast the polygons to polylines
 
-      survey.sf <- sf::st_transform(survey.sf0, sf::st_crs(MAP$akland))[1:(nrow(survey.sf0) - 1), ]
+      survey.sf <- sf::st_transform(survey.sf3, sf::st_crs(MAP$akland))[1:(nrow(survey.sf3) - 1), ]
     }
   }
 
@@ -334,11 +334,11 @@ MakeAKGFDensityplot <- function(region,
       survey.sf <- sf::st_transform(survey.area, sf::st_crs(MAP$akland))[1:(nrow(survey.area) - 1), ]
     }
     if (class(survey.area)[1] == "RasterLayer") {
-      survey.sf0 <- stars::st_as_stars(is.na(survey.area)) %>%
-        sf::st_as_sf(merge = TRUE) %>% # this is the raster to polygons part
-        sf::st_cast("POLYGON") # cast the polygons to polylines
+      survey.sf1<-stars::st_as_stars(is.na(survey.area))
+      survey.sf2<-sf::st_as_sf(survey.sf1,merge = TRUE)
+      survey.sf3<-sf::st_cast("POLYGON") # cast the polygons to polylines
 
-      survey.sf <- sf::st_transform(survey.sf0, sf::st_crs(MAP$akland))[1:(nrow(survey.sf0) - 1), ]
+      survey.sf <- sf::st_transform(survey.sf3, sf::st_crs(MAP$akland))[1:(nrow(survey.sf3) - 1), ]
     }
   }
 
@@ -494,11 +494,11 @@ MakeAKGFEFHplot <- function(region,
       survey.sf <- sf::st_transform(survey.area, sf::st_crs(MAP$akland))[1:(nrow(survey.area) - 1), ]
     }
     if (class(survey.area)[1] == "RasterLayer") {
-      survey.sf0 <- stars::st_as_stars(is.na(survey.area)) %>%
-        sf::st_as_sf(merge = TRUE) %>% # this is the raster to polygons part
-        sf::st_cast("POLYGON") # cast the polygons to polylines
+      survey.sf1<-stars::st_as_stars(is.na(survey.area))
+      survey.sf2<-sf::st_as_sf(survey.sf1,merge = TRUE)
+      survey.sf3<-sf::st_cast("POLYGON") # cast the polygons to polylines
 
-      survey.sf <- sf::st_transform(survey.sf0, sf::st_crs(MAP$akland))[1:(nrow(survey.sf0) - 1), ]
+      survey.sf <- sf::st_transform(survey.sf3, sf::st_crs(MAP$akland))[1:(nrow(survey.sf3) - 1), ]
     }
   }
 
@@ -507,8 +507,8 @@ MakeAKGFEFHplot <- function(region,
   efh.vals[efh.vals == 1] <- NA
 
   # convert the raster to polygons
-  efhpoly <- stars::st_as_stars(efh.map) %>%
-    sf::st_as_sf(merge = TRUE)
+  efhpoly0 <- stars::st_as_stars(efh.map)
+  efh.poly <- sf::st_as_sf(efh.poly0,merge = TRUE)
   efhpoly2 <- efhpoly[efhpoly$layer != 1, ]
 
   # we'll need a new outline
@@ -516,10 +516,8 @@ MakeAKGFEFHplot <- function(region,
   efh.vals2 <- is.na(efh.vals) == F
   efh.dummy.raster <- raster::setValues(efh.dummy.raster, values = efh.vals2)
 
-  efhdummy <- stars::st_as_stars(efh.dummy.raster) %>%
-    sf::st_as_sf(merge = TRUE) %>% # this is the raster to polygons part
-    sf::st_cast("MULTILINESTRING") # cast the polygons to polylines
-
+  efhdummy0 <- stars::st_as_stars(efh.dummy.raster)
+  efh.dummy <- sf::st_cast(sf::st_as_sf(efhdummy0,merge = TRUE))
   efhdummy2 <- sf::st_transform(efhdummy, sf::st_crs(MAP$akland))
 
   # Now we need to get rid of a lot of the tiniest bits, which we'll do by dropping the smallest areas
@@ -660,9 +658,8 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
     col.vec <- c("dodgerblue", "orange", "orchid3")
   }
 
-  dummy.sf <- stars::st_as_stars(is.na(background) == F) %>%
-    sf::st_as_sf(merge = TRUE) %>% # this is the raster to polygons part
-    sf::st_cast("POLYGON") # cast the polygons to polylines
+  dummy.sf0 <- stars::st_as_stars(is.na(background) == F)
+  dummy.sf<- sf::st_cast(sf::st_as_sf(merge = TRUE),"POLYGON") # cast the polygons to polylines
   dummy.sf2 <- sf::st_transform(dummy.sf, sf::st_crs(MAP$akland))
   dummy.sf3 <- dummy.sf2[dummy.sf2$layer == 1, ]
 
@@ -697,8 +694,8 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
 
     comp.raster <- raster::setValues(x = comp.raster, values = vals)
 
-    efhpoly <- stars::st_as_stars(comp.raster) %>%
-      sf::st_as_sf(merge = TRUE)
+    efhpoly0 <- stars::st_as_stars(comp.raster)
+    efhpoly<-  sf::st_as_sf(efhpoly0,merge = TRUE)
     efhpoly2 <- efhpoly[efhpoly$layer > 1, ]
 
     # this is a kludge to make sure there are always all 3 types
@@ -725,14 +722,14 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
     mix.col <- col.vec[3]
   } else {
     if (exists("old.present")) {
-      efhpoly <- stars::st_as_stars(old > nonEFH) %>%
-        sf::st_as_sf(merge = TRUE)
+      efhpoly0 <- stars::st_as_stars(old > nonEFH)
+      efhpoly <- sf::st_as_sf(efhpoly0,merge = TRUE)
       efhpoly2 <- efhpoly[efhpoly$layer != 0, ]
       old.col <- col.vec[1]
     }
     if (exists("new.present")) {
-      efhpoly <- stars::st_as_stars(new > nonEFH) %>%
-        sf::st_as_sf(merge = TRUE)
+      efhpoly0 <- stars::st_as_stars(new > nonEFH)
+      efhpoly <- sf::st_as_sf(efhpoly0,merge = TRUE)
       efhpoly2 <- efhpoly[efhpoly$layer != 0, ]
       new.col <- col.vec[2]
     }
