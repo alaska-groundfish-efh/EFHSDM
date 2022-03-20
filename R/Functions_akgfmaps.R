@@ -379,7 +379,7 @@ MakeAKGFDensityplot <- function(region,
     ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
     viridis::scale_color_viridis(
       option = col.palette, begin = col.palette.limits[1], end = col.palette.limits[2],
-      na.value = NA, name = legend.title, labels = comma_format(big.mark = ",")) +
+      na.value = NA, name = legend.title, labels = scales::comma_format(big.mark = ",")) +
     ggplot2::theme_bw() +
     ggplot2::theme(
       panel.border = element_rect(color = "black", fill = NA),
