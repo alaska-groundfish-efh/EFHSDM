@@ -23,17 +23,8 @@
 # require(MASS)
 # require(scales)
 # require(labeling)
-# #
-# example.raster<-raster("Y:/RACE_EFH_variables/Trawl_Models/AI/Adult_arrowtooth_flounder/ensemble_abundance")
-# dataCRS<-example.raster@crs
 #
-# ai.catch<-read.csv("Y:/RACE_EFH_variables/Trawl_Models/AI/all_AI_data_2021.csv")
 #
-# presence<-ai.catch[ai.catch$a_rex>0,c("lon","lat")]
-# absence<-ai.catch[ai.catch$a_rex==0,c("lon","lat")]
-# highdensity<-ai.catch[ai.catch$a_rex>=quantile(ai.catch$a_rex[ai.catch$a_rex>0],.9),c("lon","lat")]
-#
-
 #' Make dotplot with akfgmaps
 #'
 #' @description makes a pretty good dotplot; needs additional testing with areas other than "bs.all", "goa", and "ai".
@@ -203,8 +194,8 @@ MakeAKGFDotplot <- function(presence,
   dotplot <- ggplot2::ggplot() +
     ggplot2::geom_sf(data = survey.sf, fill = "grey95") +
     ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
-    ggplot2::ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
-    geom_sf(data = MAP$bathymetry, color = "grey60")
+    ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
+    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60")
 
   # add the dots
   if (is.na(absence) == F) {
@@ -383,7 +374,7 @@ MakeAKGFDensityplot <- function(region,
     ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust[1:2], ylim = MAP$plot.boundary$y + ext.adjust[3:4]) +
     ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
     ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
-    ggplot2::scale_color_viridis(
+    viridis::scale_color_viridis(
       option = col.palette, begin = col.palette.limits[1], end = col.palette.limits[2],
       na.value = NA, name = legend.title, labels = comma_format(big.mark = ",")) +
     ggplot2::theme_bw() +
@@ -556,7 +547,7 @@ MakeAKGFEFHplot <- function(region,
     ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust[1:2], ylim = MAP$plot.boundary$y + ext.adjust[3:4]) +
     ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
     ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
-    ggplot2::scale_fill_viridis(discrete = T, name = legend.title, labels = legend.labels) +
+    viridis::scale_fill_viridis(discrete = T, name = legend.title, labels = legend.labels) +
     ggplot2::theme_bw() +
     ggplot2:: theme(
       panel.border = element_rect(color = "black", fill = NA),
@@ -866,11 +857,12 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
 
         ext.adjust.x <- c(0, 0)
         ext.adjust.y <- c(0, 0)
-        if (region == "goa") {
-          ext.adjust.x <- c(200000, -100000)
-          ext.adjust.y <- c(-490000, 700000)
+        if (tolower(region) == "goa") {
+          ext.adjust.x <- c(400000, -200000)
+          ext.adjust.y <- c(-490000, 600000)
         }
-        if (region == "ai") {
+        if (tolower(region) == "ai") {
+          ext.adjust.x <- c(150000, -400000)
           ext.adjust.y <- c(-390000, 500000)
         }
 
