@@ -70,9 +70,16 @@ GOA_btemp <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/B
 GOA_slope <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Slope")
 GOA_sponge <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Spongefactor")
 
+GOA_lat <- raster::init(GOA_bathy, v = "y")
+GOA_lat <- raster::mask(lat, GOA_bathy, overwrite = F)
+GOA_lon <- raster::init(GOA_bathy, v = "x")
+GOA_lon <- raster::mask(lon, GOA_bathy, overwrite = F)
+
 usethis::use_data(region_data_all)
 usethis::use_data(GOA_bathy)
 usethis::use_data(GOA_btemp)
 usethis::use_data(GOA_slope)
 usethis::use_data(GOA_sponge)
-#save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, file = here::here("R","sysdata.rda"))
+usethis::use_data(GOA_lat)
+usethis::use_data(GOA_lon)
+#save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, GOA_lat, GOA_lon, file = here::here("R","sysdata.rda"))

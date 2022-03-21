@@ -42,10 +42,8 @@ region.data$pen <- as.integer(region.data$pen > 0)
 
 region.data$logarea <- log(region.data$area)
 
-lat <- raster::init(GOA_bathy, v = "y")
-lat <- raster::mask(lat, GOA_bathy, overwrite = F)
-lon <- raster::init(GOA_bathy, v = "x")
-lon <- raster::mask(lon, GOA_bathy, overwrite = F)
+lat <- GOA_lat
+lon <- GOA_lon
 
 raster.stack <- raster::stack(lon, lat, bathy, btemp, slope, sponge)
 names(raster.stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
