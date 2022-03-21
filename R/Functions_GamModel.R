@@ -313,7 +313,8 @@ FitHurdleGAM <- function(data,
     prob.form <- as.formula(prob.formula)
   }
 
-  out.gam <- mgcv::gam(list(dens.form, prob.form), family = mgcv::ziplss(), data = data, select = F)
+  out.gam <- mgcv::gam(list(dens.form, prob.form), family = "ziplss", data = data, select = F)
+
 
   # additional term selections for the factors is carried out together
   if (reduce) {
@@ -350,7 +351,7 @@ FitHurdleGAM <- function(data,
       }
 
       new.form <- AssembleGAMFormula(yvar = species, gam.table = list(dens.xvars, prob.xvars), hgam = T)
-      out.gam1 <- mgcv::gam(new.form, family = mgcv::ziplss(), data = data)
+      out.gam1 <- mgcv::gam(new.form, family = "ziplss", data = data)
       gcv_gam1 <- out.gam1$gcv.ubre
 
       # Fixed bug causing xvars not to update
@@ -545,7 +546,8 @@ GAMStats <- function(model, # a gam model
       p.terms1 <- p.terms[p.terms$term != x.vars[i], ]
 
       new.gam.form <- AssembleGAMFormula(yvar = species, gam.table = list(d.terms1, p.terms1), hgam = T)
-      try(new.gam <- mgcv::gam(new.gam.form, family = mgcv::ziplss(), data = data, select = F))
+      try(new.gam <- mgcv::gam(new.gam.form, family = "ziplss", data = data, select = F))
+
     } else {
       terms1 <- terms[terms$term != x.vars[i], ]
       new.gam.form <- AssembleGAMFormula(yvar = species, gam.table = terms1, hgam = F)
