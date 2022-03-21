@@ -315,6 +315,7 @@ FitHurdleGAM <- function(data,
 
   out.gam <- mgcv::gam(list(dens.form, prob.form), family = "ziplss", data = data, select = F)
 
+
   # additional term selections for the factors is carried out together
   if (reduce) {
     # stepwise variable selection based on ubre
@@ -546,6 +547,7 @@ GAMStats <- function(model, # a gam model
 
       new.gam.form <- AssembleGAMFormula(yvar = species, gam.table = list(d.terms1, p.terms1), hgam = T)
       try(new.gam <- mgcv::gam(new.gam.form, family = "ziplss", data = data, select = F))
+
     } else {
       terms1 <- terms[terms$term != x.vars[i], ]
       new.gam.form <- AssembleGAMFormula(yvar = species, gam.table = terms1, hgam = F)

@@ -31,7 +31,7 @@ MakeEnsemble<-function(ensemble.list=NA,
 
     # find the rmse for each set
     for(m in 1:length(ensemble.list)){
-      ensemble.dat<-na.omit(ensemble.list[[m]])
+      ensemble.dat<-stats::na.omit(ensemble.list[[m]])
       if(nrow(ensemble.dat)>0){
         rmse[m]<-sqrt(sum((ensemble.dat$abund-ensemble.dat$pred)^2)/nrow(ensemble.dat))
       }else{
@@ -122,7 +122,7 @@ ValidateEnsemble<-function(pred.list,
       ensemble.preds$pred<-ensemble.preds$pred+pred.list[[m]]$pred*model.weights[m]
     }
   }
-  ensemble.preds$prob<-1-dpois(0,ensemble.preds$pred)
+  ensemble.preds$prob<-1-stats::dpois(0,ensemble.preds$pred)
   ensemble.preds$cvprob<-ensemble.preds$prob
 
   keepers<-which(is.na(ensemble.preds$pred)==F & is.infinite(ensemble.preds$pred)==F)
@@ -135,7 +135,7 @@ ValidateEnsemble<-function(pred.list,
   }
 
   ensemble.rmse<-sqrt(sum((ensemble.preds$abund-ensemble.preds$pred)^2,na.rm=T)/nrow(ensemble.preds))
-  regr <- lm(ensemble.preds2$pred[keepers]~ensemble.preds2$abund[keepers])
+  regr <- stats::lm(ensemble.preds2$pred[keepers]~ensemble.preds2$abund[keepers])
   rsqr <- summary(regr)$r.squared
 
   # ploting portion
@@ -146,11 +146,11 @@ ValidateEnsemble<-function(pred.list,
     qqnorm((ensemble.preds2$abund - ensemble.preds2$pred))
     qqline((ensemble.preds2$abund - ensemble.preds2$pred))
 
-    if(histogram){hist((ensemble.preds2$abund - ensemble.preds2$pred), xlab = "Residuals", main = "")}
+    if(histogram){graphics::hist((ensemble.preds2$abund - ensemble.preds2$pred), xlab = "Residuals", main = "")}
 
-    pred.max <- ifelse(method=="pearson",quantile(ensemble.preds2$pred[keepers],probs=.99,na.rm=T),nrow(ensemble.preds2))
-    abund.max <- ifelse(method=="pearson",quantile(ensemble.preds2$pred[keepers],probs=.99,na.rm=T),nrow(ensemble.preds2))
-    plot.max<-max(pred.max,abund.max)*1.1
+    pred.max <- ifelse(method=="pearson",stats::quantile(ensemble.preds2$pred[keepers],probs=.99,na.rm=T),nrow(ensemble.preds2))
+    abund.max <- ifelse(method=="pearson",stats::quantile(ensemble.preds2$pred[keepers],probs=.99,na.rm=T),nrow(ensemble.preds2))
+    plot.max<-base::max(pred.max,abund.max)*1.1
 
     plot(y=ensemble.preds2$pred[keepers], x=ensemble.preds2$abund[keepers], ylim = c(0,plot.max), xlim = c(0,plot.max),
          ylab = ifelse(method=="pearson","Predicted","Predicted Ranks"),

@@ -379,11 +379,11 @@ plotAbundance<-function(map,                                # A raster of abunda
   if(is.na(zmax)){
 
     sample <- raster::sampleRandom(map,min(10000,ncell(map)), na.rm = TRUE)
-    zmax <- quantile(sample[is.finite(sample)], probs = zquant, na.rm = TRUE, names = FALSE)
+    zmax <- stats::quantile(sample[is.finite(sample)], probs = zquant, na.rm = TRUE, names = FALSE)
   }
   if(is.na(zmin)){
     sample <- raster::sampleRandom(map,min(10000,ncell(map)), na.rm = TRUE)
-    zmin <- quantile(sample[is.finite(sample)], probs = 1-zquant, na.rm = TRUE, names = FALSE)
+    zmin <- stats::quantile(sample[is.finite(sample)], probs = 1-zquant, na.rm = TRUE, names = FALSE)
   }
   if(center.scale==T){
     zmax<-max(abs(zmin),abs(zmax))
@@ -998,7 +998,7 @@ MakeVarianceRasters<-function(model.list,            # a list of models for each
   # loop through and get predictions for each model
   for(m in 1:length(model.list2)){
     if(model.type=="maxnet"){
-      out.data[,m]<-exp(maxnet::predict(model.list2[[m]],newdata=data,type="link")+model.list2[[m]]$entropy)
+      out.data[,m]<-exp(predict(model.list2[[m]],newdata=data,type="link")+model.list2[[m]]$entropy)
     }
     if(model.type=="cloglog"){
       out.data[,m]<-exp(mgcv::predict.gam(object = model.list2[[m]],newdata=data,type="link"))
