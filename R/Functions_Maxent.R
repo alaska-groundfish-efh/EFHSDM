@@ -129,7 +129,7 @@ MakeMaxEntAbundance<-function(model,
     na.spots<-which(apply(X = dat,MARGIN = 1,FUN = function(x){return(any(is.na(x)))}))
     dat.spots<-which(seq(1:nrow(dat))%in%na.spots==F)
 
-    preds<-maxnet::predict(model,dat[dat.spots,],type="link")
+    preds<-predict(model,dat[dat.spots,],type="link")
     preds2<-exp(preds+model$ent)*scale.fac
     new.vals<-vector(length=nrow(dat))
     new.vals[na.spots]<-NA

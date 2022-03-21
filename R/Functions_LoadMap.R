@@ -737,16 +737,16 @@ CrossValidateModel<-function(model,
     error.data$abund[start.vec[i]:end.vec[i]]<-test.data[,species]
 
     if(model.type=="maxnet"){
-      preds<-exp(maxnet::predict(object = model,newdata=test.data,response="link")+model$entropy)
-      probs<-maxnet::predict(object = model,newdata=test.data,type="cloglog")
+      preds<-exp(predict(object = model,newdata=test.data,response="link")+model$entropy)
+      probs<-predict(object = model,newdata=test.data,type="cloglog")
       # then on to the cv model
       vars0<-names(model$samplemeans)
       facs<-vars0[vars0%in%names(model$varmax)==F]
 
       try(cv.model<-FitMaxnet(data = train.data,species = species,vars = names(model$varmax),facs = facs,regmult = regmult))
       if(exists("cv.model")){
-        cvpreds<-exp(maxnet::predict(object = cv.model,newdata=test.data,response="link")+cv.model$entropy)
-        cvprobs<-maxnet::predict(object = cv.model,newdata=test.data,type="cloglog")
+        cvpreds<-exp(predict(object = cv.model,newdata=test.data,response="link")+cv.model$entropy)
+        cvprobs<-predict(object = cv.model,newdata=test.data,type="cloglog")
       }else{
         cvpreds<-rep(NA,times=nrow(test.data))
         cvprobs<-rep(NA,times=nrow(test.data))
@@ -998,7 +998,7 @@ MakeVarianceRasters<-function(model.list,            # a list of models for each
   # loop through and get predictions for each model
   for(m in 1:length(model.list2)){
     if(model.type=="maxnet"){
-      out.data[,m]<-exp(maxnet::predict(model.list2[[m]],newdata=data,type="link")+model.list2[[m]]$entropy)
+      out.data[,m]<-exp(predict(model.list2[[m]],newdata=data,type="link")+model.list2[[m]]$entropy)
     }
     if(model.type=="cloglog"){
       out.data[,m]<-exp(mgcv::predict.gam(object = model.list2[[m]],newdata=data,type="link"))
