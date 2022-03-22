@@ -212,31 +212,31 @@ PDE<-function(obs,pred){
 #'
 #' @description Add a map of Alaska and other features to an existing map
 #' @details This function adds a map of AK and other features to an existing map, including a legend. It has many options for customizing the appearance. The whole "AddGrid" system is old and ought to be removed in favor of the newer akgfmaps plotting, when I get the time. Deprecated: Likely to be deleted soon.
-#' @param legPosition
-#' @param horiz
-#' @param legName
-#' @param legVals
-#' @param legend.size
-#' @param col.vec
-#' @param depth
-#' @param dlevels
-#' @param dlabels
-#' @param dlabel.size
-#' @param bathy
-#' @param grid
-#' @param ext
-#' @param map.grid
-#' @param grid.col
-#' @param xticks
-#' @param yticks
-#' @param xaxis
-#' @param yaxis
-#' @param axistext.size
-#' @param coast
-#' @param land.col
-#' @param border.col
-#' @param plot.yaxis
-#' @param plot.xaxis
+#' @param legPosition - depracated
+#' @param horiz - depracated
+#' @param legName - depracated
+#' @param legVals - depracated
+#' @param legend.size - depracated
+#' @param col.vec - depracated
+#' @param depth - depracated
+#' @param dlevels - depracated
+#' @param dlabels - depracated
+#' @param dlabel.size - depracated
+#' @param bathy - depracated
+#' @param grid - depracated
+#' @param ext - depracated
+#' @param map.grid - depracated
+#' @param grid.col - depracated
+#' @param xticks - depracated
+#' @param yticks - depracated
+#' @param xaxis - depracated
+#' @param yaxis - depracated
+#' @param axistext.size - depracated
+#' @param coast - depracated
+#' @param land.col - depracated
+#' @param border.col - depracated
+#' @param plot.yaxis - depracated
+#' @param plot.xaxis - depracated
 #'
 #' @return
 #' @export
@@ -247,7 +247,7 @@ AddGrid<-function(legPosition="bottomleft",                # where should the le
                   legName="Percentiles",                   # Name of legend, if applicable
                   legVals=c("95%","75%","50%","25%"),      # legend labels for the EFH cuts
                   legend.size=1,                           # multiplier for legend size
-                  col.vec=viridis(4),                      # colors for the EFH categories
+                  col.vec=viridis::viridis(4),                      # colors for the EFH categories
                   depth=F,                                 # Should depth contours be drawn
                   dlevels=c(100,200,500),                  # depth contours to be shown, if depth=T
                   dlabels=F,                               # should depth contours be labelled
@@ -305,7 +305,7 @@ plotEFH<-function(map,                                      # raster with factor
                   map.ext=NULL,                             # an extent object to narrow the plot
                   outline=F,                                # Should an outline be drawn around EFH spots
                   outline.lwd=1,                            # size of outline line
-                  col.vec=viridis(4),                       # a set of colors or a color scale
+                  col.vec=viridis::viridis(4),                       # a set of colors or a color scale
                   title="",                                 # main title
                   background=NULL,                          # background color for areas that are not EFH
                   ylab = "Latitude", xlab = "Longitude",    # labels for the lat/lon
