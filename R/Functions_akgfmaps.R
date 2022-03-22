@@ -341,7 +341,7 @@ MakeAKGFDensityplot <- function(region,
     if (class(survey.area)[1] == "RasterLayer") {
       survey.sf1<-stars::st_as_stars(is.na(survey.area))
       survey.sf2<-sf::st_as_sf(survey.sf1,merge = TRUE)
-      survey.sf3<-sf::st_cast("POLYGON") # cast the polygons to polylines
+      survey.sf3<-sf::st_cast(survey.sf2,"POLYGON") # cast the polygons to polylines
 
       survey.sf <- sf::st_transform(survey.sf3, sf::st_crs(MAP$akland))[1:(nrow(survey.sf3) - 1), ]
     }
@@ -503,7 +503,7 @@ MakeAKGFEFHplot <- function(region,
     if (class(survey.area)[1] == "RasterLayer") {
       survey.sf1<-stars::st_as_stars(is.na(survey.area))
       survey.sf2<-sf::st_as_sf(survey.sf1,merge = TRUE)
-      survey.sf3<-sf::st_cast("POLYGON") # cast the polygons to polylines
+      survey.sf3<-sf::st_cast(survey.sf2,"POLYGON") # cast the polygons to polylines
 
       survey.sf <- sf::st_transform(survey.sf3, sf::st_crs(MAP$akland))[1:(nrow(survey.sf3) - 1), ]
     }
