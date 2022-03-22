@@ -139,7 +139,7 @@ MakeAKGFDotplot <- function(presence,
     if (class(survey.area)[1] == "RasterLayer") {
       survey.sf1<-stars::st_as_stars(is.na(survey.area))
       survey.sf2<-sf::st_as_sf(survey.sf1,merge = TRUE)
-      survey.sf3<-sf::st_cast("POLYGON") # cast the polygons to polylines
+      survey.sf3<-sf::st_cast(survey.sf2,"POLYGON") # cast the polygons to polylines
 
       survey.sf <- sf::st_transform(survey.sf3, sf::st_crs(MAP$akland))[1:(nrow(survey.sf3) - 1), ]
     }
@@ -515,7 +515,7 @@ MakeAKGFEFHplot <- function(region,
 
   # convert the raster to polygons
   efhpoly0 <- stars::st_as_stars(efh.map)
-  efh.poly <- sf::st_as_sf(efh.poly0,merge = TRUE)
+  efhpoly <- sf::st_as_sf(efhpoly0,merge = TRUE)
   efhpoly2 <- efhpoly[efhpoly$layer != 1, ]
 
   # we'll need a new outline
@@ -524,7 +524,7 @@ MakeAKGFEFHplot <- function(region,
   efh.dummy.raster <- raster::setValues(efh.dummy.raster, values = efh.vals2)
 
   efhdummy0 <- stars::st_as_stars(efh.dummy.raster)
-  efh.dummy <- sf::st_cast(sf::st_as_sf(efhdummy0,merge = TRUE))
+  efhdummy <- sf::st_cast(sf::st_as_sf(efhdummy0,merge = TRUE))
   efhdummy2 <- sf::st_transform(efhdummy, sf::st_crs(MAP$akland))
 
   # Now we need to get rid of a lot of the tiniest bits, which we'll do by dropping the smallest areas
@@ -871,6 +871,8 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
         if (tolower(region) == "goa") {
           ext.adjust.x <- c(400000, -200000)
           ext.adjust.y <- c(-490000, 600000)
+          MAP$graticule$degree_label[c(1,3,5,7,9)]<-""
+          MAP$lon.breaks<-c(-170,-160,-150,-140,-130)
         }
         if (tolower(region) == "ai") {
           ext.adjust.x <- c(150000, -400000)

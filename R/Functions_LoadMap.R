@@ -198,8 +198,8 @@ PDE<-function(obs,pred){
 
   nulldev<-2*sum(term1-term2)
 
-  term1<-obs*log(obs/(pred))
-  term1[is.nan(term1)]<-0
+  pred[pred==0]<-.00001
+  term1<-obs*log(obs/pred)
   term2<-obs-pred
 
   pdev<-2*sum(term1-term2)
