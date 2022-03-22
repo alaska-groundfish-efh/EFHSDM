@@ -10,7 +10,7 @@ AddGrid(
   legName = "Percentiles",
   legVals = c("95\%", "75\%", "50\%", "25\%"),
   legend.size = 1,
-  col.vec = viridis(4),
+  col.vec = viridis::viridis(4),
   depth = F,
   dlevels = c(100, 200, 500),
   dlabels = F,
@@ -33,7 +33,105 @@ AddGrid(
 )
 }
 \arguments{
-\item{plot.xaxis}{}
+\item{legPosition}{\itemize{
+\item depracated
+}}
+
+\item{horiz}{\itemize{
+\item depracated
+}}
+
+\item{legName}{\itemize{
+\item depracated
+}}
+
+\item{legVals}{\itemize{
+\item depracated
+}}
+
+\item{legend.size}{\itemize{
+\item depracated
+}}
+
+\item{col.vec}{\itemize{
+\item depracated
+}}
+
+\item{depth}{\itemize{
+\item depracated
+}}
+
+\item{dlevels}{\itemize{
+\item depracated
+}}
+
+\item{dlabels}{\itemize{
+\item depracated
+}}
+
+\item{dlabel.size}{\itemize{
+\item depracated
+}}
+
+\item{bathy}{\itemize{
+\item depracated
+}}
+
+\item{grid}{\itemize{
+\item depracated
+}}
+
+\item{ext}{\itemize{
+\item depracated
+}}
+
+\item{map.grid}{\itemize{
+\item depracated
+}}
+
+\item{grid.col}{\itemize{
+\item depracated
+}}
+
+\item{xticks}{\itemize{
+\item depracated
+}}
+
+\item{yticks}{\itemize{
+\item depracated
+}}
+
+\item{xaxis}{\itemize{
+\item depracated
+}}
+
+\item{yaxis}{\itemize{
+\item depracated
+}}
+
+\item{axistext.size}{\itemize{
+\item depracated
+}}
+
+\item{coast}{\itemize{
+\item depracated
+}}
+
+\item{land.col}{\itemize{
+\item depracated
+}}
+
+\item{border.col}{\itemize{
+\item depracated
+}}
+
+\item{plot.yaxis}{\itemize{
+\item depracated
+}}
+
+\item{plot.xaxis}{\itemize{
+\item depracated
+}}
 }
 \value{
 

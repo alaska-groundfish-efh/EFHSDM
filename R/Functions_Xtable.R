@@ -498,7 +498,7 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
 #' @param nice.names
 #' @param dev.list
 #' @param model.weights
-#' @param filename
+#' @param filename path to files
 #'
 #' @return
 #' @export
