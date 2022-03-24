@@ -9,7 +9,7 @@ plotEFH(
   map.ext = NULL,
   outline = F,
   outline.lwd = 1,
-  col.vec = viridis(4),
+  col.vec = viridis::viridis(4),
   title = "",
   background = NULL,
   ylab = "Latitude",
