@@ -3,31 +3,23 @@
 # # several types of SDM and an example of how to construct a weighted ensemble average
 #
 # # note, revise these lines once the data is loading correctly
-# region.data <- read.csv("Y:/RACE_EFH_Variables/Trawl_Models/GOA/all_GOA_data_2021.csv")
 #
-# bathy <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Bathy")
-# btemp <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Btemp")
-# btemp <- raster::crop(x = btemp, y = bathy)
-# slope <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Slope")
-# sponge <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Spongefactor")
-#
-# region.data$j_rebs<-region.data$j_rebs+region.data$j_rough+region.data$j_bspot
-# region.data$a_rebs<-region.data$a_rebs+region.data$a_rough+region.data$a_bspot
-#
+# region.data<-region_data_all
 # region.data$sponge <- as.integer(region.data$sponge > 0)
 # region.data$coral <- as.integer(region.data$coral > 0)
 # region.data$pen <- as.integer(region.data$pen > 0)
 #
 # region.data$logarea <- log(region.data$area)
 #
-# lat <- raster::init(bathy, v = "y")
-# lat <- raster::mask(lat, bathy, overwrite = F)
-# lon <- raster::init(bathy, v = "x")
-# lon <- raster::mask(lon, bathy, overwrite = F)
+# lat <- raster::init(GOA_bathy, v = "y")
+# lat <- raster::mask(lat, GOA_bathy, overwrite = F)
+# lon <- raster::init(GOA_bathy, v = "x")
+# lon <- raster::mask(lon, GOA_bathy, overwrite = F)
 #
-# raster.stack <- raster::stack(lon, lat, bathy, btemp, slope, sponge)
+# raster.stack <- raster::stack(lon, lat, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge)
 # names(raster.stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
 #
+# # this table let's the functions print nicer versions of the names; it is optional
 # nice.names<-data.frame(stringsAsFactors = F,
 #                        var=c("lon","lat","bdepth","slope","aspectE","aspectN","curve","btemp","speed","tmax","BPI","phi","vitalrate",
 #                              "color","sponge","coral","pen","area","bcurrentU","bcurrentV","bcurrentUSD","bcurrentVSD","lon*lat",
@@ -56,14 +48,14 @@
 # species.data$Folds<-sample(random.folds,size = nrow(species.data),replace = F)
 #
 # # a good start is to map the presence data
-# hd<-quantile(species.data[species.data[,species]>0,species],.9)
+# hd<-stats::quantile(species.data[species.data[,species]>0,species],.9)
 #
 # MakeAKGFDotplot(presence = species.data[species.data[,species]>0,],
 #                 absence = species.data[species.data[,species]==0,],
 #                 highdensity = species.data[species.data[,species]>=hd,],
 #                 dataCRS = raster.stack@crs,region = "goa",title.name = figure.name)
 #
-# gam.form <- formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) +
+# gam.form <- stats::formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) +
 #                     s(btemp, bs='tp',m=1,k=4) + s(slope, bs='tp',m=1,k=4) + as.factor(sponge) + offset(logarea)")
 #
 # ########################################################################################
@@ -78,7 +70,7 @@
 #                         regmult = 1,reduce = T)
 #
 # # the results of a maxnet model should always be scaled, if one wishes to make abundance predictions
-# maxnet.scale<-mean(species.data[,species])/mean(exp(predict(maxnet.model,newdata=species.data,type="link")+
+# maxnet.scale<-mean(species.data[,species])/mean(exp(stats::predict(maxnet.model,newdata=species.data,type="link")+
 #                                                       maxnet.model$ent))
 #
 # maxnet.abund<-MakeMaxEntAbundance(model = maxnet.model,maxent.stack = raster.stack,
@@ -103,9 +95,8 @@
 # ########################################################################################
 # ########################################################################################
 # # cloglog PAGAM
-# cloglog.model<-FitGAM(gam.formula = gam.form,data = species.data,
-#                       family.gam = "binomial",link.fx = "cloglog",reduce = T,select = T,
-#                       verbose=F)
+# cloglog.model<-FitGAM(gam.formula = gam.form,data = species.data,family.gam = "binomial",
+#                       link.fx = "cloglog",reduce = T,select = T,verbose=F)
 #
 # # this type of model should also always be scaled if abundance prediction is desired
 # cloglog.scale<-mean(species.data[,species])/mean(exp(predict(cloglog.model,type="link")))
@@ -130,7 +121,7 @@
 #
 # # ziplss GAMs require a separate formula for the probability part of the model, and it should leave off
 # # the dependent variable
-# prob.form<-formula("~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) +
+# prob.form<-stats::formula("~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) +
 #                     s(btemp, bs='tp',m=1,k=4) + s(slope, bs='tp',m=1,k=4) + as.factor(sponge) + offset(logarea)")
 #
 # hpoisson.model<-FitHurdleGAM(density.formula = gam.form,prob.formula = prob.form,

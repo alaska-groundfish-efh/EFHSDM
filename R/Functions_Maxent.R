@@ -134,7 +134,7 @@ MakeMaxEntAbundance<-function(model,
     new.vals<-vector(length=nrow(dat))
     new.vals[na.spots]<-NA
     new.vals[dat.spots]<-preds2
-    habitat.prediction<-raster::setValues(x = raster(maxent.stack),values = new.vals)
+    habitat.prediction<-raster::setValues(x = raster::raster(maxent.stack),values = new.vals)
   }
   # this makes a habitat suitability map from a maxnet model
   if(type=="maxnet"){
@@ -148,7 +148,7 @@ MakeMaxEntAbundance<-function(model,
     new.vals<-vector(length=nrow(dat))
     new.vals[na.spots]<-NA
     new.vals[dat.spots]<-preds
-    habitat.prediction<-raster::setValues(x = raster(maxent.stack),values = new.vals)
+    habitat.prediction<-raster::setValues(x = raster::raster(maxent.stack),values = new.vals)
   }
   # need to add a check to see about the strange problems with the EBS
   if(is.null(land)==F){

@@ -640,7 +640,7 @@ MakeGAMAbundance <- function(model,
   if ("offset" %in% model.terms$type) {
     off.name <- model.terms$term[which(model.terms$type == "offset")]
     off.val <- ifelse(is.list(model$offset), mean(model$offset[[1]]), mean(model$offset))
-    off.raster <- raster(
+    off.raster <- raster::raster(
       ext = r.stack@extent, crs = r.stack@crs, nrow = r.stack@nrows, ncol = r.stack@ncols,
       vals = off.val
     )
