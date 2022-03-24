@@ -86,7 +86,7 @@ FindEFHbreaks<-function(abund.raster,                  # an abundance raster
   if(method=="percentile"){
     sample <- na.omit(raster::getValues(abund.raster))
     sample[sample <= threshold] <- NA
-    breaks <- quantile(sample, probs = quants, na.rm = TRUE, names = FALSE)
+    breaks <- stats::quantile(sample, probs = quants, na.rm = TRUE, names = FALSE)
     breaks[1]<-0
     breaks[length(breaks)]<-Inf
   }
@@ -289,7 +289,7 @@ CrossValidateModel<-function(model,
         probs<-1-dnbinom(0,mu = mgcv::predict.gam(model,newdata=test.data,type="response"),size = theta)
       }else{
         gamfam<-model$family$family
-        probs<-(1-dpois(0,mgcv::predict.gam(object = model,newdata=test.data,type="response")))
+        probs<-(1-stats::dpois(0,mgcv::predict.gam(object = model,newdata=test.data,type="response")))
       }
       preds<-mgcv::predict.gam(object = model,newdata=test.data,type="response")
 
@@ -299,9 +299,9 @@ CrossValidateModel<-function(model,
         cvpreds<-mgcv::predict.gam(object = cv.model,newdata=test.data,type="response")
         if(strsplit(model$family$family,split="[()]")[[1]][1]=="Negative Binomial"){
           cvtheta<-as.numeric(strsplit(cv.model$family[[1]],split="[()]")[[1]][2])
-          cvprobs<-1-dnbinom(0,mu = cvpreds,size = cvtheta)
+          cvprobs<-1-stats::dnbinom(0,mu = cvpreds,size = cvtheta)
         }else{
-          cvprobs<-1-dpois(0,cvpreds)
+          cvprobs<-1-stats::dpois(0,cvpreds)
         }
       }else{
         cvpreds<-rep(NA,times=nrow(test.data))
@@ -375,12 +375,12 @@ MakeCrossValidationPlots<-function(error.data,           # a data frame, typical
     error.data2$cvpred<-rank(error.data2$cvpred)
   }
 
-  main.regr<-lm(error.data2$pred[keepers]~error.data2$abund[keepers])
+  main.regr<-stats::lm(error.data2$pred[keepers]~error.data2$abund[keepers])
   main.r2<-summary(main.regr)$r.squared
   main.rmse<-sqrt(sum((na.omit(error.data$abund[keepers]-error.data$pred[keepers]))^2)/nrow(na.omit(error.data[keepers,])))
 
   #now need to do the cv tests, which should already be in a nice format from the CV function
-  cv.regr<-lm(error.data2$cvpred[keepers]~error.data2$abund[keepers])
+  cv.regr<-stats::lm(error.data2$cvpred[keepers]~error.data2$abund[keepers])
   cv.r2<-summary(cv.regr)$r.squared
   cv.rmse<-sqrt(sum((na.omit(error.data$abund[keepers]-error.data$cvpred[keepers]))^2)/nrow(na.omit(error.data[keepers,])))
 
@@ -396,8 +396,8 @@ MakeCrossValidationPlots<-function(error.data,           # a data frame, typical
   qqnorm((error.data$pred[keepers] - error.data$abund[keepers]), main = "Model Predictions")
   qqline((error.data$pred[keepers] - error.data$abund[keepers]))
   if(make.hist==T){hist((error.data$pred[keepers] - error.data$abund[keepers]), xlab = "Residuals", main = "")}
-  pred.max <- ifelse(method=="pearson",quantile(error.data2$pred[keepers],probs=.99,na.rm=T),nrow(error.data2))
-  abund.max <- ifelse(method=="pearson",quantile(error.data2$pred[keepers],probs=.99,na.rm=T),nrow(error.data2))
+  pred.max <- ifelse(method=="pearson",stats::quantile(error.data2$pred[keepers],probs=.99,na.rm=T),nrow(error.data2))
+  abund.max <- ifelse(method=="pearson",stats::quantile(error.data2$pred[keepers],probs=.99,na.rm=T),nrow(error.data2))
   plot.max<-max(pred.max,abund.max)*1.1
 
   plot(y=error.data2$pred[keepers], x=error.data2$abund[keepers], ylim = c(0,plot.max), xlim = c(0,plot.max),
@@ -409,12 +409,12 @@ MakeCrossValidationPlots<-function(error.data,           # a data frame, typical
 
 
   #Plots for test/CV data
-  pred.max <- ifelse(method=="pearson",quantile(error.data2$cvpred[keepers],probs=.99,na.rm=T),nrow(error.data2))
-  abund.max <- ifelse(method=="pearson",quantile(error.data2$cvpred[keepers],probs=.99,na.rm=T),nrow(error.data2))
+  pred.max <- ifelse(method=="pearson",stats::quantile(error.data2$cvpred[keepers],probs=.99,na.rm=T),nrow(error.data2))
+  abund.max <- ifelse(method=="pearson",stats::quantile(error.data2$cvpred[keepers],probs=.99,na.rm=T),nrow(error.data2))
   plot.max<-max(pred.max,abund.max)*1.1
 
-  qqnorm((error.data$cvpred[keepers] - error.data$abund[keepers]), main = "Test data")
-  qqline((error.data$cvpred[keepers] - error.data$abund[keepers]))
+  stats::qqnorm((error.data$cvpred[keepers] - error.data$abund[keepers]), main = "Test data")
+  stats::qqline((error.data$cvpred[keepers] - error.data$abund[keepers]))
   if(make.hist==T){hist((error.data$cvpred[keepers] - error.data$abund[keepers]), xlab = "Residuals", main = "")}
 
   plot(y=error.data2$cvpred[keepers], x=error.data2$abund[keepers], ylim = c(0,plot.max), xlim = c(0,plot.max),

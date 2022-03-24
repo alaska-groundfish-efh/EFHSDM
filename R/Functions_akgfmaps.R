@@ -203,13 +203,13 @@ MakeAKGFDotplot <- function(presence,
   # add the dots
   if (is.na(absence) == F) {
     dotplot <- dotplot +
-      ggplot2::geom_sf(data = abs.sf, alpha = .25, size = abs.size, shape = abs.shape, aes(color = factor(abs.fac)))
+      ggplot2::geom_sf(data = abs.sf, alpha = .25, size = abs.size, shape = abs.shape, ggplot2::aes(color = factor(abs.fac)))
   }
   dotplot <- dotplot +
-    ggplot2::geom_sf(data = pres.sf, size = pres.size, aes(color = factor(pres.fac)), shape = pres.shape, stroke = .8)
+    ggplot2::geom_sf(data = pres.sf, size = pres.size, ggplot2::aes(color = factor(pres.fac)), shape = pres.shape, stroke = .8)
   if (is.na(highdensity) == F) {
     dotplot <- dotplot +
-      ggplot2::geom_sf(data = high.sf, size = hd.size, shape = hd.shape, aes(color = factor(hd.fac)))
+      ggplot2::geom_sf(data = high.sf, size = hd.size, shape = hd.shape, ggplot2::aes(color = factor(hd.fac)))
   }
 
   # add the themes
@@ -219,13 +219,13 @@ MakeAKGFDotplot <- function(presence,
     ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
     ggplot2::theme_bw() +
     ggplot2::theme(
-      panel.border = element_rect(color = "black", fill = NA),
-      panel.background = element_rect(fill = NA, color = "black"),
-      legend.key = element_rect(fill = NA, color = "grey30"),
+      panel.border = ggplot2::element_rect(color = "black", fill = NA),
+      panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+      legend.key = ggplot2::element_rect(fill = NA, color = "grey30"),
       legend.position = legend.pos,
-      axis.title = element_blank(), axis.text = element_text(size = 12),
-      legend.text = element_text(size = 12), legend.title = element_text(size = 12),
-      plot.background = element_rect(fill = NA, color = NA)
+      axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_text(size = 12),
+      legend.text = ggplot2::element_text(size = 12), legend.title = ggplot2::element_text(size = 12),
+      plot.background = ggplot2::element_rect(fill = NA, color = NA)
     )
 
   # add a title
@@ -236,7 +236,7 @@ MakeAKGFDotplot <- function(presence,
     dotplot <- dotplot +
       ggplot2::geom_label(
         data = data.frame(x = title.pos[1], y = title.pos[2], label = title.name),
-        aes(x = x, y = y, label = label, hjust = 0, vjust = 1), size = 5
+        ggplot2::aes(x = x, y = y, label = label, hjust = 0, vjust = 1), size = 5
       )
   }
 
@@ -244,7 +244,7 @@ MakeAKGFDotplot <- function(presence,
   if (is.na(legend.pos) == F) {
     dotplot <- dotplot +
       ggplot2::scale_color_manual(name = NULL, values = leg.col, labels = leg.name) +
-      ggplot2::guides(color = guide_legend(override.aes = list(shape = leg.shape, size = leg.size)))
+      ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(shape = leg.shape, size = leg.size)))
   }
   return(dotplot)
 }
@@ -364,7 +364,8 @@ MakeAKGFDensityplot <- function(region,
   }
 
   # often helps to remove some of the high points
-  density.sf$density[density.sf$density > quantile(density.sf$density, buffer, na.rm = T)] <- stats::quantile(density.sf$density, buffer, na.rm = T) # MCS: I think this is the stats::quantile() but it could be a raster thing?
+  upper<-stats::quantile(density.sf$density, buffer, na.rm = T)
+  density.sf$density[density.sf$density > upper] <- upper
 
   # set up the basic map, will add more customization later
   densityplot <- ggplot2::ggplot() +
@@ -375,7 +376,7 @@ MakeAKGFDensityplot <- function(region,
 
   # add the density plot
   densityplot <- densityplot +
-    ggplot2::geom_sf(data = density.sf, aes(col = density), size = .05)
+    ggplot2::geom_sf(data = density.sf, ggplot2::aes(col = density), size = .05)
 
   # add the themes
   densityplot <- densityplot +
@@ -387,13 +388,13 @@ MakeAKGFDensityplot <- function(region,
       na.value = NA, name = legend.title, labels = scales::comma_format(big.mark = ",")) +
     ggplot2::theme_bw() +
     ggplot2::theme(
-      panel.border = element_rect(color = "black", fill = NA),
-      panel.background = element_rect(fill = NA, color = "black"),
-      legend.key = element_rect(fill = NA, color = "grey30"),
-      legend.position = legend.pos, legend.margin = margin(0, 0, 0, 0),
-      axis.title = element_blank(), axis.text = element_text(size = 12),
-      legend.text = element_text(size = 12), legend.title = element_text(size = 12),
-      plot.background = element_rect(fill = NA, color = NA)
+      panel.border = ggplot2::element_rect(color = "black", fill = NA),
+      panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+      legend.key = ggplot2::element_rect(fill = NA, color = "grey30"),
+      legend.position = legend.pos, legend.margin = ggplot2::margin(0, 0, 0, 0),
+      axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_text(size = 12),
+      legend.text = ggplot2::element_text(size = 12), legend.title = ggplot2::element_text(size = 12),
+      plot.background = ggplot2::element_rect(fill = NA, color = NA)
     )
 
   # add a title
@@ -401,13 +402,13 @@ MakeAKGFDensityplot <- function(region,
     densityplot <- densityplot +
       ggplot2::geom_label(
         data = data.frame(x = title.pos[1], y = title.pos[2], label = title.name),
-        aes(x = x, y = y, label = label, hjust = 0, vjust = 1), size = 5
+        ggplot2::aes(x = x, y = y, label = label, hjust = 0, vjust = 1), size = 5
       )
   }
   # add a legend
   if (is.na(legend.pos[1]) == F) {
     densityplot <- densityplot +
-      ggplot2::guides(color = guide_colorbar(title.position = "top", title.hjust = .5, barheight = barheight))
+      ggplot2::guides(color = ggplot2::guide_colorbar(title.position = "top", title.hjust = .5, barheight = barheight))
   }
   return(densityplot)
 }
@@ -747,7 +748,7 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
   out.plot <- ggplot2::ggplot() +
     ggplot2::geom_sf(data = dummy.sf3, fill = "grey95") +
     ggplot2::geom_sf(data = MAP$survey.area, fill = "grey95") +
-    ggplot2::geom_sf(data = efhpoly2, aes(fill = factor(layer)), col = 1, size = .05) +
+    ggplot2::geom_sf(data = efhpoly2, ggplot2::aes(fill = factor(layer)), col = 1, size = .05) +
     ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
     ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
     ggplot2::geom_sf(data = MAP$bathymetry, col = "grey60", size = .25) +
@@ -761,15 +762,15 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
     ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
     ggplot2::theme_bw() +
     ggplot2::theme(
-      panel.border = element_rect(color = "black", fill = NA),
-      panel.background = element_rect(fill = NA, color = "black"),
-      legend.key = element_rect(fill = NA, color = NA),
+      panel.border = ggplot2::element_rect(color = "black", fill = NA),
+      panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+      legend.key = ggplot2::element_rect(fill = NA, color = NA),
       legend.position = leg.pos, legend.justification = c(0, 1),
-      axis.title = element_blank(), axis.text = element_text(size = 12),
-      legend.text = element_text(size = 12), legend.title = element_text(size = 12),
-      plot.background = element_rect(fill = NA, color = NA)
+      axis.title = ggplot2::element_blank(), axis.text = element_text(size = 12),
+      legend.text = ggplot2::element_text(size = 12), legend.title = element_text(size = 12),
+      plot.background = ggplot2::element_rect(fill = NA, color = NA)
     ) +
-    ggplot2::guides(color = guide_legend(override.aes = list(size = 4, shape = 15)))
+    ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size = 4, shape = 15)))
 
   return(out.plot)
 }
@@ -882,7 +883,7 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
         var.plot <- ggplot2::ggplot() +
           ggplot2::geom_sf(data = MAP$akland, fill = "grey70") +
           ggplot2::geom_sf(data = MAP$bathymetry, col = "grey60") +
-          ggplot2::geom_path(data = e.data2, aes(x = lon, y = lat, group = group), size = 1) +
+          ggplot2::geom_path(data = e.data2, ggplot2::aes(x = lon, y = lat, group = group), size = 1) +
           ggplot2::geom_label(
             data = spot.data2, aes(x = X, y = Y, label = label), fill = rgb(1, 1, 1, .9),
             label.size = NA, size = 4, label.padding = unit(.10, "lines"), nudge_x = -1000
@@ -892,10 +893,10 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
           ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
           ggplot2::theme_bw() +
           ggplot2::theme(
-            panel.border = element_rect(color = "black", fill = NA),
-            panel.background = element_rect(fill = NA, color = "black"),
-            axis.title = element_blank(), axis.text = element_text(size = 12),
-            plot.background = element_rect(fill = NA, color = NA)
+            panel.border = ggplot2::element_rect(color = "black", fill = NA),
+            panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+            axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_text(size = 12),
+            plot.background = ggplot2::element_rect(fill = NA, color = NA)
           )
       } else {
         # for options other than lat.lon
@@ -915,19 +916,19 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
         names(e.data)[1:2] <- c("x", "y")
 
         var.plot <- ggplot2::ggplot() +
-          ggplot2::geom_path(data = con.data2, aes(x = x, y = y, group = group)) +
-          ggplot2::geom_label(data = label.spots, aes(x = x, y = y, label = round(tag, 1)), fill = "white", label.size = NA) +
+          ggplot2::geom_path(data = con.data2, ggplot2::aes(x = x, y = y, group = group)) +
+          ggplot2::geom_label(data = label.spots, ggplot2::aes(x = x, y = y, label = round(tag, 1)), fill = "white", label.size = NA) +
           ggplot2::xlab(xname) +
           ggplot2::ylab(yname) +
           ggplot2::theme_bw() +
           ggplot2::theme(
-            panel.border = element_rect(color = "black", fill = NA),
-            panel.background = element_rect(fill = NA, color = "black"),
-            axis.text = element_text(size = 12), axis.title = element_text(size = 12),
-            plot.background = element_rect(fill = NA, color = NA)
+            panel.border = ggplot2::element_rect(color = "black", fill = NA),
+            panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+            axis.text = ggplot2::element_text(size = 12), axis.title = ggplot2::element_text(size = 12),
+            plot.background = ggplot2::element_rect(fill = NA, color = NA)
           )
         if (xname == "Current Velocity East (m/s)") {
-          var.plot <- var.plot + ggplot2::geom_vline(xintercept = 0, linetype = 3) + geom_hline(yintercept = 0, linetype = 3)
+          var.plot <- var.plot + ggplot2::geom_vline(xintercept = 0, linetype = 3) + ggplot2::geom_hline(yintercept = 0, linetype = 3)
         }
         if (xname == "Current Velocity East SD (m/s)") {
           var.plot <- var.plot + ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 3)
@@ -939,17 +940,17 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
 
       # now the single dimension smoothed terms
       var.plot <- ggplot2::ggplot() +
-        ggplot2::geom_line(data = e.data, aes(x = x, y = effect)) +
-        ggplot2::geom_line(data = e.data, aes(x = x, y = upper), linetype = 2) +
-        ggplot2::geom_line(data = e.data, aes(x = x, y = lower), linetype = 2) +
+        ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = effect)) +
+        ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = upper), linetype = 2) +
+        ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = lower), linetype = 2) +
         ggplot2::xlab(xname) +
         ggplot2::ylab("Variable Effect") +
         ggplot2::theme_bw() +
         ggplot2::theme(
-          panel.border = element_rect(color = "black", fill = NA),
-          panel.background = element_rect(fill = NA, color = "black"),
-          axis.text = element_text(size = 12), axis.title = element_text(size = 12),
-          plot.background = element_rect(fill = NA, color = NA)
+          panel.border = ggplot2::element_rect(color = "black", fill = NA),
+          panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+          axis.text = ggplot2::element_text(size = 12), axis.title = ggplot2::element_text(size = 12),
+          plot.background = ggplot2::element_rect(fill = NA, color = NA)
         )
     }
     if (nrow(e.data) < 10) {
@@ -958,18 +959,18 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
       e.data$x <- as.numeric(as.character(e.data$x))
 
       var.plot <- ggplot2::ggplot() +
-        ggplot2::geom_segment(data = e.data, aes(y = effect, yend = effect, x = x - .35, xend = x + .35), size = 2) +
-        ggplot2::geom_segment(data = e.data, aes(y = lower, yend = lower, x = x - .35, xend = x + .35), size = 1, linetype = 2) +
-        ggplot2::geom_segment(data = e.data, aes(y = upper, yend = upper, x = x - .35, xend = x + .35), size = 1, linetype = 2) +
+        ggplot2::geom_segment(data = e.data, ggplot2::aes(y = effect, yend = effect, x = x - .35, xend = x + .35), size = 2) +
+        ggplot2::geom_segment(data = e.data, ggplot2::aes(y = lower, yend = lower, x = x - .35, xend = x + .35), size = 1, linetype = 2) +
+        ggplot2::geom_segment(data = e.data, ggplot2::aes(y = upper, yend = upper, x = x - .35, xend = x + .35), size = 1, linetype = 2) +
         ggplot2::xlab(xname) +
         ggplot2::ylab("Variable Effect") +
         ggplot2::scale_x_continuous(breaks = (e.data$x)) +
         ggplot2::theme_bw() +
         ggplot2::theme(
-          panel.border = element_rect(color = "black", fill = NA),
-          panel.background = element_rect(fill = NA, color = "black"),
-          axis.text = element_text(size = 12), axis.title = element_text(size = 12),
-          plot.background = element_rect(fill = NA, color = NA)
+          panel.border = ggplot2::element_rect(color = "black", fill = NA),
+          panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+          axis.text = ggplot2::element_text(size = 12), axis.title = ggplot2::element_text(size = 12),
+          plot.background = ggplot2::element_rect(fill = NA, color = NA)
         )
     }
 
