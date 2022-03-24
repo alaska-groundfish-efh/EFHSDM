@@ -2,7 +2,7 @@
 
 A package is designed to produce SDMs and SDM visualizations as part of the 2022 EFH 5-year review. It is designed to be moderately flexible and can be expanded in the future, but for now assumes that abundance prediction is the end goal. 
 
-The most recent version of this package was built in R 4.1.1.
+The most recent version of this package was built in R 4.1.2.
 
 Authors:
 
@@ -13,10 +13,14 @@ Authors:
 @jodipirtle
 
 
+
 # Installation
 `EFHSDM` can be installed using the following code:
 ```r
-devtools::install_github("alaska-groundfish-efh/EFHSDM", build_vignettes = TRUE)
+devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes=TRUE)
+
+devtools::install_github("alaska-groundfish-efh/EFHSDM@pkgdev", dependencies = TRUE, build_vignettes = FALSE)
+#NOTE: For install, make sure to change these instructions when the pkgdev branch is merged w main
 ```
 
 
@@ -112,7 +116,7 @@ region.data <- subset(region.data, year >= 2012)
 region.data$sponge <- as.integer(region.data$sponge > 0)
 region.data$logarea <- log(region.data$area)
 
-bathy <- raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Bathy")
+#bathy <- raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Bathy")
 btemp <- raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Btemp")
 btemp <- crop(x = btemp, y = bathy)
 lat <- raster::init(bathy, v = "y")

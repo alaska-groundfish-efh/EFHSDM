@@ -83,3 +83,9 @@ usethis::use_data(GOA_sponge)
 usethis::use_data(GOA_lat)
 usethis::use_data(GOA_lon)
 #save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, GOA_lat, GOA_lon, file = here::here("R","sysdata.rda"))
+
+
+# Build package -----------------------------------------------------------
+
+devtools::build()
+# Build pkg including vignettes
