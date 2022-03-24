@@ -205,18 +205,18 @@ MakeXtable<-function(model,             # a model object
   if(is.null(devs)==F){table1[3:(length(term.names)+2),dev.col]<-format(round(devs[term.order],1),nsmall = 1)}
   if(is.null(train)==F){
     train.dat<-na.omit(train)
-    table1[3,train.col[1]]<-round(cor(abund,train,method=rsq.method)^2,3)
+    table1[3,train.col[1]]<-round(stats::cor(abund,train,method=rsq.method)^2,3)
     table1[3,train.col[2]]<-format(round(RMSE(pred = train,obs = abund),1),nsmall=1,big.mark = ",")
 
   }
   if(is.null(test)==F){
     test.dat<-na.omit(test)
-    table1[3,test.col[1]]<-round(cor(abund,test,method=rsq.method)^2,3)
+    table1[3,test.col[1]]<-round(stats::cor(abund,test,method=rsq.method)^2,3)
     table1[3,test.col[2]]<-format(round(RMSE(pred = test,obs = abund),1),nsmall=1,big.mark = ",")
   }
   if(is.null(forecast)==F){
     forecast.dat<-na.omit(forecast)
-    table1[3,forecast.col[1]]<-round(cor(abund,forecast,method=rsq.method)^2,3)
+    table1[3,forecast.col[1]]<-round(stats::cor(abund,forecast,method=rsq.method)^2,3)
     table1[3,forecast.col[2]]<-format(round(RMSE(pred = forecast,obs = abund),1),nsmall=1,big.mark = ",")
   }
   if(is.null(area)==F){table1[3,area.col]<-format(round(area,-2),big.mark = ",")}
@@ -286,14 +286,14 @@ MakeXtable<-function(model,             # a model object
     cv.table[3:cv.rows,3]<-c(aggregate(x = abund,by=list(group),FUN=function(x){sum(x>0)})[,2],
                              sum(abund>0))
     cv.table[3:cv.rows,5]<-format(signif(c(aggregate(x=test-abund,by=list(group),FUN="mean",na.rm=T)$x,mean(test-abund,na.rm=T)),3),nsmall=2)
-    cv.table[cv.rows,4]<-format(round(cor(abund,test,method=rsq.method)^2, 3),nsmall=3)
+    cv.table[cv.rows,4]<-format(round(stats::cor(abund,test,method=rsq.method)^2, 3),nsmall=3)
     cv.table[cv.rows,6]<-format(round(RMSE(pred = test,obs = abund),2),nsmall=1,big.mark = "'")
     # now need a loop
     for(g in 1:length(unique(group))){
       gabund<-abund[group==unique(group)[g]]
       gtest<-test[group==unique(group)[g]]
       if(length(gtest)>0){
-        cv.table[2+g,4]<-format(round(cor(gabund,gtest,method=rsq.method)^2, 3),nsmall=3)
+        cv.table[2+g,4]<-format(round(stats::cor(gabund,gtest,method=rsq.method)^2, 3),nsmall=3)
         cv.table[2+g,6]<-format(round(RMSE(pred = gtest,obs = gabund),2),nsmall=1,big.mark = ",")
       }else{
         cv.table[2+g,4]<-"NA"
@@ -406,7 +406,7 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
 
         N.vec[m]<-sum(pred.dat$abund>0,na.rm=T)
         rmse.vec[m]<-RMSE(pred = pred.dat[,pred.cvpred],obs = pred.dat$abund)
-        cor.vec[m]<-cor(pred.dat$abund,round(pred.dat[,pred.cvpred],2),method=cor.method)
+        cor.vec[m]<-stats::cor(pred.dat$abund,round(pred.dat[,pred.cvpred],2),method=cor.method)
         auc.vec[m]<-PresenceAbsence::auc(data.frame(1:nrow(pred.dat),pred.dat$abund,pred.dat[,prob.cvprob]))[[1]]
         pde.vec[m]<-PDE(obs = pred.dat$abund,pred = pred.dat[,pred.cvpred])
       }
@@ -425,7 +425,7 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
 
       etable[n.models+3,N.col]<-sum(ensemble.dat$abund>0,na.rm=T)
       etable[n.models+3,pred.cols[1]]<-format(round(RMSE(obs=ensemble.dat$abund,pred=ensemble.dat$pred),digs),nsmall=digs,big.mark = ",")
-      etable[n.models+3,pred.cols[2]]<-format(round(cor(ensemble.preds$abund,ensemble.preds$pred,method=cor.method), 2),nsmall=2)
+      etable[n.models+3,pred.cols[2]]<-format(round(stats::cor(ensemble.preds$abund,ensemble.preds$pred,method=cor.method), 2),nsmall=2)
       etable[n.models+3,pred.cols[3]]<-format(round(PresenceAbsence::auc(data.frame(1:nrow(ensemble.dat),ensemble.preds$abund,ensemble.preds$prob))[[1]], 2),nsmall=2)
       etable[n.models+3,pred.cols[4]]<-format(round(PDE(obs = ensemble.preds$abund,pred = ensemble.preds$pred), 2),nsmall=2)
     }

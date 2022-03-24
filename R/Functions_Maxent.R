@@ -134,7 +134,7 @@ MakeMaxEntAbundance<-function(model,
     new.vals<-vector(length=nrow(dat))
     new.vals[na.spots]<-NA
     new.vals[dat.spots]<-preds2
-    habitat.prediction<-raster::setValues(x = raster(maxent.stack),values = new.vals)
+    habitat.prediction<-raster::setValues(x = raster::raster(maxent.stack),values = new.vals)
   }
   # this makes a habitat suitability map from a maxnet model
   if(type=="maxnet"){
@@ -148,7 +148,7 @@ MakeMaxEntAbundance<-function(model,
     new.vals<-vector(length=nrow(dat))
     new.vals[na.spots]<-NA
     new.vals[dat.spots]<-preds
-    habitat.prediction<-raster::setValues(x = raster(maxent.stack),values = new.vals)
+    habitat.prediction<-raster::setValues(x = raster::raster(maxent.stack),values = new.vals)
   }
   # need to add a check to see about the strange problems with the EBS
   if(is.null(land)==F){
@@ -463,7 +463,7 @@ MaxnetStats<-function(model,                 # a maxnet model
   facs<-vars1d[vars1d%in%min.names==F]
   vars1d<-vars1d[vars1d%in%min.names]
 
-  pb <- txtProgressBar(min = 0, max = length(c(maxnet2d,vars1d,facs)), style = 3)
+  pb <- utils::txtProgressBar(min = 0, max = length(c(maxnet2d,vars1d,facs)), style = 3)
   pb.i<-1
   # This part makes the estimate of deviance explained for each covariate
   # each category of covariate needs to be handled separately
@@ -477,7 +477,7 @@ MaxnetStats<-function(model,                 # a maxnet model
       if(exists("test.model")){
         dev.vec2d[i]<-test.model$dev.ratio[length(test.model$dev.ratio)]
         rm(test.model)
-        setTxtProgressBar(pb, pb.i)
+        utils::setTxtProgressBar(pb, pb.i)
         pb.i<-pb.i+1
       }else{
         close(pb)
@@ -498,7 +498,7 @@ MaxnetStats<-function(model,                 # a maxnet model
     if(exists("test.model")){
       dev.vec[i]<-test.model$dev.ratio[length(test.model$dev.ratio)]
       rm(test.model)
-      setTxtProgressBar(pb, pb.i)
+      utils::setTxtProgressBar(pb, pb.i)
       pb.i<-pb.i+1
     }else{
       close(pb)
@@ -515,7 +515,7 @@ MaxnetStats<-function(model,                 # a maxnet model
     if(exists("test.model")){
       fac.vec[i]<-test.model$dev.ratio[length(test.model$dev.ratio)]
       rm(test.model)
-      setTxtProgressBar(pb, pb.i)
+      utils::setTxtProgressBar(pb, pb.i)
       pb.i<-pb.i+1
     }else{
       close(pb)

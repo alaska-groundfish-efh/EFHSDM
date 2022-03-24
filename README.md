@@ -111,22 +111,18 @@ sapply(efh_fns, source, .GlobalEnv)
 
 ### Load the rasters
 ``` r
-region.data <- read.csv("Y:/RACE_EFH_Variables/Trawl_Models/GOA/all_GOA_data_2021.csv")
-region.data <- subset(region.data, year >= 2012)
+region.data <- subset(region_data_all, year >= 2012)
 region.data$sponge <- as.integer(region.data$sponge > 0)
 region.data$logarea <- log(region.data$area)
 
-#bathy <- raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Bathy")
-btemp <- raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Btemp")
-btemp <- crop(x = btemp, y = bathy)
-lat <- raster::init(bathy, v = "y")
-lat <- raster::mask(lat, bathy, overwrite = F)
-lon <- raster::init(bathy, v = "x")
-lon <- raster::mask(lon, bathy, overwrite = F)
-slope <- raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Slope")
-sponge <- raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Spongefactor")
+# this step formulates lon and lat so they can easily be used as variables, and stacks them in one object
+lat <- raster::init(GOA_bathy, v = "y")
+lat <- raster::mask(lat, GOA_bathy, overwrite = F)
+lon <- raster::init(GOA_bathy, v = "x")
+lon <- raster::mask(lon, GOA_bathy, overwrite = F)
 
-raster.stack <- raster::stack(lon, lat, bathy, btemp, slope, sponge)
+raster.stack <- raster::stack(lon, lat, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge)
+
 names(raster.stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
 ```
 
@@ -209,7 +205,7 @@ EFH can be made in exactly the same way as for the consistuent models:
 
 ```r
 FindEFHbreaks(ensemble.abundance, method = "percentile")
-cut(ensemble.abundance, ensemble.breaks)
+raster::cut(ensemble.abundance, ensemble.breaks)
 ```
 
 ## Legal disclaimer
