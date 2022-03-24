@@ -436,7 +436,7 @@ MakeAKGFDensityplot <- function(region,
 #' @examples
 MakeAKGFEFHplot <- function(region,
                             efh.map,
-                            drop = 10^8,
+                            drop = 10^6,
                             survey.area = "default",
                             ext.adjust = "default", # vector of length four, representing xmin,xmax, ymin,ymax, to adjust the extent
                             legend.pos = "default", # a vector of length two with a location for the legend, use NA to suppress
@@ -547,8 +547,8 @@ MakeAKGFEFHplot <- function(region,
 
   # add the efh polys
   efhplot <- efhplot +
-    ggplot2::geom_sf(data = efhpoly2, aes(fill = as.factor(layer)), col = NA) +
-    ggplot2::geom_sf(data = efhdummy3, size = .3)
+    ggplot2::geom_sf(data = efhpoly2, ggplot2::aes(fill = as.factor(layer)), col = NA) +
+    ggplot2::geom_sf(data = efhdummy3,fill=NA, size = .3)
 
   # add the themes
   efhplot <- efhplot +
@@ -558,27 +558,27 @@ MakeAKGFEFHplot <- function(region,
     viridis::scale_fill_viridis(discrete = T, name = legend.title, labels = legend.labels) +
     ggplot2::theme_bw() +
     ggplot2:: theme(
-      panel.border = element_rect(color = "black", fill = NA),
-      panel.background = element_rect(fill = NA, color = "black"),
-      legend.key = element_rect(fill = NA, color = "grey30"),
+      panel.border = ggplot2::element_rect(color = "black", fill = NA),
+      panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+      legend.key = ggplot2::element_rect(fill = NA, color = "grey30"),
       legend.position = legend.pos,
-      axis.title = element_blank(), axis.text = element_text(size = 12),
-      legend.text = element_text(size = 12), legend.title = element_text(size = 12),
-      plot.background = element_rect(fill = NA, color = NA))
+      axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_text(size = 12),
+      legend.text = ggplot2::element_text(size = 12), legend.title = ggplot2::element_text(size = 12),
+      plot.background = ggplot2::element_rect(fill = NA, color = NA))
 
   # add a title
   if (is.na(title.name) == F && is.na(title.pos) == F) {
     efhplot <- efhplot +
       ggplot2::geom_label(
         data = data.frame(x = title.pos[1], y = title.pos[2], label = title.name),
-        aes(x = x, y = y, label = label, hjust = 0, vjust = 1), size = 5
+        ggplot2::aes(x = x, y = y, label = label, hjust = 0, vjust = 1), size = 5
       )
   }
 
   # add a legend
   if (is.na(legend.pos[1]) == F) {
     efhplot <- efhplot +
-      ggplot2::guides(color = guide_legend(override.aes = list(size = 4, shape = 15)))
+      ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size = 4, shape = 15)))
   }
   return(efhplot)
 }
@@ -668,7 +668,7 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
   }
 
   dummy.sf0 <- stars::st_as_stars(is.na(background) == F)
-  dummy.sf<- sf::st_cast(sf::st_as_sf(merge = TRUE),"POLYGON") # cast the polygons to polylines
+  dummy.sf<- sf::st_cast(sf::st_as_sf(dummy.sf0,merge = TRUE),"POLYGON") # cast the polygons to polylines
   dummy.sf2 <- sf::st_transform(dummy.sf, sf::st_crs(MAP$akland))
   dummy.sf3 <- dummy.sf2[dummy.sf2$layer == 1, ]
 
