@@ -106,26 +106,34 @@ MakeAKGFDotplot <- function(presence,
       ext.adjust <- c(200000, -100000, 0, 0)
     }
   }
-  if (is.na(legend.pos) == F && legend.pos == "default") {
-    if (region %in% c("ai", "ai.west", "ai.central", "ai.east")) {
-      legend.pos <- c(0.12, 0.20)
-    }
-    if (region %in% c("ebs", "bs.all", "bs.south", "sebs", "ecs", "ebs.ecs")) {
-      legend.pos <- c(0.12, 0.18)
-    }
-    if (region %in% c("goa", "goa.west", "goa.east")) {
-      legend.pos <- c(0.08, 0.41)
+  if (length(legend.pos)<2){
+    if(legend.pos == "default") {
+      if (region %in% c("ai", "ai.west", "ai.central", "ai.east")) {
+        legend.pos <- c(0.12, 0.20)
+      }
+      if (region %in% c("ebs", "bs.all", "bs.south", "sebs", "ecs", "ebs.ecs")) {
+        legend.pos <- c(0.12, 0.18)
+      }
+      if (region %in% c("goa", "goa.west", "goa.east")) {
+        legend.pos <- c(0.08, 0.41)
+      }
+    }else{
+      legend.pos<-NA
     }
   }
-  if (is.na(title.pos) == F && title.pos == "default") {
-    if (region %in% c("ai", "ai.west", "ai.central", "ai.east")) {
-      title.pos <- c(-900000, 490000)
-    }
-    if (region %in% c("ebs", "bs.all", "bs.south", "sebs", "ecs", "ebs.ecs")) {
-      title.pos <- c(-550000, 800000)
-    }
-    if (region %in% c("goa", "goa.west", "goa.east")) {
-      title.pos <- c(-1300000, 630000)
+  if (length(title.pos)<2){
+    if(title.pos == "default") {
+      if (region %in% c("ai", "ai.west", "ai.central", "ai.east")) {
+        title.pos <- c(-900000, 490000)
+      }
+      if (region %in% c("ebs", "bs.all", "bs.south", "sebs", "ecs", "ebs.ecs")) {
+        title.pos <- c(-550000, 800000)
+      }
+      if (region %in% c("goa", "goa.west", "goa.east")) {
+        title.pos <- c(-1300000, 630000)
+      }
+    }else{
+      title.pos<-NA
     }
   }
 
@@ -151,7 +159,7 @@ MakeAKGFDotplot <- function(presence,
   leg.name <- NULL
 
   # Now go through and set up the dot locations and add them to legend
-  if (is.na(absence) == F) {
+  if (is.data.frame(absence)) {
     if (is.na(dataCRS)) {
       abs.sf <- sf::st_as_sf(x = absence, coords = c("lon", "lat"), crs = sf::st_crs(MAP$akland))
     } else {
@@ -179,7 +187,7 @@ MakeAKGFDotplot <- function(presence,
   leg.size <- c(leg.size, pres.size)
   pres.fac <- abs.fac + 1
 
-  if (is.na(highdensity) == F) {
+  if (is.data.frame(highdensity)) {
     if (is.na(dataCRS)) {
       high.sf <- sf::st_as_sf(x = highdensity, coords = c("lon", "lat"), crs = sf::st_crs(MAP$akland))
     } else {
@@ -201,13 +209,13 @@ MakeAKGFDotplot <- function(presence,
     ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60")
 
   # add the dots
-  if (is.na(absence) == F) {
+  if (is.data.frame(absence)) {
     dotplot <- dotplot +
       ggplot2::geom_sf(data = abs.sf, alpha = .25, size = abs.size, shape = abs.shape, ggplot2::aes(color = factor(abs.fac)))
   }
   dotplot <- dotplot +
     ggplot2::geom_sf(data = pres.sf, size = pres.size, ggplot2::aes(color = factor(pres.fac)), shape = pres.shape, stroke = .8)
-  if (is.na(highdensity) == F) {
+  if (is.data.frame(highdensity)) {
     dotplot <- dotplot +
       ggplot2::geom_sf(data = high.sf, size = hd.size, shape = hd.shape, ggplot2::aes(color = factor(hd.fac)))
   }
@@ -229,7 +237,7 @@ MakeAKGFDotplot <- function(presence,
     )
 
   # add a title
-  if (is.na(title.name) == F && is.na(title.pos) == F) {
+  if (is.na(title.name) == F && length(title.pos) == 2) {
     if (title.count) {
       title.name <- paste0(title.name, "\nN = ", format(nrow(pres.sf), big.mark = ","))
     }
@@ -241,7 +249,7 @@ MakeAKGFDotplot <- function(presence,
   }
 
   # add a legend
-  if (is.na(legend.pos) == F) {
+  if (length(legend.pos)==2) {
     dotplot <- dotplot +
       ggplot2::scale_color_manual(name = NULL, values = leg.col, labels = leg.name) +
       ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(shape = leg.shape, size = leg.size)))
@@ -308,7 +316,8 @@ MakeAKGFDensityplot <- function(region,
       ext.adjust <- c(200000, -100000, 0, 0)
     }
   }
-  if (is.na(legend.pos) == F && legend.pos == "default") {
+
+  if (length(legend.pos)<2 && legend.pos == "default") {
     if (region %in% c("ai", "ai.west", "ai.central", "ai.east")) {
       legend.pos <- c(.08, .28)
     }
@@ -319,7 +328,7 @@ MakeAKGFDensityplot <- function(region,
       legend.pos <- c(0.08, 0.51)
     }
   }
-  if (is.na(title.pos) == F && title.pos == "default") {
+  if (length(title.pos) <2 && title.pos == "default") {
     if (region %in% c("ai", "ai.west", "ai.central", "ai.east")) {
       title.pos <- c(-900000, 490000)
     }
@@ -406,7 +415,7 @@ MakeAKGFDensityplot <- function(region,
       )
   }
   # add a legend
-  if (is.na(legend.pos[1]) == F) {
+  if (length(legend.pos==2)) {
     densityplot <- densityplot +
       ggplot2::guides(color = ggplot2::guide_colorbar(title.position = "top", title.hjust = .5, barheight = barheight))
   }
