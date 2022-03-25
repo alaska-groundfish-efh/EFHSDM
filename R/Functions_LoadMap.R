@@ -393,7 +393,7 @@ MakeCrossValidationPlots<-function(error.data,           # a data frame, typical
   old.par<-graphics::par()[c("mfcol","family","mar","xaxs","yaxs")]
   graphics::par(mfcol = c(ifelse(make.hist==T,3,2),2), family = "sans", mar = c(4,4,3,1))
 
-  graphics::qqnorm((error.data$pred[keepers] - error.data$abund[keepers]), main = "Model Predictions")
+  stats::qqnorm((error.data$pred[keepers] - error.data$abund[keepers]), main = "Model Predictions")
   graphics::qqline((error.data$pred[keepers] - error.data$abund[keepers]))
   if(make.hist==T){graphics::hist((error.data$pred[keepers] - error.data$abund[keepers]), xlab = "Residuals", main = "")}
   pred.max <- ifelse(method=="pearson",stats::quantile(error.data2$pred[keepers],probs=.99,na.rm=T),nrow(error.data2))

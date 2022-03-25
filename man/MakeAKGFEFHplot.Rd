@@ -24,6 +24,8 @@ MakeAKGFEFHplot(
 
 \item{efh.map}{raster of factors to be interpretted as EFH}
 
+\item{drop}{a buffer that prevents outlining of small isolated pixels, makes it look nicer}
+
 \item{survey.area}{sf or raster layer to use, if the desired survey area is different from akgfmaps}
 
 \item{ext.adjust}{vector of length four, representing xmin,xmax, ymin,ymax, to adjust the extent}
