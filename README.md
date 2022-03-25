@@ -19,8 +19,7 @@ Authors:
 ```r
 devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes=TRUE)
 
-devtools::install_github("alaska-groundfish-efh/EFHSDM@pkgdev", dependencies = TRUE, build_vignettes = FALSE)
-#NOTE: For install, make sure to change these instructions when the pkgdev branch is merged w main
+devtools::install_github("alaska-groundfish-efh/EFHSDM@main", dependencies = TRUE, build_vignettes = FALSE)
 ```
 
 
