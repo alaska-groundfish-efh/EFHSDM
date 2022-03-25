@@ -359,7 +359,7 @@ MakeAKGFDensityplot <- function(region,
     # convert the raster to ggplot format
     density.dat <- data.frame(lat = density.dat0$y, lon = density.dat0$x, density = vals)
 
-    density.sf0 <- st_as_sf(x = subset(density.dat, is.na(density) == F), coords = c("lon", "lat"), crs = density.map@crs)
+    density.sf0 <- sf::st_as_sf(x = subset(density.dat, is.na(density) == F), coords = c("lon", "lat"), crs = density.map@crs)
     density.sf <- sf::st_transform(density.sf0, sf::st_crs(MAP$akland))
   }
 
