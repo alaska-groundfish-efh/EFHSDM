@@ -1,18 +1,19 @@
 # This script contains some functions for making the tables for summary stats
 
-rpackages <- c("xtable", "XML")
+# rpackages <- c("xtable", "XML")
+#
+# which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
+#
+# if(length(which_not_installed) > 1){
+#   install.packages(rpackages[which_not_installed], dep = TRUE)
+# }
+# rm(rpackages,which_not_installed)
+#
+# require(xtable)
+# require(XML)
 
-which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
 
-if(length(which_not_installed) > 1){
-  install.packages(rpackages[which_not_installed], dep = TRUE)
-}
-rm(rpackages,which_not_installed)
-
-require(xtable)
-require(XML)
-
-#' Make a table with constituent model statistics
+#' Make deviance explained table with constituent model statistics
 #'
 #' @description Make a table of deviance explained for a model object.
 #' @details This is a slightly over-complicated function, but it automatically adjusts the table to whatever data is supplied to it. Basically, first it makes a lot of notes as to where things should go, then it takes a second pass construct the table and put everything in the right place. Known issue: does not calculate the degrees of freedom for factors.
@@ -204,19 +205,19 @@ MakeXtable<-function(model,             # a model object
   }
   if(is.null(devs)==F){table1[3:(length(term.names)+2),dev.col]<-format(round(devs[term.order],1),nsmall = 1)}
   if(is.null(train)==F){
-    train.dat<-na.omit(train)
-    table1[3,train.col[1]]<-round(cor(abund,train,method=rsq.method)^2,3)
+    train.dat<-stats::na.omit(train)
+    table1[3,train.col[1]]<-round(stats::cor(abund,train,method=rsq.method)^2,3)
     table1[3,train.col[2]]<-format(round(RMSE(pred = train,obs = abund),1),nsmall=1,big.mark = ",")
 
   }
   if(is.null(test)==F){
-    test.dat<-na.omit(test)
-    table1[3,test.col[1]]<-round(cor(abund,test,method=rsq.method)^2,3)
+    test.dat<-stats::na.omit(test)
+    table1[3,test.col[1]]<-round(stats::cor(abund,test,method=rsq.method)^2,3)
     table1[3,test.col[2]]<-format(round(RMSE(pred = test,obs = abund),1),nsmall=1,big.mark = ",")
   }
   if(is.null(forecast)==F){
-    forecast.dat<-na.omit(forecast)
-    table1[3,forecast.col[1]]<-round(cor(abund,forecast,method=rsq.method)^2,3)
+    forecast.dat<-stats::na.omit(forecast)
+    table1[3,forecast.col[1]]<-round(stats::cor(abund,forecast,method=rsq.method)^2,3)
     table1[3,forecast.col[2]]<-format(round(RMSE(pred = forecast,obs = abund),1),nsmall=1,big.mark = ",")
   }
   if(is.null(area)==F){table1[3,area.col]<-format(round(area,-2),big.mark = ",")}
@@ -283,17 +284,17 @@ MakeXtable<-function(model,             # a model object
     cv.table[2,1:6]<-c("Fold","N","Pres","rsq","mean error","rmse")
     cv.table[3:cv.rows,1]<-c(unique(group),"Totals/Averages")
     cv.table[3:cv.rows,2]<-c(table(group),sum(table(group)))
-    cv.table[3:cv.rows,3]<-c(aggregate(x = abund,by=list(group),FUN=function(x){sum(x>0)})[,2],
+    cv.table[3:cv.rows,3]<-c(stats::aggregate(x = abund,by=list(group),FUN=function(x){sum(x>0)})[,2],
                              sum(abund>0))
     cv.table[3:cv.rows,5]<-format(signif(c(aggregate(x=test-abund,by=list(group),FUN="mean",na.rm=T)$x,mean(test-abund,na.rm=T)),3),nsmall=2)
-    cv.table[cv.rows,4]<-format(round(cor(abund,test,method=rsq.method)^2, 3),nsmall=3)
+    cv.table[cv.rows,4]<-format(round(stats::cor(abund,test,method=rsq.method)^2, 3),nsmall=3)
     cv.table[cv.rows,6]<-format(round(RMSE(pred = test,obs = abund),2),nsmall=1,big.mark = "'")
     # now need a loop
     for(g in 1:length(unique(group))){
       gabund<-abund[group==unique(group)[g]]
       gtest<-test[group==unique(group)[g]]
       if(length(gtest)>0){
-        cv.table[2+g,4]<-format(round(cor(gabund,gtest,method=rsq.method)^2, 3),nsmall=3)
+        cv.table[2+g,4]<-format(round(stats::cor(gabund,gtest,method=rsq.method)^2, 3),nsmall=3)
         cv.table[2+g,6]<-format(round(RMSE(pred = gtest,obs = gabund),2),nsmall=1,big.mark = ",")
       }else{
         cv.table[2+g,4]<-"NA"
@@ -311,9 +312,10 @@ MakeXtable<-function(model,             # a model object
 
 
 
-#' Make a table of summary statistics (for ensemble)
+
+#' Make deviance explained table (for ensemble)
 #'
-#' @description Make an HTML table of summary stats and fit metrics for a model ensemble.
+#' @description Make an HTML table of deviance explained and fit metrics for a model ensemble.
 #' @details For now, you need to include each of the elements for the ensemble table to work, so no shortcuts. It is kind of cumbersome and unlikely to be useful for others. May soon be deprecated.
 #' @param model.names vector of names for the models
 #' @param ensemble logical; is an ensemble included
@@ -397,7 +399,7 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
     pde.vec<-rep(NA,length(model.names))
     for(m in 1:length(model.names)){
       if(model.names[m]%in%preds.table$Model){
-        pred.dat<-na.omit(subset(preds.table,Model==model.names[m]))
+        pred.dat<-stats::na.omit(subset(preds.table,Model==model.names[m]))
         pred.dat$pred[which(is.infinite(pred.dat$pred))]<-10^10
         pred.cvpred<-ifelse(RMSE(pred = pred.dat$pred,obs = pred.dat$abund)<
                               RMSE(pred = pred.dat$cvpred,obs = pred.dat$abund),"cvpred","pred")
@@ -406,7 +408,7 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
 
         N.vec[m]<-sum(pred.dat$abund>0,na.rm=T)
         rmse.vec[m]<-RMSE(pred = pred.dat[,pred.cvpred],obs = pred.dat$abund)
-        cor.vec[m]<-cor(pred.dat$abund,round(pred.dat[,pred.cvpred],2),method=cor.method)
+        cor.vec[m]<-stats::cor(pred.dat$abund,round(pred.dat[,pred.cvpred],2),method=cor.method)
         auc.vec[m]<-PresenceAbsence::auc(data.frame(1:nrow(pred.dat),pred.dat$abund,pred.dat[,prob.cvprob]))[[1]]
         pde.vec[m]<-PDE(obs = pred.dat$abund,pred = pred.dat[,pred.cvpred])
       }
@@ -421,11 +423,11 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
     etable[model.rows,pred.cols[4]]<-format(round(pde.vec, 2),nsmall=2)
 
     if(ensemble){
-      ensemble.dat<-na.omit(subset(preds.table,Model=="ensemble"))
 
+      ensemble.dat<-stats::na.omit(subset(preds.table,Model=="ensemble"))
       etable[n.models+3,N.col]<-sum(ensemble.dat$abund>0,na.rm=T)
       etable[n.models+3,pred.cols[1]]<-format(round(RMSE(obs=ensemble.dat$abund,pred=ensemble.dat$pred),digs),nsmall=digs,big.mark = ",")
-      etable[n.models+3,pred.cols[2]]<-format(round(cor(ensemble.preds$abund,ensemble.preds$pred,method=cor.method), 2),nsmall=2)
+      etable[n.models+3,pred.cols[2]]<-format(round(stats::cor(ensemble.preds$abund,ensemble.preds$pred,method=cor.method), 2),nsmall=2)
       etable[n.models+3,pred.cols[3]]<-format(round(PresenceAbsence::auc(data.frame(1:nrow(ensemble.dat),ensemble.preds$abund,ensemble.preds$prob))[[1]], 2),nsmall=2)
       etable[n.models+3,pred.cols[4]]<-format(round(PDE(obs = ensemble.preds$abund,pred = ensemble.preds$pred), 2),nsmall=2)
     }
@@ -491,8 +493,8 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
 
 
 
-#' Make a deviance table
-#'
+
+#' Make deviance table
 #' @description Make an HTML table of deviance explained for a model ensemble.
 #' @details Makes a simple html table of deviance explained values for models and the ensemble.
 #' @param model.names character vector with names for the models, should match order of dev.list

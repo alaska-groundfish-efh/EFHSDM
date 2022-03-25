@@ -22,3 +22,31 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+Imports: 
+    ggplot2,
+    akgfmaps (>= 1.7.4),
+    viridis,
+    stars,
+    sf,
+    gridExtra,
+    patchwork,
+    MASS,
+    scales,
+    labeling,
+    mgcv,
+    raster,
+    PresenceAbsence,
+    rgdal,
+    sp,
+    gstat,
+    maxnet,
+    ENMeval,
+    xtable,
+    XML,
+    magrittr
+Remotes: 
+    git::https://github.com/afsc-gap-products/akgfmaps.git@master
+Depends: 
+    R (>= 3.5.0)
+LazyData: 
+    true

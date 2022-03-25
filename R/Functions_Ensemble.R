@@ -1,8 +1,6 @@
 # This script includes functions useful for making an ensemble from other models
 # It assumes some data formats from other functions in this "package"
-
-
-
+#
 #' Make model ensemble
 #' @description Make an ensemble model vector with weights for each model
 #' @details This function calculates the weights for an ensemble model using a very simple rmse method. Future work may allow for more complex methods. One can supply a list of dataset (old way), or one can more sensibly just supply a named vector of RMSE values (better way)
@@ -33,7 +31,7 @@ MakeEnsemble<-function(ensemble.list=NA,
 
     # find the rmse for each set
     for(m in 1:length(ensemble.list)){
-      ensemble.dat<-na.omit(ensemble.list[[m]])
+      ensemble.dat<-stats::na.omit(ensemble.list[[m]])
       if(nrow(ensemble.dat)>0){
         rmse[m]<-sqrt(sum((ensemble.dat$abund-ensemble.dat$pred)^2)/nrow(ensemble.dat))
       }else{
@@ -124,7 +122,7 @@ ValidateEnsemble<-function(pred.list,
       ensemble.preds$pred<-ensemble.preds$pred+pred.list[[m]]$pred*model.weights[m]
     }
   }
-  ensemble.preds$prob<-1-dpois(0,ensemble.preds$pred)
+  ensemble.preds$prob<-1-stats::dpois(0,ensemble.preds$pred)
   ensemble.preds$cvprob<-ensemble.preds$prob
 
   keepers<-which(is.na(ensemble.preds$pred)==F & is.infinite(ensemble.preds$pred)==F)
@@ -137,31 +135,31 @@ ValidateEnsemble<-function(pred.list,
   }
 
   ensemble.rmse<-sqrt(sum((ensemble.preds$abund-ensemble.preds$pred)^2,na.rm=T)/nrow(ensemble.preds))
-  regr <- lm(ensemble.preds2$pred[keepers]~ensemble.preds2$abund[keepers])
+  regr <- stats::lm(ensemble.preds2$pred[keepers]~ensemble.preds2$abund[keepers])
   rsqr <- summary(regr)$r.squared
 
   # ploting portion
   if(make.plots==T){
-    old.par<-par()[c("mfcol","family","mar","xaxs","yaxs")]
-    par(mfcol = c(2+as.integer(histogram),1), family = "sans", mar = c(4,4,3,1))
+    old.par<-graphics::par()[c("mfcol","family","mar","xaxs","yaxs")]
+    graphics::par(mfcol = c(2+as.integer(histogram),1), family = "sans", mar = c(4,4,3,1))
 
-    qqnorm((ensemble.preds2$abund - ensemble.preds2$pred))
-    qqline((ensemble.preds2$abund - ensemble.preds2$pred))
+    stats::qqnorm((ensemble.preds2$abund - ensemble.preds2$pred))
+    stats::qqline((ensemble.preds2$abund - ensemble.preds2$pred))
 
-    if(histogram){hist((ensemble.preds2$abund - ensemble.preds2$pred), xlab = "Residuals", main = "")}
+    if(histogram){graphics::hist((ensemble.preds2$abund - ensemble.preds2$pred), xlab = "Residuals", main = "")}
 
-    pred.max <- ifelse(method=="pearson",quantile(ensemble.preds2$pred[keepers],probs=.99,na.rm=T),nrow(ensemble.preds2))
-    abund.max <- ifelse(method=="pearson",quantile(ensemble.preds2$pred[keepers],probs=.99,na.rm=T),nrow(ensemble.preds2))
-    plot.max<-max(pred.max,abund.max)*1.1
+    pred.max <- ifelse(method=="pearson",stats::quantile(ensemble.preds2$pred[keepers],probs=.99,na.rm=T),nrow(ensemble.preds2))
+    abund.max <- ifelse(method=="pearson",stats::quantile(ensemble.preds2$pred[keepers],probs=.99,na.rm=T),nrow(ensemble.preds2))
+    plot.max<-base::max(pred.max,abund.max)*1.1
 
     plot(y=ensemble.preds2$pred[keepers], x=ensemble.preds2$abund[keepers], ylim = c(0,plot.max), xlim = c(0,plot.max),
          ylab = ifelse(method=="pearson","Predicted","Predicted Ranks"),
          xlab = ifelse(method=="pearson","Observed","Observed Ranks"),main = "", pch = 20)
-    abline(coef = c(0,1), lty = 2)
-    abline(regr,col=2)
-    text(1, plot.max*.9, paste(method,"R-squared = ", signif(rsqr,2)), pos = 4)
+    graphics::abline(coef = c(0,1), lty = 2)
+    graphics::abline(regr,col=2)
+    graphics::text(1, plot.max*.9, paste(method,"R-squared = ", signif(rsqr,2)), pos = 4)
 
-    suppressWarnings(par(old.par))
+    suppressWarnings(graphics::par(old.par))
   }
 
   print(paste("Ensemble",method,"Rsq =",round(rsqr,3)))
@@ -190,8 +188,8 @@ MakeEnsembleAbundance<-function(model.weights,
 
   # intialize a raster with appropriate properties
   good.abund<-which(is.na(abund.list)==F)
-  new.abund<-raster(abund.list[[good.abund[1]]])
-  new.abund<-setValues(new.abund,values = 0)
+  new.abund<-raster::raster(abund.list[[good.abund[1]]])
+  new.abund<-raster::setValues(new.abund,values = 0)
 
   #To make the raster, we'll need another loop
   for(i in 1:length(model.weights)){
@@ -200,7 +198,7 @@ MakeEnsembleAbundance<-function(model.weights,
     }
   }
   if(filename!=""){
-    writeRaster(x = new.abund,filename = filename,overwrite=T)
+    raster::writeRaster(x = new.abund,filename = filename,overwrite=T)
   }
   return(new.abund)
 }
@@ -230,31 +228,31 @@ GetEnsembleVariance<-function(model.weights,variance.list,abund.list,ensemble.ab
     abund.list2[[k]]<-abund.list[[keepers[k]]]
   }
 
-  data.spots<-which(is.na(getValues(abund.list2[[1]]))==F)
+  data.spots<-which(is.na(raster::getValues(abund.list2[[1]]))==F)
   if(length(abund.list2)>1){
     for(r in 2:length(abund.list2)){
-      spots<-which(is.na(getValues(abund.list2[[r]]))==F)
+      spots<-which(is.na(raster::getValues(abund.list2[[r]]))==F)
       data.spots<-data.spots[data.spots%in%spots]
     }
   }
-  e.abund<-extract(ensemble.abund,data.spots)
+  e.abund<-raster::extract(ensemble.abund,data.spots)
 
   dat<-matrix(nrow=length(data.spots),ncol=length(keepers))
 
   for(m in 1:length(keepers)){
-    a.dat<-extract(abund.list2[[m]],data.spots)
-    v.dat<-extract(variance.list2[[m]],data.spots)
+    a.dat<-raster::extract(abund.list2[[m]],data.spots)
+    v.dat<-raster::extract(variance.list2[[m]],data.spots)
 
     dat[,m]<-weights2[m]*sqrt(v.dat+(a.dat-e.abund)^2)
   }
 
   std.error<-apply(dat,MARGIN = 1,FUN = sum)
 
-  out.raster<-raster(abund.list2[[1]])
-  val.vec<-getValues(out.raster)
+  out.raster<-raster::raster(abund.list2[[1]])
+  val.vec<-raster::getValues(out.raster)
   val.vec[data.spots]<-std.error
 
-  out.raster<-setValues(out.raster,val.vec)
+  out.raster<-raster::setValues(out.raster,val.vec)
   return(out.raster)
 }
 

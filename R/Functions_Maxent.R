@@ -3,20 +3,20 @@
 # to function with maxent
 
 # Setting lists of required packages & installing it
-rpackages <- c("raster", "PresenceAbsence", "maxnet","ENMeval")
-
-# rJava, rgeos, maps
-which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
-
-if(length(which_not_installed) > 1){
-  install.packages(rpackages[which_not_installed], dep = TRUE)
-}
-rm(rpackages,which_not_installed)
-
-require(raster)
-require(PresenceAbsence)
-require(maxnet)
-require(ENMeval)
+# rpackages <- c("raster", "PresenceAbsence", "maxnet","ENMeval")
+#
+# # rJava, rgeos, maps
+# which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
+#
+# if(length(which_not_installed) > 1){
+#   install.packages(rpackages[which_not_installed], dep = TRUE)
+# }
+# rm(rpackages,which_not_installed)
+#
+# require(raster)
+# require(PresenceAbsence)
+# require(maxnet)
+# require(ENMeval)
 
 ####################################################################################################################################
 ##################################################MAXENT MODEL######################################################################
@@ -73,7 +73,7 @@ FitMaxnet<-function(data,
     maxnet.data<-maxnet.data[-unique(drops),]
   }
 
-  maxnet.model<-maxnet(p = presence.vec,data = maxnet.data,regmult = regmult)
+  maxnet.model<-maxnet::maxnet(p = presence.vec,data = maxnet.data,regmult = regmult)
 
   # remove variables that aren't contributing
   if(reduce){
@@ -83,7 +83,7 @@ FitMaxnet<-function(data,
     if(length(badvars)>0){
       badcols<-which(names(maxnet.data)%in%badvars)
       maxnet.data2<-maxnet.data[,-badcols]
-      maxnet.model<-maxnet(p = presence.vec,data = maxnet.data2,regmult = regmult)
+      maxnet.model<-maxnet::maxnet(p = presence.vec,data = maxnet.data2,regmult = regmult)
     }
   }
   return(maxnet.model)
@@ -123,41 +123,41 @@ MakeMaxEntAbundance<-function(model,
   # Somewhat counterintuitive, but this is the type if using the cloglog link to make an abundance estimate
   if(type=="cloglog"){
     # since ENMeval 2.0, they got rid of the useful function and I need to make the predictions the long way
-    dat<-getValues(maxent.stack)
+    dat<-raster::getValues(maxent.stack)
 
     # using predict with maxnet will quietly remove the NAs, so need to track them manually
     na.spots<-which(apply(X = dat,MARGIN = 1,FUN = function(x){return(any(is.na(x)))}))
     dat.spots<-which(seq(1:nrow(dat))%in%na.spots==F)
 
-    preds<-predict(model,dat[dat.spots,],type="link")
+    preds<-stats::predict(model,dat[dat.spots,],type="link")
     preds2<-exp(preds+model$ent)*scale.fac
     new.vals<-vector(length=nrow(dat))
     new.vals[na.spots]<-NA
     new.vals[dat.spots]<-preds2
-    habitat.prediction<-setValues(x = raster(maxent.stack),values = new.vals)
+    habitat.prediction<-raster::setValues(x = raster::raster(maxent.stack),values = new.vals)
   }
   # this makes a habitat suitability map from a maxnet model
   if(type=="maxnet"){
-    dat<-getValues(maxent.stack)
+    dat<-raster::getValues(maxent.stack)
 
     # using predict with maxnet will quietly remove the NAs, so need to track them manually
     na.spots<-which(apply(X = dat,MARGIN = 1,FUN = function(x){return(any(is.na(x)))}))
     dat.spots<-which(seq(1:nrow(dat))%in%na.spots==F)
 
-    preds<-predict(model,dat[dat.spots,],type="cloglog")
+    preds<-stats::predict(model,dat[dat.spots,],type="cloglog")
     new.vals<-vector(length=nrow(dat))
     new.vals[na.spots]<-NA
     new.vals[dat.spots]<-preds
-    habitat.prediction<-setValues(x = raster(maxent.stack),values = new.vals)
+    habitat.prediction<-raster::setValues(x = raster::raster(maxent.stack),values = new.vals)
   }
   # need to add a check to see about the strange problems with the EBS
-  if(compareRaster(x = habitat.prediction,land,stopiffalse = F)==F){
-    habitat.prediction<-extend(x=habitat.prediction,y=land)
+  if(is.null(land)==F){
+    habitat.prediction<-raster::extend(x=habitat.prediction,y=land)
   }
 
   # For some reason, the crs info isn't always carrying over
   habitat.prediction@crs<-maxent.stack@crs
-  if(filename!=""){writeRaster(x = habitat.prediction,filename = filename, overwrite = TRUE)}
+  if(filename!=""){raster::writeRaster(x = habitat.prediction,filename = filename, overwrite = TRUE)}
 
   # Apply additional masks if necessary
   if(is.null(land)==F){
@@ -265,12 +265,12 @@ GetMaxnetEffects<-function(model,
       yseq<-seq(from=min(data[,y.name]),to=max(data[,y.name]),length.out=40)
 
       if(x.name%in%names(model$varmax)){
-        effect.x<-ent+as.vector(response.plot(model,v=x.name,plot=F,type="link")$pred)
+        effect.x<-ent+as.vector(maxnet::response.plot(model,v=x.name,plot=F,type="link")$pred)
       }else{
         effect.x<-log(.01)
       }
       if(y.name%in%names(model$varmax)){
-        effect.y<-ent+as.vector(response.plot(model,v=y.name,plot=F,type="link")$pred)
+        effect.y<-ent+as.vector(maxnet::response.plot(model,v=y.name,plot=F,type="link")$pred)
       }else{
         effect.y<-log(.01)
       }
@@ -301,7 +301,7 @@ GetMaxnetEffects<-function(model,
     for(i in 1:length(xvars)){
       # calculate the main effects
       dat<-data.frame(x=seq(from=model$varmin[xvars[i]],to=model$varmax[xvars[i]],length.out = 100))
-      suppressWarnings(dat$effect<-ent+as.vector(response.plot(model,v=xvars[i],plot=F,type="link")$pred))
+      suppressWarnings(dat$effect<-ent+as.vector(maxnet::response.plot(model,v=xvars[i],plot=F,type="link")$pred))
 
       if(scale=="abund"){
         dat$effect<-exp(dat$effect)*scale.factor
@@ -314,7 +314,7 @@ GetMaxnetEffects<-function(model,
         cv.dat<-matrix(data=NA,nrow=100,ncol=length(cv.models))
         for(f in 1:length(cv.models)){
           if(is.na(cv.models[[f]])==F){
-            suppressWarnings(cv.dat[,f]<-response.plot(cv.models[[f]],type = "link",v = xvars[i],plot=F)$pred
+            suppressWarnings(cv.dat[,f]<-maxnet::response.plot(cv.models[[f]],type = "link",v = xvars[i],plot=F)$pred
                              +cv.models[[f]]$entropy*as.integer(add.entropy))
           }else{
             cv.dat[,f]<-NA
@@ -344,7 +344,7 @@ GetMaxnetEffects<-function(model,
       # calculate the main effects
       dat<-data.frame(model$levels[xfacs[i]])
       names(dat)<-"x"
-      suppressWarnings(dat$effect<-ent+as.vector(response.plot(model,v=xfacs[i],plot=F,type="link")$pred))
+      suppressWarnings(dat$effect<-ent+as.vector(maxnet::response.plot(model,v=xfacs[i],plot=F,type="link")$pred))
 
       if(scale=="abund"){
         dat$effect<-exp(dat$effect)*scale.factor
@@ -356,7 +356,7 @@ GetMaxnetEffects<-function(model,
         cv.dat<-matrix(data=NA,nrow=nrow(dat),ncol=length(cv.models))
         for(f in 1:length(cv.models)){
           if(is.na(cv.models[[f]])==F){
-            cv.dat[,f]<-response.plot(cv.models[[f]],type = "link",
+            cv.dat[,f]<-maxnet::response.plot(cv.models[[f]],type = "link",
                                       v = xfacs[i],plot=F,levels = dat$x)$pred+ent
           }else{
             cv.dat[,f]<-NA
@@ -463,7 +463,7 @@ MaxnetStats<-function(model,                 # a maxnet model
   facs<-vars1d[vars1d%in%min.names==F]
   vars1d<-vars1d[vars1d%in%min.names]
 
-  pb <- txtProgressBar(min = 0, max = length(c(maxnet2d,vars1d,facs)), style = 3)
+  pb <- utils::txtProgressBar(min = 0, max = length(c(maxnet2d,vars1d,facs)), style = 3)
   pb.i<-1
   # This part makes the estimate of deviance explained for each covariate
   # each category of covariate needs to be handled separately
@@ -477,7 +477,7 @@ MaxnetStats<-function(model,                 # a maxnet model
       if(exists("test.model")){
         dev.vec2d[i]<-test.model$dev.ratio[length(test.model$dev.ratio)]
         rm(test.model)
-        setTxtProgressBar(pb, pb.i)
+        utils::setTxtProgressBar(pb, pb.i)
         pb.i<-pb.i+1
       }else{
         close(pb)
@@ -498,7 +498,7 @@ MaxnetStats<-function(model,                 # a maxnet model
     if(exists("test.model")){
       dev.vec[i]<-test.model$dev.ratio[length(test.model$dev.ratio)]
       rm(test.model)
-      setTxtProgressBar(pb, pb.i)
+      utils::setTxtProgressBar(pb, pb.i)
       pb.i<-pb.i+1
     }else{
       close(pb)
@@ -515,7 +515,7 @@ MaxnetStats<-function(model,                 # a maxnet model
     if(exists("test.model")){
       fac.vec[i]<-test.model$dev.ratio[length(test.model$dev.ratio)]
       rm(test.model)
-      setTxtProgressBar(pb, pb.i)
+      utils::setTxtProgressBar(pb, pb.i)
       pb.i<-pb.i+1
     }else{
       close(pb)

@@ -1,39 +1,30 @@
 # this script will make some more generalized functions for mapping things with the akgfmaps package
 
-rpackages <- c("viridis", "stars", "sf", "gridExtra", "patchwork", "MASS", "scales", "labeling", "ggplot2")
-
-which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
-
-if (length(which_not_installed) > 1) {
-  install.packages(rpackages[which_not_installed], dep = TRUE)
-}
-
-if ("akgfmaps" %in% rownames(installed.packages()) == F) {
-  devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
-}
-rm(rpackages, which_not_installed)
-
-require(ggplot2)
-require(akgfmaps)
-require(viridis)
-require(stars)
-require(sf)
-require(gridExtra)
-require(patchwork)
-require(MASS)
-require(scales)
-require(labeling)
+# rpackages <- c("viridis", "stars", "sf", "gridExtra", "patchwork", "MASS", "scales", "labeling", "ggplot2")
 #
-# example.raster<-raster("Y:/RACE_EFH_variables/Trawl_Models/AI/Adult_arrowtooth_flounder/ensemble_abundance")
-# dataCRS<-example.raster@crs
+# which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
 #
-# ai.catch<-read.csv("Y:/RACE_EFH_variables/Trawl_Models/AI/all_AI_data_2021.csv")
+# if (length(which_not_installed) > 1) {
+#   install.packages(rpackages[which_not_installed], dep = TRUE)
+# }
 #
-# presence<-ai.catch[ai.catch$a_rex>0,c("lon","lat")]
-# absence<-ai.catch[ai.catch$a_rex==0,c("lon","lat")]
-# highdensity<-ai.catch[ai.catch$a_rex>=quantile(ai.catch$a_rex[ai.catch$a_rex>0],.9),c("lon","lat")]
-#
+# if ("akgfmaps" %in% rownames(installed.packages()) == F) {
+#   devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
+# }
+# rm(rpackages, which_not_installed)
 
+# require(ggplot2)
+# require(akgfmaps)
+# require(viridis)
+# require(stars)
+# require(sf)
+# require(gridExtra)
+# require(patchwork)
+# require(MASS)
+# require(scales)
+# require(labeling)
+#
+#
 #' Make dotplot with akfgmaps
 #'
 #' @description makes a pretty good dotplot; needs additional testing with areas other than "bs.all", "goa", and "ai".
@@ -61,6 +52,8 @@ require(labeling)
 #' @param abs.size size for absence dots
 #' @param pres.size size for presence dots
 #' @param hd.size size for high density dots
+#' @importFrom akgfmaps get_base_layers
+#' @importFrom magrittr %>%
 #'
 #' @return a ggplot with the desired figure
 #' @export
@@ -91,11 +84,12 @@ MakeAKGFDotplot <- function(presence,
                             hd.size = 1) {
   # start by getting the map
   region <- tolower(region)
+  #browser()
   if (region %in% c(
     "ebs", "bs.all", "sebs", "bs.south", "ecs", "ebs.ecs", "ai",
     "ai.west", "ai.central", "ai.east", "goa", "goa.west", "goa.east"
   )) {
-    MAP <- get_base_layers(select.region = region, set.crs = "auto")
+    MAP <- akgfmaps::get_base_layers(select.region = region, set.crs = "auto",use.survey.bathymetry = TRUE)
   } else {
     stop("region not recognized")
   }
@@ -140,14 +134,14 @@ MakeAKGFDotplot <- function(presence,
     survey.sf <- MAP$survey.area
   } else {
     if (class(survey.area)[1] == "sf") {
-      survey.sf <- st_transform(survey.area, st_crs(MAP$akland))
+      survey.sf <- sf::st_transform(survey.area, sf::st_crs(MAP$akland))
     }
     if (class(survey.area)[1] == "RasterLayer") {
-      survey.sf0 <- st_as_stars(is.na(survey.area)) %>%
-        st_as_sf(merge = TRUE) %>% # this is the raster to polygons part
-        st_cast("POLYGON") # cast the polygons to polylines
+      survey.sf1<-stars::st_as_stars(is.na(survey.area))
+      survey.sf2<-sf::st_as_sf(survey.sf1,merge = TRUE)
+      survey.sf3<-sf::st_cast(survey.sf2,"POLYGON") # cast the polygons to polylines
 
-      survey.sf <- st_transform(survey.sf0, st_crs(MAP$akland))[1:(nrow(survey.sf0) - 1), ]
+      survey.sf <- sf::st_transform(survey.sf3, sf::st_crs(MAP$akland))[1:(nrow(survey.sf3) - 1), ]
     }
   }
 
@@ -159,10 +153,10 @@ MakeAKGFDotplot <- function(presence,
   # Now go through and set up the dot locations and add them to legend
   if (is.na(absence) == F) {
     if (is.na(dataCRS)) {
-      abs.sf <- st_as_sf(x = absence, coords = c("lon", "lat"), crs = st_crs(MAP$akland))
+      abs.sf <- sf::st_as_sf(x = absence, coords = c("lon", "lat"), crs = sf::st_crs(MAP$akland))
     } else {
-      abs.sf0 <- st_as_sf(x = absence, coords = c("lon", "lat"), crs = dataCRS)
-      abs.sf <- st_transform(abs.sf0, st_crs(MAP$akland))
+      abs.sf0 <- sf::st_as_sf(x = absence, coords = c("lon", "lat"), crs = dataCRS)
+      abs.sf <- sf::st_transform(abs.sf0, sf::st_crs(MAP$akland))
     }
     leg.name <- abs.name
     leg.col <- abs.col
@@ -174,10 +168,10 @@ MakeAKGFDotplot <- function(presence,
   }
 
   if (is.na(dataCRS)) {
-    pres.sf <- st_as_sf(x = presence, coords = c("lon", "lat"), crs = st_crs(MAP$akland))
+    pres.sf <- sf::st_as_sf(x = presence, coords = c("lon", "lat"), crs = sf::st_crs(MAP$akland))
   } else {
-    pres.sf0 <- st_as_sf(x = presence, coords = c("lon", "lat"), crs = dataCRS)
-    pres.sf <- st_transform(pres.sf0, st_crs(MAP$akland))
+    pres.sf0 <- sf::st_as_sf(x = presence, coords = c("lon", "lat"), crs = dataCRS)
+    pres.sf <- sf::st_transform(pres.sf0, sf::st_crs(MAP$akland))
   }
   leg.name <- c(leg.name, pres.name)
   leg.col <- c(leg.col, pres.col)
@@ -187,10 +181,10 @@ MakeAKGFDotplot <- function(presence,
 
   if (is.na(highdensity) == F) {
     if (is.na(dataCRS)) {
-      high.sf <- st_as_sf(x = highdensity, coords = c("lon", "lat"), crs = st_crs(MAP$akland))
+      high.sf <- sf::st_as_sf(x = highdensity, coords = c("lon", "lat"), crs = sf::st_crs(MAP$akland))
     } else {
-      high.sf0 <- st_as_sf(x = highdensity, coords = c("lon", "lat"), crs = dataCRS)
-      high.sf <- st_transform(high.sf0, st_crs(MAP$akland))
+      high.sf0 <- sf::st_as_sf(x = highdensity, coords = c("lon", "lat"), crs = dataCRS)
+      high.sf <- sf::st_transform(high.sf0, sf::st_crs(MAP$akland))
     }
     leg.name <- c(leg.name, hd.name)
     leg.col <- c(leg.col, hd.col)
@@ -200,35 +194,38 @@ MakeAKGFDotplot <- function(presence,
   }
 
   # set up the basic map, will add more customization later
-  dotplot <- ggplot() +
-    geom_sf(data = survey.sf, fill = "grey95") +
-    geom_sf(data = MAP$akland, fill = "grey40") +
-    geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
-    geom_sf(data = MAP$bathymetry, color = "grey60")
+  dotplot <- ggplot2::ggplot() +
+    ggplot2::geom_sf(data = survey.sf, fill = "grey95") +
+    ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
+    ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
+    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60")
 
   # add the dots
   if (is.na(absence) == F) {
-    dotplot <- dotplot + geom_sf(data = abs.sf, alpha = .25, size = abs.size, shape = abs.shape, aes(color = factor(abs.fac)))
+    dotplot <- dotplot +
+      ggplot2::geom_sf(data = abs.sf, alpha = .25, size = abs.size, shape = abs.shape, ggplot2::aes(color = factor(abs.fac)))
   }
-  dotplot <- dotplot + geom_sf(data = pres.sf, size = pres.size, aes(color = factor(pres.fac)), shape = pres.shape, stroke = .8)
+  dotplot <- dotplot +
+    ggplot2::geom_sf(data = pres.sf, size = pres.size, ggplot2::aes(color = factor(pres.fac)), shape = pres.shape, stroke = .8)
   if (is.na(highdensity) == F) {
-    dotplot <- dotplot + geom_sf(data = high.sf, size = hd.size, shape = hd.shape, aes(color = factor(hd.fac)))
+    dotplot <- dotplot +
+      ggplot2::geom_sf(data = high.sf, size = hd.size, shape = hd.shape, ggplot2::aes(color = factor(hd.fac)))
   }
 
   # add the themes
   dotplot <- dotplot +
-    coord_sf(xlim = MAP$plot.boundary$x + ext.adjust[1:2], ylim = MAP$plot.boundary$y + ext.adjust[3:4]) +
-    scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
-    scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
-    theme_bw() +
-    theme(
-      panel.border = element_rect(color = "black", fill = NA),
-      panel.background = element_rect(fill = NA, color = "black"),
-      legend.key = element_rect(fill = NA, color = "grey30"),
+    ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust[1:2], ylim = MAP$plot.boundary$y + ext.adjust[3:4]) +
+    ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
+    ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(
+      panel.border = ggplot2::element_rect(color = "black", fill = NA),
+      panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+      legend.key = ggplot2::element_rect(fill = NA, color = "grey30"),
       legend.position = legend.pos,
-      axis.title = element_blank(), axis.text = element_text(size = 12),
-      legend.text = element_text(size = 12), legend.title = element_text(size = 12),
-      plot.background = element_rect(fill = NA, color = NA)
+      axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_text(size = 12),
+      legend.text = ggplot2::element_text(size = 12), legend.title = ggplot2::element_text(size = 12),
+      plot.background = ggplot2::element_rect(fill = NA, color = NA)
     )
 
   # add a title
@@ -237,17 +234,17 @@ MakeAKGFDotplot <- function(presence,
       title.name <- paste0(title.name, "\nN = ", format(nrow(pres.sf), big.mark = ","))
     }
     dotplot <- dotplot +
-      geom_label(
+      ggplot2::geom_label(
         data = data.frame(x = title.pos[1], y = title.pos[2], label = title.name),
-        aes(x = x, y = y, label = label, hjust = 0, vjust = 1), size = 5
+        ggplot2::aes(x = x, y = y, label = label, hjust = 0, vjust = 1), size = 5
       )
   }
 
   # add a legend
   if (is.na(legend.pos) == F) {
     dotplot <- dotplot +
-      scale_color_manual(name = NULL, values = leg.col, labels = leg.name) +
-      guides(color = guide_legend(override.aes = list(shape = leg.shape, size = leg.size)))
+      ggplot2::scale_color_manual(name = NULL, values = leg.col, labels = leg.name) +
+      ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(shape = leg.shape, size = leg.size)))
   }
   return(dotplot)
 }
@@ -268,6 +265,8 @@ MakeAKGFDotplot <- function(presence,
 #' @param title.name character; a title for the figure, or NA to suppress
 #' @param title.pos vector of length two with coordinates for for the legend, use NA to suppress
 #' @param barheight numeric; height of the bar in the legend
+#' @importFrom akgfmaps get_base_layers
+#' @importFrom magrittr %>%
 #'
 #' @return a ggplot object of the map
 #' @export
@@ -292,7 +291,7 @@ MakeAKGFDensityplot <- function(region,
     "ebs", "bs.all", "sebs", "bs.south", "ecs", "ebs.ecs", "ai",
     "ai.west", "ai.central", "ai.east", "goa", "goa.west", "goa.east"
   )) {
-    MAP <- get_base_layers(select.region = region, set.crs = "auto")
+    MAP <- akgfmaps::get_base_layers(select.region = region, set.crs = "auto")
   } else {
     stop("region not recognized")
   }
@@ -337,79 +336,79 @@ MakeAKGFDensityplot <- function(region,
     survey.sf <- MAP$survey.area
   } else {
     if (class(survey.area)[1] == "sf") {
-      survey.sf <- st_transform(survey.area, st_crs(MAP$akland))[1:(nrow(survey.area) - 1), ]
+      survey.sf <- sf::st_transform(survey.area, sf::st_crs(MAP$akland))[1:(nrow(survey.area) - 1), ]
     }
     if (class(survey.area)[1] == "RasterLayer") {
-      survey.sf0 <- st_as_stars(is.na(survey.area)) %>%
-        st_as_sf(merge = TRUE) %>% # this is the raster to polygons part
-        st_cast("POLYGON") # cast the polygons to polylines
+      survey.sf1<-stars::st_as_stars(is.na(survey.area))
+      survey.sf2<-sf::st_as_sf(survey.sf1,merge = TRUE)
+      survey.sf3<-sf::st_cast(survey.sf2,"POLYGON") # cast the polygons to polylines
 
-      survey.sf <- st_transform(survey.sf0, st_crs(MAP$akland))[1:(nrow(survey.sf0) - 1), ]
+      survey.sf <- sf::st_transform(survey.sf3, sf::st_crs(MAP$akland))[1:(nrow(survey.sf3) - 1), ]
     }
   }
 
   # set up the density component
   if (class(density.map)[1] == "sf") {
-    density.sf <- st_transform(density.map, st_crs(MAP$akland))
+    density.sf <- sf::st_transform(density.map, sf::st_crs(MAP$akland))
     names(density.sf[1]) <- "density"
   }
   if (class(density.map)[1] == "RasterLayer") {
-    density.dat0 <- as.data.frame(xyFromCell(density.map, 1:ncell(density.map)))
-    vals <- getValues(density.map)
+    density.dat0 <- as.data.frame(raster::xyFromCell(density.map, 1:raster::ncell(density.map)))
+    vals <- raster::getValues(density.map)
 
     # convert the raster to ggplot format
     density.dat <- data.frame(lat = density.dat0$y, lon = density.dat0$x, density = vals)
 
-    density.sf0 <- st_as_sf(x = subset(density.dat, is.na(density) == F), coords = c("lon", "lat"), crs = density.map@crs)
-    density.sf <- st_transform(density.sf0, st_crs(MAP$akland))
+    density.sf0 <- sf::st_as_sf(x = subset(density.dat, is.na(density) == F), coords = c("lon", "lat"), crs = density.map@crs)
+    density.sf <- sf::st_transform(density.sf0, sf::st_crs(MAP$akland))
   }
 
   # often helps to remove some of the high points
-  density.sf$density[density.sf$density > quantile(density.sf$density, buffer, na.rm = T)] <- quantile(density.sf$density, buffer, na.rm = T)
+  upper<-stats::quantile(density.sf$density, buffer, na.rm = T)
+  density.sf$density[density.sf$density > upper] <- upper
 
   # set up the basic map, will add more customization later
-  densityplot <- ggplot() +
-    geom_sf(data = survey.sf, fill = "grey95") +
-    geom_sf(data = MAP$akland, fill = "grey40") +
-    geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
-    geom_sf(data = MAP$bathymetry, color = "grey60")
+  densityplot <- ggplot2::ggplot() +
+    ggplot2::geom_sf(data = survey.sf, fill = "grey95") +
+    ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
+    ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
+    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60")
 
   # add the density plot
   densityplot <- densityplot +
-    geom_sf(data = density.sf, aes(col = density), size = .05)
+    ggplot2::geom_sf(data = density.sf, ggplot2::aes(col = density), size = .05)
 
   # add the themes
   densityplot <- densityplot +
-    coord_sf(xlim = MAP$plot.boundary$x + ext.adjust[1:2], ylim = MAP$plot.boundary$y + ext.adjust[3:4]) +
-    scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
-    scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
-    scale_color_viridis(
+    ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust[1:2], ylim = MAP$plot.boundary$y + ext.adjust[3:4]) +
+    ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
+    ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
+    viridis::scale_color_viridis(
       option = col.palette, begin = col.palette.limits[1], end = col.palette.limits[2],
-      na.value = NA, name = legend.title, labels = comma_format(big.mark = ",")
-    ) +
-    theme_bw() +
-    theme(
-      panel.border = element_rect(color = "black", fill = NA),
-      panel.background = element_rect(fill = NA, color = "black"),
-      legend.key = element_rect(fill = NA, color = "grey30"),
-      legend.position = legend.pos, legend.margin = margin(0, 0, 0, 0),
-      axis.title = element_blank(), axis.text = element_text(size = 12),
-      legend.text = element_text(size = 12), legend.title = element_text(size = 12),
-      plot.background = element_rect(fill = NA, color = NA)
+      na.value = NA, name = legend.title, labels = scales::comma_format(big.mark = ",")) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(
+      panel.border = ggplot2::element_rect(color = "black", fill = NA),
+      panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+      legend.key = ggplot2::element_rect(fill = NA, color = "grey30"),
+      legend.position = legend.pos, legend.margin = ggplot2::margin(0, 0, 0, 0),
+      axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_text(size = 12),
+      legend.text = ggplot2::element_text(size = 12), legend.title = ggplot2::element_text(size = 12),
+      plot.background = ggplot2::element_rect(fill = NA, color = NA)
     )
 
   # add a title
   if (is.na(title.name) == F && is.na(title.pos) == F) {
     densityplot <- densityplot +
-      geom_label(
+      ggplot2::geom_label(
         data = data.frame(x = title.pos[1], y = title.pos[2], label = title.name),
-        aes(x = x, y = y, label = label, hjust = 0, vjust = 1), size = 5
+        ggplot2::aes(x = x, y = y, label = label, hjust = 0, vjust = 1), size = 5
       )
   }
   # add a legend
   if (is.na(legend.pos[1]) == F) {
     densityplot <- densityplot +
-      guides(color = guide_colorbar(title.position = "top", title.hjust = .5, barheight = barheight))
+      ggplot2::guides(color = ggplot2::guide_colorbar(title.position = "top", title.hjust = .5, barheight = barheight))
   }
   return(densityplot)
 }
@@ -419,7 +418,7 @@ MakeAKGFDensityplot <- function(region,
 #' @description Create EFH map for a species/lifestage combination
 #' @param region character; which region is being used, must correspond to an akgfmaps baselayer
 #' @param efh.map raster of factors to be interpretted as EFH
-#' @drop a buffer that prevents outlining of small isolated pixels, makes it look nicer
+#' @param drop a buffer that prevents outlining of small isolated pixels, makes it look nicer
 #' @param survey.area sf or raster layer to use, if the desired survey area is different from akgfmaps
 #' @param ext.adjust vector of length four, representing xmin,xmax, ymin,ymax, to adjust the extent
 #' @param legend.pos vector of length two with decimal position of legend box
@@ -429,6 +428,8 @@ MakeAKGFDensityplot <- function(region,
 #' @param col.palette.limits vector of length two giving start and end points for the color palette
 #' @param title.name character; a title for the figure, or NA to suppress
 #' @param title.pos vector of length two with coordinates for for the legend, use NA to suppress
+#' @importFrom akgfmaps get_base_layers
+#' @importFrom magrittr %>%
 #'
 #' @return raster of EFH quantiles (subareas)
 #' @export
@@ -453,7 +454,7 @@ MakeAKGFEFHplot <- function(region,
     "ebs", "bs.all", "sebs", "bs.south", "ecs", "ebs.ecs", "ai",
     "ai.west", "ai.central", "ai.east", "goa", "goa.west", "goa.east"
   )) {
-    MAP <- get_base_layers(select.region = region, set.crs = "auto")
+    MAP <- akgfmaps::get_base_layers(select.region = region, set.crs = "auto")
   } else {
     stop("region not recognized")
   }
@@ -498,90 +499,87 @@ MakeAKGFEFHplot <- function(region,
     survey.sf <- MAP$survey.area
   } else {
     if (class(survey.area)[1] == "sf") {
-      survey.sf <- st_transform(survey.area, st_crs(MAP$akland))[1:(nrow(survey.area) - 1), ]
+      survey.sf <- sf::st_transform(survey.area, sf::st_crs(MAP$akland))[1:(nrow(survey.area) - 1), ]
     }
     if (class(survey.area)[1] == "RasterLayer") {
-      survey.sf0 <- st_as_stars(is.na(survey.area)) %>%
-        st_as_sf(merge = TRUE) %>% # this is the raster to polygons part
-        st_cast("POLYGON") # cast the polygons to polylines
+      survey.sf1<-stars::st_as_stars(is.na(survey.area))
+      survey.sf2<-sf::st_as_sf(survey.sf1,merge = TRUE)
+      survey.sf3<-sf::st_cast(survey.sf2,"POLYGON") # cast the polygons to polylines
 
-      survey.sf <- st_transform(survey.sf0, st_crs(MAP$akland))[1:(nrow(survey.sf0) - 1), ]
+      survey.sf <- sf::st_transform(survey.sf3, sf::st_crs(MAP$akland))[1:(nrow(survey.sf3) - 1), ]
     }
   }
 
   # set up the factor maps
-  efh.vals <- getValues(efh.map)
+  efh.vals <- raster::getValues(efh.map)
   efh.vals[efh.vals == 1] <- NA
 
   # convert the raster to polygons
-  efhpoly <- st_as_stars(efh.map) %>%
-    st_as_sf(merge = TRUE)
+  efhpoly0 <- stars::st_as_stars(efh.map)
+  efhpoly <- sf::st_as_sf(efhpoly0,merge = TRUE)
   efhpoly2 <- efhpoly[efhpoly$layer != 1, ]
 
   # we'll need a new outline
-  efh.dummy.raster <- raster(efh.map)
+  efh.dummy.raster <- raster::raster(efh.map)
   efh.vals2 <- is.na(efh.vals) == F
-  efh.dummy.raster <- setValues(efh.dummy.raster, values = efh.vals2)
+  efh.dummy.raster <- raster::setValues(efh.dummy.raster, values = efh.vals2)
 
-  efhdummy <- st_as_stars(efh.dummy.raster) %>%
-    st_as_sf(merge = TRUE) %>% # this is the raster to polygons part
-    st_cast("MULTILINESTRING") # cast the polygons to polylines
-
-  efhdummy2 <- st_transform(efhdummy, st_crs(MAP$akland))
+  efhdummy0 <- stars::st_as_stars(efh.dummy.raster)
+  efhdummy <- sf::st_cast(sf::st_as_sf(efhdummy0,merge = TRUE))
+  efhdummy2 <- sf::st_transform(efhdummy, sf::st_crs(MAP$akland))
 
   # Now we need to get rid of a lot of the tiniest bits, which we'll do by dropping the smallest areas
-  efhdummy.poly <- st_cast(efhdummy2, "POLYGON")
-  areas <- st_area(efhdummy.poly)
+  efhdummy.poly <- sf::st_cast(efhdummy2, "POLYGON")
+  areas <- sf::st_area(efhdummy.poly)
 
   outside <- order(areas, decreasing = T)[1]
   toosmall <- which(as.numeric(areas) < drop)
 
   efh.x <- efhdummy2$layer[-c(outside, toosmall)]
   efh.y <- efhdummy2$geometry[-c(outside, toosmall)]
-  efhdummy3 <- st_sf(efh.x, efh.y)
+  efhdummy3 <- sf::st_sf(efh.x, efh.y)
 
   # set up the basic map, will add more customization later
-  efhplot <- ggplot() +
-    geom_sf(data = survey.sf, fill = "grey95") +
-    geom_sf(data = MAP$akland, fill = "grey40") +
-    geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
-    geom_sf(data = MAP$bathymetry, color = "grey60")
+  efhplot <- ggplot2::ggplot() +
+    ggplot2::geom_sf(data = survey.sf, fill = "grey95") +
+    ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
+    ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
+    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60")
 
   # add the efh polys
   efhplot <- efhplot +
-    geom_sf(data = efhpoly2, aes(fill = as.factor(layer)), col = NA) +
-    geom_sf(data = efhdummy3, size = .3)
+    ggplot2::geom_sf(data = efhpoly2, ggplot2::aes(fill = as.factor(layer)), col = NA) +
+    ggplot2::geom_sf(data = efhdummy3,fill=NA, size = .3)
 
   # add the themes
   efhplot <- efhplot +
-    coord_sf(xlim = MAP$plot.boundary$x + ext.adjust[1:2], ylim = MAP$plot.boundary$y + ext.adjust[3:4]) +
-    scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
-    scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
-    scale_fill_viridis(discrete = T, name = legend.title, labels = legend.labels) +
-    theme_bw() +
-    theme(
-      panel.border = element_rect(color = "black", fill = NA),
-      panel.background = element_rect(fill = NA, color = "black"),
-      legend.key = element_rect(fill = NA, color = "grey30"),
+    ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust[1:2], ylim = MAP$plot.boundary$y + ext.adjust[3:4]) +
+    ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
+    ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
+    viridis::scale_fill_viridis(discrete = T, name = legend.title, labels = legend.labels) +
+    ggplot2::theme_bw() +
+    ggplot2:: theme(
+      panel.border = ggplot2::element_rect(color = "black", fill = NA),
+      panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+      legend.key = ggplot2::element_rect(fill = NA, color = "grey30"),
       legend.position = legend.pos,
-      axis.title = element_blank(), axis.text = element_text(size = 12),
-      legend.text = element_text(size = 12), legend.title = element_text(size = 12),
-      plot.background = element_rect(fill = NA, color = NA)
-    )
+      axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_text(size = 12),
+      legend.text = ggplot2::element_text(size = 12), legend.title = ggplot2::element_text(size = 12),
+      plot.background = ggplot2::element_rect(fill = NA, color = NA))
 
   # add a title
   if (is.na(title.name) == F && is.na(title.pos) == F) {
     efhplot <- efhplot +
-      geom_label(
+      ggplot2::geom_label(
         data = data.frame(x = title.pos[1], y = title.pos[2], label = title.name),
-        aes(x = x, y = y, label = label, hjust = 0, vjust = 1), size = 5
+        ggplot2::aes(x = x, y = y, label = label, hjust = 0, vjust = 1), size = 5
       )
   }
 
   # add a legend
   if (is.na(legend.pos[1]) == F) {
     efhplot <- efhplot +
-      guides(color = guide_legend(override.aes = list(size = 4, shape = 15)))
+      ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size = 4, shape = 15)))
   }
   return(efhplot)
 }
@@ -601,6 +599,8 @@ MakeAKGFEFHplot <- function(region,
 #' @param ext.adjust.x vector length 2 to adjust the horizontal extent
 #' @param ext.adjust.y vector length 2 to adjust the vertical extent
 #' @param nonEFH integer; the value corresponding to non-EFH in the old and new rasters
+#' @importFrom akgfmaps get_base_layers
+#' @importFrom magrittr %>%
 #'
 #' @return ggplot object with the comparison map
 #' @export
@@ -615,7 +615,7 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
     "ebs", "bs.all", "sebs", "bs.south", "ecs", "ebs.ecs", "ai",
     "ai.west", "ai.central", "ai.east", "goa", "goa.west", "goa.east"
   )) {
-    MAP <- get_base_layers(select.region = region, set.crs = "auto")
+    MAP <- akgfmaps::get_base_layers(select.region = region, set.crs = "auto")
   } else {
     stop("region not recognized")
   }
@@ -668,10 +668,9 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
     col.vec <- c("dodgerblue", "orange", "orchid3")
   }
 
-  dummy.sf <- st_as_stars(is.na(background) == F) %>%
-    st_as_sf(merge = TRUE) %>% # this is the raster to polygons part
-    st_cast("POLYGON") # cast the polygons to polylines
-  dummy.sf2 <- st_transform(dummy.sf, st_crs(MAP$akland))
+  dummy.sf0 <- stars::st_as_stars(is.na(background) == F)
+  dummy.sf<- sf::st_cast(sf::st_as_sf(dummy.sf0,merge = TRUE),"POLYGON") # cast the polygons to polylines
+  dummy.sf2 <- sf::st_transform(dummy.sf, sf::st_crs(MAP$akland))
   dummy.sf3 <- dummy.sf2[dummy.sf2$layer == 1, ]
 
 
@@ -684,48 +683,48 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
   try(new.present <- is.na(new@crs) == F)
 
   if (exists("old.present") & exists("new.present")) {
-    comp.raster <- cut(background, breaks = c(-Inf, Inf))
+    comp.raster <- raster::cut(background, breaks = c(-Inf, Inf))
 
     # find which areas are EFH in each version
-    old2 <- cut(x = old, breaks = c(0, nonEFH + .5, Inf))
-    new2 <- cut(x = new, breaks = c(0, nonEFH + .5, Inf))
+    old2 <- raster::cut(x = old, breaks = c(0, nonEFH + .5, Inf))
+    new2 <- raster::cut(x = new, breaks = c(0, nonEFH + .5, Inf))
 
-    vals <- getValues(comp.raster)
+    vals <- raster::getValues(comp.raster)
 
-    both <- which(getValues(old2) == 2 & getValues(new2) == 2)
-    justold <- which(getValues(old2) == 2 &
-      ((getValues(new2) == 1) | is.na(getValues(new2))))
-    justnew <- which(((getValues(old2) == 1) | is.na(getValues(old2))) &
-      getValues(new2) == 2)
+    both <- which(raster::getValues(old2) == 2 & raster::getValues(new2) == 2)
+    justold <- which(raster::getValues(old2) == 2 &
+                       ((raster::getValues(new2) == 1) | is.na(raster::getValues(new2))))
+    justnew <- which(((raster::getValues(old2) == 1) | is.na(raster::getValues(old2))) &
+                       raster::getValues(new2) == 2)
 
     # assign new values to each category
     vals[justold] <- 2
     vals[justnew] <- 3
     vals[both] <- 4
 
-    comp.raster <- setValues(x = comp.raster, values = vals)
+    comp.raster <- raster::setValues(x = comp.raster, values = vals)
 
-    efhpoly <- st_as_stars(comp.raster) %>%
-      st_as_sf(merge = TRUE)
+    efhpoly0 <- stars::st_as_stars(comp.raster)
+    efhpoly<-  sf::st_as_sf(efhpoly0,merge = TRUE)
     efhpoly2 <- efhpoly[efhpoly$layer > 1, ]
 
     # this is a kludge to make sure there are always all 3 types
     layer.present <- unique(efhpoly2$layer)
     n <- 0
     if (2 %in% layer.present == F) {
-      efhpoly2$layer[which.min(st_area(efhpoly2))] <- 2
+      efhpoly2$layer[which.min(sf::st_area(efhpoly2))] <- 2
       n <- 1
     }
     if (3 %in% layer.present == F) {
-      efhpoly2$layer[order(st_area(efhpoly2))[1 + n]] <- 3
+      efhpoly2$layer[order(sf::st_area(efhpoly2))[1 + n]] <- 3
       n <- n + 1
     }
     if (4 %in% layer.present == F) {
-      efhpoly2$layer[order(st_area(efhpoly2))[1 + n]] <- 4
+      efhpoly2$layer[order(sf::st_area(efhpoly2))[1 + n]] <- 4
     }
 
-    area1 <- sum(getValues(old) > nonEFH, na.rm = T)
-    area2 <- sum(getValues(new) > nonEFH, na.rm = T)
+    area1 <- sum(raster::getValues(old) > nonEFH, na.rm = T)
+    area2 <- sum(raster::getValues(new) > nonEFH, na.rm = T)
     main <- paste0(main, "\nChange = ", round((area2 / area1 - 1) * 100, 1), "%")
 
     old.col <- col.vec[1]
@@ -733,45 +732,45 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
     mix.col <- col.vec[3]
   } else {
     if (exists("old.present")) {
-      efhpoly <- st_as_stars(old > nonEFH) %>%
-        st_as_sf(merge = TRUE)
+      efhpoly0 <- stars::st_as_stars(old > nonEFH)
+      efhpoly <- sf::st_as_sf(efhpoly0,merge = TRUE)
       efhpoly2 <- efhpoly[efhpoly$layer != 0, ]
       old.col <- col.vec[1]
     }
     if (exists("new.present")) {
-      efhpoly <- st_as_stars(new > nonEFH) %>%
-        st_as_sf(merge = TRUE)
+      efhpoly0 <- stars::st_as_stars(new > nonEFH)
+      efhpoly <- sf::st_as_sf(efhpoly0,merge = TRUE)
       efhpoly2 <- efhpoly[efhpoly$layer != 0, ]
       new.col <- col.vec[2]
     }
   }
 
-  out.plot <- ggplot() +
-    geom_sf(data = dummy.sf3, fill = "grey95") +
-    geom_sf(data = MAP$survey.area, fill = "grey95") +
-    geom_sf(data = efhpoly2, aes(fill = factor(layer)), col = 1, size = .05) +
-    geom_sf(data = MAP$akland, fill = "grey40") +
-    geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
-    geom_sf(data = MAP$bathymetry, col = "grey60", size = .25) +
-    coord_sf(xlim = MAP$plot.boundary$x + ext.adjust.x, ylim = MAP$plot.boundary$y + ext.adjust.y) +
-    geom_label(
+  out.plot <- ggplot2::ggplot() +
+    ggplot2::geom_sf(data = dummy.sf3, fill = "grey95") +
+    ggplot2::geom_sf(data = MAP$survey.area, fill = "grey95") +
+    ggplot2::geom_sf(data = efhpoly2, ggplot2::aes(fill = factor(layer)), col = 1, size = .05) +
+    ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
+    ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
+    ggplot2::geom_sf(data = MAP$bathymetry, col = "grey60", size = .25) +
+    ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust.x, ylim = MAP$plot.boundary$y + ext.adjust.y) +
+    ggplot2::geom_label(
       data = data.frame(x = label.pos[1], y = label.pos[2], label = main),
       aes(x = x, y = y, label = main, hjust = 0, vjust = 1), size = 5
     ) +
-    scale_fill_manual(values = c(old.col, new.col, mix.col), labels = leg.labels, name = leg.name) +
-    scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
-    scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
-    theme_bw() +
-    theme(
-      panel.border = element_rect(color = "black", fill = NA),
-      panel.background = element_rect(fill = NA, color = "black"),
-      legend.key = element_rect(fill = NA, color = NA),
+    ggplot2::scale_fill_manual(values = c(old.col, new.col, mix.col), labels = leg.labels, name = leg.name) +
+    ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
+    ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(
+      panel.border = ggplot2::element_rect(color = "black", fill = NA),
+      panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+      legend.key = ggplot2::element_rect(fill = NA, color = NA),
       legend.position = leg.pos, legend.justification = c(0, 1),
-      axis.title = element_blank(), axis.text = element_text(size = 12),
-      legend.text = element_text(size = 12), legend.title = element_text(size = 12),
-      plot.background = element_rect(fill = NA, color = NA)
+      axis.title = ggplot2::element_blank(), axis.text = element_text(size = 12),
+      legend.text = ggplot2::element_text(size = 12), legend.title = ggplot2::element_text(size = 12),
+      plot.background = ggplot2::element_rect(fill = NA, color = NA)
     ) +
-    guides(color = guide_legend(override.aes = list(size = 4, shape = 15)))
+    ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size = 4, shape = 15)))
 
   return(out.plot)
 }
@@ -786,6 +785,8 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
 #' @param crs CRS for lat/lon coordinates if different from akgf
 #' @param nice.names data frame linking names to nicer version for publication figures
 #' @param vars character vector with names or list indices to be plotted
+#' @importFrom akgfmaps get_base_layers
+#' @importFrom magrittr %>%
 #'
 #' @return list of ggplot objects containing the individual panels and effects
 #' @export
@@ -836,7 +837,7 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
       yname <- nice.names$name[which(nice.names$var == effect.names[2])]
 
       if (xname %in% c("lon", "Longitude", "long")) {
-        con.data <- contourLines(x = sort(unique(e.data$x)), y = sort(unique(e.data$y)), z = matrix(nrow = 40, ncol = 40, data = e.data$effect))
+        con.data <- grDevices::contourLines(x = sort(unique(e.data$x)), y = sort(unique(e.data$y)), z = matrix(nrow = 40, ncol = 40, data = e.data$effect))
 
         con.data2 <- data.frame(lon = con.data[[1]]$x, lat = con.data[[1]]$y, effect = con.data[[1]]$level, group = 1)
         label.spots <- data.frame(con.data2[round(nrow(con.data2) / 2), 1:2], tag = con.data[[1]]$level)
@@ -850,54 +851,57 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
           label.spots <- label.spots[picks, ]
         }
 
-        MAP <- get_base_layers(select.region = tolower(region), set.crs = "auto")
+        MAP <- akgfmaps::get_base_layers(select.region = tolower(region), set.crs = "auto")
 
         if (is.na(crs)) {
           crs <- MAP$crs
         }
         # ok, now you can transform it to the right projection
-        e.ef <- st_as_sf(x = con.data2, coords = c("lon", "lat"), crs = crs)
-        e.ef2 <- st_transform(e.ef, st_crs(MAP$akland))
+        e.ef <- sf::st_as_sf(x = con.data2, coords = c("lon", "lat"), crs = crs)
+        e.ef2 <- sf::st_transform(e.ef, sf::st_crs(MAP$akland))
 
-        spots.sf <- st_as_sf(x = label.spots, coords = c("lon", "lat"), crs = crs)
-        spots.sf2 <- st_transform(spots.sf, st_crs(MAP$akland))
-        spot.data2 <- data.frame(st_coordinates(spots.sf2), label = spots.sf2$tag)
+        spots.sf <- sf::st_as_sf(x = label.spots, coords = c("lon", "lat"), crs = crs)
+        spots.sf2 <- sf::st_transform(spots.sf, sf::st_crs(MAP$akland))
+        spot.data2 <- data.frame(sf::st_coordinates(spots.sf2), label = spots.sf2$tag)
 
-        e.data2 <- data.frame(st_coordinates(e.ef2), e.ef2$effect, group = e.ef2$group)
+        e.data2 <- data.frame(sf::st_coordinates(e.ef2), e.ef2$effect, group = e.ef2$group)
         names(e.data2) <- c("lon", "lat", "effect", "group")
 
         ext.adjust.x <- c(0, 0)
         ext.adjust.y <- c(0, 0)
-        if (region == "goa") {
-          ext.adjust.x <- c(200000, -100000)
-          ext.adjust.y <- c(-490000, 700000)
+        if (tolower(region) == "goa") {
+          ext.adjust.x <- c(400000, -200000)
+          ext.adjust.y <- c(-490000, 600000)
+          MAP$graticule$degree_label[c(1,3,5,7,9)]<-""
+          MAP$lon.breaks<-c(-170,-160,-150,-140,-130)
         }
-        if (region == "ai") {
+        if (tolower(region) == "ai") {
+          ext.adjust.x <- c(150000, -400000)
           ext.adjust.y <- c(-390000, 500000)
         }
 
-        var.plot <- ggplot() +
-          geom_sf(data = MAP$akland, fill = "grey70") +
-          geom_sf(data = MAP$bathymetry, col = "grey60") +
-          geom_path(data = e.data2, aes(x = lon, y = lat, group = group), size = 1) +
-          geom_label(
-            data = spot.data2, aes(x = X, y = Y, label = label), fill = rgb(1, 1, 1, .9),
-            label.size = NA, size = 4, label.padding = unit(.10, "lines"), nudge_x = -1000
+        var.plot <- ggplot2::ggplot() +
+          ggplot2::geom_sf(data = MAP$akland, fill = "grey70") +
+          ggplot2::geom_sf(data = MAP$bathymetry, col = "grey60") +
+          ggplot2::geom_path(data = e.data2, ggplot2::aes(x = lon, y = lat, group = group), size = 1) +
+          ggplot2::geom_label(
+            data = spot.data2, ggplot2::aes(x = X, y = Y, label = label), fill = grDevices::rgb(1, 1, 1, .9),
+            label.size = NA, size = 4, label.padding = ggplot2::unit(.10, "lines"), nudge_x = -1000
           ) +
-          coord_sf(xlim = MAP$plot.boundary$x + ext.adjust.x, ylim = MAP$plot.boundary$y + ext.adjust.y) +
-          scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
-          scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
-          theme_bw() +
-          theme(
-            panel.border = element_rect(color = "black", fill = NA),
-            panel.background = element_rect(fill = NA, color = "black"),
-            axis.title = element_blank(), axis.text = element_text(size = 12),
-            plot.background = element_rect(fill = NA, color = NA)
+          ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust.x, ylim = MAP$plot.boundary$y + ext.adjust.y) +
+          ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
+          ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
+          ggplot2::theme_bw() +
+          ggplot2::theme(
+            panel.border = ggplot2::element_rect(color = "black", fill = NA),
+            panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+            axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_text(size = 12),
+            plot.background = ggplot2::element_rect(fill = NA, color = NA)
           )
       } else {
         # for options other than lat.lon
 
-        con.data <- contourLines(
+        con.data <- grDevices::contourLines(
           x = sort(unique(e.data[, 1])), y = sort(unique(e.data[, 2])),
           z = matrix(nrow = 40, ncol = 40, data = e.data$effect), nlevels = 10
         )
@@ -911,23 +915,23 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
         }
         names(e.data)[1:2] <- c("x", "y")
 
-        var.plot <- ggplot() +
-          geom_path(data = con.data2, aes(x = x, y = y, group = group)) +
-          geom_label(data = label.spots, aes(x = x, y = y, label = round(tag, 1)), fill = "white", label.size = NA) +
-          xlab(xname) +
-          ylab(yname) +
-          theme_bw() +
-          theme(
-            panel.border = element_rect(color = "black", fill = NA),
-            panel.background = element_rect(fill = NA, color = "black"),
-            axis.text = element_text(size = 12), axis.title = element_text(size = 12),
-            plot.background = element_rect(fill = NA, color = NA)
+        var.plot <- ggplot2::ggplot() +
+          ggplot2::geom_path(data = con.data2, ggplot2::aes(x = x, y = y, group = group)) +
+          ggplot2::geom_label(data = label.spots, ggplot2::aes(x = x, y = y, label = round(tag, 1)), fill = "white", label.size = NA) +
+          ggplot2::xlab(xname) +
+          ggplot2::ylab(yname) +
+          ggplot2::theme_bw() +
+          ggplot2::theme(
+            panel.border = ggplot2::element_rect(color = "black", fill = NA),
+            panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+            axis.text = ggplot2::element_text(size = 12), axis.title = ggplot2::element_text(size = 12),
+            plot.background = ggplot2::element_rect(fill = NA, color = NA)
           )
         if (xname == "Current Velocity East (m/s)") {
-          var.plot <- var.plot + geom_vline(xintercept = 0, linetype = 3) + geom_hline(yintercept = 0, linetype = 3)
+          var.plot <- var.plot + ggplot2::geom_vline(xintercept = 0, linetype = 3) + ggplot2::geom_hline(yintercept = 0, linetype = 3)
         }
         if (xname == "Current Velocity East SD (m/s)") {
-          var.plot <- var.plot + geom_abline(intercept = 0, slope = 1, linetype = 3)
+          var.plot <- var.plot + ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 3)
         }
       }
     }
@@ -935,18 +939,18 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
       xname <- nice.names$name[which(nice.names$var == names(effects.list2)[j])]
 
       # now the single dimension smoothed terms
-      var.plot <- ggplot() +
-        geom_line(data = e.data, aes(x = x, y = effect)) +
-        geom_line(data = e.data, aes(x = x, y = upper), linetype = 2) +
-        geom_line(data = e.data, aes(x = x, y = lower), linetype = 2) +
-        xlab(xname) +
-        ylab("Variable Effect") +
-        theme_bw() +
-        theme(
-          panel.border = element_rect(color = "black", fill = NA),
-          panel.background = element_rect(fill = NA, color = "black"),
-          axis.text = element_text(size = 12), axis.title = element_text(size = 12),
-          plot.background = element_rect(fill = NA, color = NA)
+      var.plot <- ggplot2::ggplot() +
+        ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = effect)) +
+        ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = upper), linetype = 2) +
+        ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = lower), linetype = 2) +
+        ggplot2::xlab(xname) +
+        ggplot2::ylab("Variable Effect") +
+        ggplot2::theme_bw() +
+        ggplot2::theme(
+          panel.border = ggplot2::element_rect(color = "black", fill = NA),
+          panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+          axis.text = ggplot2::element_text(size = 12), axis.title = ggplot2::element_text(size = 12),
+          plot.background = ggplot2::element_rect(fill = NA, color = NA)
         )
     }
     if (nrow(e.data) < 10) {
@@ -954,19 +958,19 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
       xname <- nice.names$name[which(nice.names$var == names(effects.list2)[j])]
       e.data$x <- as.numeric(as.character(e.data$x))
 
-      var.plot <- ggplot() +
-        geom_segment(data = e.data, aes(y = effect, yend = effect, x = x - .35, xend = x + .35), size = 2) +
-        geom_segment(data = e.data, aes(y = lower, yend = lower, x = x - .35, xend = x + .35), size = 1, linetype = 2) +
-        geom_segment(data = e.data, aes(y = upper, yend = upper, x = x - .35, xend = x + .35), size = 1, linetype = 2) +
-        xlab(xname) +
-        ylab("Variable Effect") +
-        scale_x_continuous(breaks = (e.data$x)) +
-        theme_bw() +
-        theme(
-          panel.border = element_rect(color = "black", fill = NA),
-          panel.background = element_rect(fill = NA, color = "black"),
-          axis.text = element_text(size = 12), axis.title = element_text(size = 12),
-          plot.background = element_rect(fill = NA, color = NA)
+      var.plot <- ggplot2::ggplot() +
+        ggplot2::geom_segment(data = e.data, ggplot2::aes(y = effect, yend = effect, x = x - .35, xend = x + .35), size = 2) +
+        ggplot2::geom_segment(data = e.data, ggplot2::aes(y = lower, yend = lower, x = x - .35, xend = x + .35), size = 1, linetype = 2) +
+        ggplot2::geom_segment(data = e.data, ggplot2::aes(y = upper, yend = upper, x = x - .35, xend = x + .35), size = 1, linetype = 2) +
+        ggplot2::xlab(xname) +
+        ggplot2::ylab("Variable Effect") +
+        ggplot2::scale_x_continuous(breaks = (e.data$x)) +
+        ggplot2::theme_bw() +
+        ggplot2::theme(
+          panel.border = ggplot2::element_rect(color = "black", fill = NA),
+          panel.background = ggplot2::element_rect(fill = NA, color = "black"),
+          axis.text = ggplot2::element_text(size = 12), axis.title = ggplot2::element_text(size = 12),
+          plot.background = ggplot2::element_rect(fill = NA, color = NA)
         )
     }
 
