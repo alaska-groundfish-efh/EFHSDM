@@ -204,18 +204,18 @@ MakeXtable<-function(model,             # a model object
   }
   if(is.null(devs)==F){table1[3:(length(term.names)+2),dev.col]<-format(round(devs[term.order],1),nsmall = 1)}
   if(is.null(train)==F){
-    train.dat<-na.omit(train)
+    train.dat<-stats::na.omit(train)
     table1[3,train.col[1]]<-round(stats::cor(abund,train,method=rsq.method)^2,3)
     table1[3,train.col[2]]<-format(round(RMSE(pred = train,obs = abund),1),nsmall=1,big.mark = ",")
 
   }
   if(is.null(test)==F){
-    test.dat<-na.omit(test)
+    test.dat<-stats::na.omit(test)
     table1[3,test.col[1]]<-round(stats::cor(abund,test,method=rsq.method)^2,3)
     table1[3,test.col[2]]<-format(round(RMSE(pred = test,obs = abund),1),nsmall=1,big.mark = ",")
   }
   if(is.null(forecast)==F){
-    forecast.dat<-na.omit(forecast)
+    forecast.dat<-stats::na.omit(forecast)
     table1[3,forecast.col[1]]<-round(stats::cor(abund,forecast,method=rsq.method)^2,3)
     table1[3,forecast.col[2]]<-format(round(RMSE(pred = forecast,obs = abund),1),nsmall=1,big.mark = ",")
   }
@@ -283,7 +283,7 @@ MakeXtable<-function(model,             # a model object
     cv.table[2,1:6]<-c("Fold","N","Pres","rsq","mean error","rmse")
     cv.table[3:cv.rows,1]<-c(unique(group),"Totals/Averages")
     cv.table[3:cv.rows,2]<-c(table(group),sum(table(group)))
-    cv.table[3:cv.rows,3]<-c(aggregate(x = abund,by=list(group),FUN=function(x){sum(x>0)})[,2],
+    cv.table[3:cv.rows,3]<-c(stats::aggregate(x = abund,by=list(group),FUN=function(x){sum(x>0)})[,2],
                              sum(abund>0))
     cv.table[3:cv.rows,5]<-format(signif(c(aggregate(x=test-abund,by=list(group),FUN="mean",na.rm=T)$x,mean(test-abund,na.rm=T)),3),nsmall=2)
     cv.table[cv.rows,4]<-format(round(stats::cor(abund,test,method=rsq.method)^2, 3),nsmall=3)
@@ -397,7 +397,7 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
     pde.vec<-rep(NA,length(model.names))
     for(m in 1:length(model.names)){
       if(model.names[m]%in%preds.table$Model){
-        pred.dat<-na.omit(subset(preds.table,Model==model.names[m]))
+        pred.dat<-stats::na.omit(subset(preds.table,Model==model.names[m]))
         pred.dat$pred[which(is.infinite(pred.dat$pred))]<-10^10
         pred.cvpred<-ifelse(RMSE(pred = pred.dat$pred,obs = pred.dat$abund)<
                               RMSE(pred = pred.dat$cvpred,obs = pred.dat$abund),"cvpred","pred")
@@ -421,7 +421,7 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
     etable[model.rows,pred.cols[4]]<-format(round(pde.vec, 2),nsmall=2)
 
     if(ensemble){
-      ensemble.dat<-na.omit(subset(preds.table,Model=="ensemble"))
+      ensemble.dat<-stats::na.omit(subset(preds.table,Model=="ensemble"))
 
       etable[n.models+3,N.col]<-sum(ensemble.dat$abund>0,na.rm=T)
       etable[n.models+3,pred.cols[1]]<-format(round(RMSE(obs=ensemble.dat$abund,pred=ensemble.dat$pred),digs),nsmall=digs,big.mark = ",")
@@ -493,11 +493,11 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
 
 #' Make deviance table
 #'
-#' @param model.names
-#' @param model.types
-#' @param nice.names
-#' @param dev.list
-#' @param model.weights
+#' @param model.names optional vector of names for the models, should match ordering of dev.list
+#' @param model.types optional vector of model types, should match ordering of dev.list
+#' @param nice.names optional data.frame with nicer names matched to abbreviated version used in models
+#' @param dev.list a list of named vectors giving the deviance explained values for each model
+#' @param model.weights optional vector of ensemble weights
 #' @param filename path to files
 #'
 #' @return

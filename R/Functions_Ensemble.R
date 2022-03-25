@@ -140,11 +140,11 @@ ValidateEnsemble<-function(pred.list,
 
   # ploting portion
   if(make.plots==T){
-    old.par<-par()[c("mfcol","family","mar","xaxs","yaxs")]
-    par(mfcol = c(2+as.integer(histogram),1), family = "sans", mar = c(4,4,3,1))
+    old.par<-graphics::par()[c("mfcol","family","mar","xaxs","yaxs")]
+    graphics::par(mfcol = c(2+as.integer(histogram),1), family = "sans", mar = c(4,4,3,1))
 
-    qqnorm((ensemble.preds2$abund - ensemble.preds2$pred))
-    qqline((ensemble.preds2$abund - ensemble.preds2$pred))
+    stats::qqnorm((ensemble.preds2$abund - ensemble.preds2$pred))
+    stats::qqline((ensemble.preds2$abund - ensemble.preds2$pred))
 
     if(histogram){graphics::hist((ensemble.preds2$abund - ensemble.preds2$pred), xlab = "Residuals", main = "")}
 
@@ -155,11 +155,11 @@ ValidateEnsemble<-function(pred.list,
     plot(y=ensemble.preds2$pred[keepers], x=ensemble.preds2$abund[keepers], ylim = c(0,plot.max), xlim = c(0,plot.max),
          ylab = ifelse(method=="pearson","Predicted","Predicted Ranks"),
          xlab = ifelse(method=="pearson","Observed","Observed Ranks"),main = "", pch = 20)
-    abline(coef = c(0,1), lty = 2)
-    abline(regr,col=2)
-    text(1, plot.max*.9, paste(method,"R-squared = ", signif(rsqr,2)), pos = 4)
+    graphics::abline(coef = c(0,1), lty = 2)
+    graphics::abline(regr,col=2)
+    graphics::text(1, plot.max*.9, paste(method,"R-squared = ", signif(rsqr,2)), pos = 4)
 
-    suppressWarnings(par(old.par))
+    suppressWarnings(graphics::par(old.par))
   }
 
   print(paste("Ensemble",method,"Rsq =",round(rsqr,3)))

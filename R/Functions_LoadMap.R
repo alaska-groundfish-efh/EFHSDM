@@ -84,7 +84,7 @@ FindEFHbreaks<-function(abund.raster,                  # an abundance raster
 
   # choose an EFH method
   if(method=="percentile"){
-    sample <- na.omit(raster::getValues(abund.raster))
+    sample <- stats::na.omit(raster::getValues(abund.raster))
     sample[sample <= threshold] <- NA
     breaks <- stats::quantile(sample, probs = quants, na.rm = TRUE, names = FALSE)
     breaks[1]<-0
@@ -93,16 +93,16 @@ FindEFHbreaks<-function(abund.raster,                  # an abundance raster
   if(method=="cumulative"){
     # Decide whether to sample at given locations or use the whole thing
     if(is.null(data)){
-      vals<-na.omit(sort(raster::getValues(abund.raster)))
+      vals<-stats::na.omit(sort(raster::getValues(abund.raster)))
       vals2<-cumsum(vals)/sum(vals)
     }else{
-      vals<-na.omit(sort(raster::extract(abund.raster,data.frame(data$lon,data$lat))))
+      vals<-stats::na.omit(sort(raster::extract(abund.raster,data.frame(data$lon,data$lat))))
       vals2<-cumsum(vals)/sum(vals)
     }
 
     # Loop to calculate the breaks
     breaks<-c(0,rep(NA,length(quants)-2),Inf)
-    while(length(unique(na.omit(breaks)))!=length(quants)){
+    while(length(unique(stats::na.omit(breaks)))!=length(quants)){
       for(j in 2:(length(quants)-1)){
         breaks[j]<-vals[which(vals2>quants[j])[1]]
       }
@@ -147,7 +147,7 @@ CrossValidateModel<-function(model,
                              group="random"){
 
   if(model.type!="maxnet"){
-    species<-ifelse(model$family$family=="ziplss",as.character(formula(model)[[1]])[[2]],as.character(formula(model))[[2]])
+    species<-ifelse(model$family$family=="ziplss",as.character(stats::formula(model)[[1]])[[2]],as.character(stats::formula(model))[[2]])
   }
 
   if(model.type%in%c("maxnet","cloglog","hgam","gam")==F){
@@ -215,7 +215,7 @@ CrossValidateModel<-function(model,
   if(scale.preds){scale.factors<-rep(NA,length=n.folds)}
 
   #progress bar
-  pb <- txtProgressBar(min = 0, max = n.folds, style = 3)
+  pb <- utils::txtProgressBar(min = 0, max = n.folds, style = 3)
 
   # For each fold, first set up the data, then use the appropriate method to generate predictions
   for(i in 1:n.folds){
@@ -256,7 +256,7 @@ CrossValidateModel<-function(model,
       probs<-mgcv::predict.gam(object = model,newdata=test.data,type="response")
 
       try(cv.model<-FitGAM(data = train.data,reduce=F,family.gam = "binomial",select=F,
-                           link.fx = "cloglog",gam.formula = formula(model),verbose = F))
+                           link.fx = "cloglog",gam.formula = stats::formula(model),verbose = F))
       if(exists("cv.model")){
         cvpreds<-exp(mgcv::predict.gam(object = cv.model,newdata=test.data,type="link"))
         cvprobs<-mgcv::predict.gam(object = cv.model,newdata=test.data,type="response")
@@ -270,7 +270,7 @@ CrossValidateModel<-function(model,
       preds<-mgcv::predict.gam(object = model,newdata=test.data,type="response")
       probs<-1-exp(-exp(mgcv::predict.gam(model,newdata=test.data)[,2]))
 
-      try(cv.model<-FitHurdleGAM(density.formula = formula(model)[[1]],prob.formula = formula(model)[[2]],
+      try(cv.model<-FitHurdleGAM(density.formula = stats::formula(model)[[1]],prob.formula = stats::formula(model)[[2]],
                                  data = train.data,reduce = F,verbose = F,select = F))
       if(exists("cv.model")){
         cvpreds<-mgcv::predict.gam(object = cv.model,newdata=test.data,type="response")
@@ -286,7 +286,7 @@ CrossValidateModel<-function(model,
       if(strsplit(model$family$family,split="[()]")[[1]][1]=="Negative Binomial"){
         gamfam<-"nb"
         theta<-as.numeric(strsplit(model$family[[1]],split="[()]")[[1]][2])
-        probs<-1-dnbinom(0,mu = mgcv::predict.gam(model,newdata=test.data,type="response"),size = theta)
+        probs<-1-stats::dnbinom(0,mu = mgcv::predict.gam(model,newdata=test.data,type="response"),size = theta)
       }else{
         gamfam<-model$family$family
         probs<-(1-stats::dpois(0,mgcv::predict.gam(object = model,newdata=test.data,type="response")))
@@ -294,7 +294,7 @@ CrossValidateModel<-function(model,
       preds<-mgcv::predict.gam(object = model,newdata=test.data,type="response")
 
       try(cv.model<-FitGAM(data = train.data,reduce=F,family.gam = gamfam,select=F,
-                           link.fx = model$family$link,gam.formula = formula(model),verbose = F))
+                           link.fx = model$family$link,gam.formula = stats::formula(model),verbose = F))
       if(exists("cv.model")){
         cvpreds<-mgcv::predict.gam(object = cv.model,newdata=test.data,type="response")
         if(strsplit(model$family$family,split="[()]")[[1]][1]=="Negative Binomial"){
@@ -323,8 +323,8 @@ CrossValidateModel<-function(model,
     model.list[[i]]<-cv.model
 
     # need to remove a few old objects
-    suppressWarnings(rm(cv.model,cv.preds))
-    setTxtProgressBar(pb, i)
+    suppressWarnings(rm(cv.model,cvpreds))
+    utils::setTxtProgressBar(pb, i)
   }
 
   if(scale.preds){
@@ -351,7 +351,7 @@ CrossValidateModel<-function(model,
 #' @details This is low priority, but could be much better.
 #' @param error.data data frame containing observation, predictions, and CV predictions
 #' @param method character; a method to be passed to the cor function
-#' @param make.hist # should the histograms be plotted, they sometimes fail and may need to be turned off
+#' @param make.hist should the histograms be plotted, they sometimes fail and may need to be turned off
 #'
 #' @return nothing, but creates some plots
 #' @export
@@ -377,12 +377,12 @@ MakeCrossValidationPlots<-function(error.data,           # a data frame, typical
 
   main.regr<-stats::lm(error.data2$pred[keepers]~error.data2$abund[keepers])
   main.r2<-summary(main.regr)$r.squared
-  main.rmse<-sqrt(sum((na.omit(error.data$abund[keepers]-error.data$pred[keepers]))^2)/nrow(na.omit(error.data[keepers,])))
+  main.rmse<-sqrt(sum((stats::na.omit(error.data$abund[keepers]-error.data$pred[keepers]))^2)/nrow(stats::na.omit(error.data[keepers,])))
 
   #now need to do the cv tests, which should already be in a nice format from the CV function
   cv.regr<-stats::lm(error.data2$cvpred[keepers]~error.data2$abund[keepers])
   cv.r2<-summary(cv.regr)$r.squared
-  cv.rmse<-sqrt(sum((na.omit(error.data$abund[keepers]-error.data$cvpred[keepers]))^2)/nrow(na.omit(error.data[keepers,])))
+  cv.rmse<-sqrt(sum((stats::na.omit(error.data$abund[keepers]-error.data$cvpred[keepers]))^2)/nrow(stats::na.omit(error.data[keepers,])))
 
   print(paste("Full model",method,"Rsq =",round(main.r2,2)))
   print(paste("CV",method,"Rsq =",round(cv.r2,2)))
@@ -390,12 +390,12 @@ MakeCrossValidationPlots<-function(error.data,           # a data frame, typical
   print(paste("CV RMSE =",round(cv.rmse,3)))
 
   # make all the plots
-  old.par<-par()[c("mfcol","family","mar","xaxs","yaxs")]
-  par(mfcol = c(ifelse(make.hist==T,3,2),2), family = "sans", mar = c(4,4,3,1))
+  old.par<-graphics::par()[c("mfcol","family","mar","xaxs","yaxs")]
+  graphics::par(mfcol = c(ifelse(make.hist==T,3,2),2), family = "sans", mar = c(4,4,3,1))
 
-  qqnorm((error.data$pred[keepers] - error.data$abund[keepers]), main = "Model Predictions")
-  qqline((error.data$pred[keepers] - error.data$abund[keepers]))
-  if(make.hist==T){hist((error.data$pred[keepers] - error.data$abund[keepers]), xlab = "Residuals", main = "")}
+  graphics::qqnorm((error.data$pred[keepers] - error.data$abund[keepers]), main = "Model Predictions")
+  graphics::qqline((error.data$pred[keepers] - error.data$abund[keepers]))
+  if(make.hist==T){graphics::hist((error.data$pred[keepers] - error.data$abund[keepers]), xlab = "Residuals", main = "")}
   pred.max <- ifelse(method=="pearson",stats::quantile(error.data2$pred[keepers],probs=.99,na.rm=T),nrow(error.data2))
   abund.max <- ifelse(method=="pearson",stats::quantile(error.data2$pred[keepers],probs=.99,na.rm=T),nrow(error.data2))
   plot.max<-max(pred.max,abund.max)*1.1
@@ -403,9 +403,9 @@ MakeCrossValidationPlots<-function(error.data,           # a data frame, typical
   plot(y=error.data2$pred[keepers], x=error.data2$abund[keepers], ylim = c(0,plot.max), xlim = c(0,plot.max),
        ylab = ifelse(method=="pearson","Predicted","Predicted Ranks"),
        xlab = ifelse(method=="pearson","Observed","Observed Ranks"),main = "", pch = 20)
-  abline(coef = c(0,1), lty = 2)
-  abline(main.regr,col=2)
-  text(1, plot.max*.9, paste(method,"R-squared = ", signif(main.r2,2)), pos = 4)
+  graphics::abline(coef = c(0,1), lty = 2)
+  graphics::abline(main.regr,col=2)
+  graphics::text(1, plot.max*.9, paste(method,"R-squared = ", signif(main.r2,2)), pos = 4)
 
 
   #Plots for test/CV data
@@ -415,15 +415,15 @@ MakeCrossValidationPlots<-function(error.data,           # a data frame, typical
 
   stats::qqnorm((error.data$cvpred[keepers] - error.data$abund[keepers]), main = "Test data")
   stats::qqline((error.data$cvpred[keepers] - error.data$abund[keepers]))
-  if(make.hist==T){hist((error.data$cvpred[keepers] - error.data$abund[keepers]), xlab = "Residuals", main = "")}
+  if(make.hist==T){graphics::hist((error.data$cvpred[keepers] - error.data$abund[keepers]), xlab = "Residuals", main = "")}
 
   plot(y=error.data2$cvpred[keepers], x=error.data2$abund[keepers], ylim = c(0,plot.max), xlim = c(0,plot.max),
        ylab = ifelse(method=="pearson","Predicted","Predicted Ranks"),
        xlab = ifelse(method=="pearson","Observed","Observed Ranks"),main = "", pch = 20)
-  abline(coef = c(0,1), lty = 2)
-  abline(cv.regr,col=2)
-  text(1, plot.max*.9, paste(method,"R-squared = ", signif(cv.r2,2)), pos = 4)
-  suppressWarnings(par(old.par))
+  graphics::abline(coef = c(0,1), lty = 2)
+  graphics::abline(cv.regr,col=2)
+  graphics::text(1, plot.max*.9, paste(method,"R-squared = ", signif(cv.r2,2)), pos = 4)
+  suppressWarnings(graphics::par(old.par))
 }
 
 
@@ -491,12 +491,12 @@ MakeVarianceRasters<-function(model.list,            # a list of models for each
 
 
   #progress bar
-  pb <- txtProgressBar(min = 0, max = length(model.list2), style = 3)
+  pb <- utils::txtProgressBar(min = 0, max = length(model.list2), style = 3)
 
   # loop through and get predictions for each model
   for(m in 1:length(model.list2)){
     if(model.type=="maxnet"){
-      out.data[,m]<-exp(predict(model.list2[[m]],newdata=data,type="link")+model.list2[[m]]$entropy)
+      out.data[,m]<-exp(stats::predict(model.list2[[m]],newdata=data,type="link")+model.list2[[m]]$entropy)
     }
     if(model.type=="cloglog"){
       out.data[,m]<-exp(mgcv::predict.gam(object = model.list2[[m]],newdata=data,type="link"))
@@ -507,14 +507,14 @@ MakeVarianceRasters<-function(model.list,            # a list of models for each
     if(model.type=="gam"){
       out.data[,m]<-mgcv::predict.gam(object = model.list2[[m]],newdata=data,type="response")
     }
-    setTxtProgressBar(pb, m)
+    utils::setTxtProgressBar(pb, m)
   }
   close(pb)
   # now tally things up
 
   raster.template<-raster::raster(raster.stack)
 
-  variances<-apply(X = out.data*scale.factor,MARGIN = 1,FUN = var)
+  variances<-apply(X = out.data*scale.factor,MARGIN = 1,FUN = stats::var)
   var.vec<-rep(NA,times=raster::ncell(raster.stack))
   var.vec[data.spots]<-variances
   var.raster<-raster::setValues(raster.template,values = var.vec)
