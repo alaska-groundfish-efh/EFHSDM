@@ -61,6 +61,19 @@ usethis::use_build_ignore(files = "R/Meatgrinder5.R")
 
 
 # Datasets ----------------------------------------------------------------
+# Advice from Sean:
+# There are a couple of ways to make .rda data set load into the environment
+# One is to put everything in data and set LazyData: true in the description
+# The other is ensure that all of the data sets that should be exported have @export in the .R file for your data
+# In coldpool I have LazyData: false and export the individual data sets: https://github.com/afsc-gap-products/coldpool/blob/2019492cb8db3bc71e086075406217ebba073419/R/data.R#L1
+
+# In FishStatsUtils, Jim has LazyData: true and puts all of the lazy load .rdas in in /data/
+#   https://github.com/James-Thorson-NOAA/FishStatsUtils/tree/main/data
+# and
+# https://github.com/James-Thorson-NOAA/FishStatsUtils/blob/51c7713682ecc8a30ddb3d1f949b7c241451e75b/DESCRIPTION#L57
+
+
+
 # Set up sysdata.rda, which includes data that should be automatically loaded with the package and will not be avail to users outside the package
 
 # These are all in the current example; more will probably need to be added
@@ -75,6 +88,17 @@ GOA_lat <- raster::mask(lat, GOA_bathy, overwrite = F)
 GOA_lon <- raster::init(GOA_bathy, v = "x")
 GOA_lon <- raster::mask(lon, GOA_bathy, overwrite = F)
 
+# region.data <- subset(region_data_all, year >= 2012)
+# region.data$sponge <- as.integer(region.data$sponge > 0)
+# region.data$logarea <- log(region.data$area)
+
+# this step formulates lon and lat so they can easily be used as variables, and stacks them in one object
+
+#Multiply raster by one to get "free-floating" raster w no filenames attached (good because we don't want paths in there)
+raster_stack <- 1*raster::stack(GOA_lon, GOA_lat, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge)
+
+names(raster_stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
+
 usethis::use_data(region_data_all)
 usethis::use_data(GOA_bathy)
 usethis::use_data(GOA_btemp)
@@ -82,4 +106,11 @@ usethis::use_data(GOA_slope)
 usethis::use_data(GOA_sponge)
 usethis::use_data(GOA_lat)
 usethis::use_data(GOA_lon)
+usethis::use_data(raster_stack)
 #save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, GOA_lat, GOA_lon, file = here::here("R","sysdata.rda"))
+
+
+# Build package -----------------------------------------------------------
+
+devtools::build()
+# Build pkg including vignettes

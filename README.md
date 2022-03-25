@@ -2,7 +2,7 @@
 
 A package is designed to produce SDMs and SDM visualizations as part of the 2022 EFH 5-year review. It is designed to be moderately flexible and can be expanded in the future, but for now assumes that abundance prediction is the end goal. 
 
-The most recent version of this package was built in R 4.1.1.
+The most recent version of this package was built in R 4.1.2.
 
 Authors:
 
@@ -13,10 +13,14 @@ Authors:
 @jodipirtle
 
 
+
 # Installation
 `EFHSDM` can be installed using the following code:
 ```r
-devtools::install_github("alaska-groundfish-efh/EFHSDM", build_vignettes = TRUE)
+devtools::install_github("afsc-gap-products/akgfmaps", build_vignettes=TRUE)
+
+devtools::install_github("alaska-groundfish-efh/EFHSDM@pkgdev", dependencies = TRUE, build_vignettes = FALSE)
+#NOTE: For install, make sure to change these instructions when the pkgdev branch is merged w main
 ```
 
 
@@ -98,27 +102,22 @@ First, make sure you are connected to the VPN and have access to the `Y:/` drive
 
 Begin by loading the data and the covariate rasters. For example purposes, we will used only the last  years of data and only a few covariates. *Note that this means that the map you produce will look different from the final map produced in the 2022 EFH 5-year Review.*
 
-
-### Load the functions used for SDMs
-```{r include=F}
-efh_fns <- paste0("R/", list.files(path = here::here("R"), pattern = "Functions_"))
-sapply(efh_fns, source, .GlobalEnv)
+### Load EFHSDM
+```r
+library(akgfmaps)
+library(EFHSDM)
 ```
 
 ### Load the rasters
+
+Currently, the raster for this example is stored with the package, and is just called `raster_stack`. You may eventually want to make your own raster stack and use it here. 
 ``` r
 region.data <- subset(region_data_all, year >= 2012)
 region.data$sponge <- as.integer(region.data$sponge > 0)
 region.data$logarea <- log(region.data$area)
 
-# this step formulates lon and lat so they can easily be used as variables, and stacks them in one object
-lat <- raster::init(GOA_bathy, v = "y")
-lat <- raster::mask(lat, GOA_bathy, overwrite = F)
-lon <- raster::init(GOA_bathy, v = "x")
-lon <- raster::mask(lon, GOA_bathy, overwrite = F)
 
-raster.stack <- raster::stack(lon, lat, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge)
-names(raster.stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
+raster.stack <- raster_stack
 ```
 
 ### Next we will fit a basic Poisson model and generate an abundance map
@@ -126,14 +125,14 @@ names(raster.stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
 gam.form <- formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) + s(btemp, bs='tp',m=1,k=4) + s(slope, bs='tp',m=1,k=4) + offset(logarea)")
 
 # Note: to change the species/lifestage in this example, you can use any of the names in the columns of the region.data object:
-names(region.data[-c(1:29,185)])
+head(names(region.data[-c(1:29,185)]))
 
 poisson.model <- FitGAM(gam.formula = gam.form, data = region.data, family.gam = "poisson")
 ```
 
 ### Make the abundance map
 ``` r
-poisson.abundance <- MakeGAMAbundance(poisson.model, raster.stack)
+poisson.abundance <- MakeGAMAbundance(model = poisson.model, r.stack = raster.stack)
 abundance.plot <- MakeAKGFDensityplot(region = "goa", density.map = poisson.abundance, buffer = .98, title.name = "Adult ATF", legend.title = "Abundance")
 
 # Display abundance plot. Note: this may take a minute to render!
