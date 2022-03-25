@@ -822,9 +822,9 @@ GetGAMEffects <- function(model,
       # we are going to piggy back off the mgcv functions to figure out which ones are NAs
       # that way the plot won't extrapolate out of the sample area
       # best way to do this is via the built in plot function, but need a dummy png so that it doesn't output
-      graphics::png("trashme.png")
+      grDevices::png("trashme.png")
       x <- plot(model, scale = 0, se = F, pages = 1)
-      graphics::dev.off()
+      grDevices::dev.off()
       file.remove("trashme.png")
 
       xvec <- vector(length = length(x))
