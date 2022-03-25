@@ -45,7 +45,7 @@ region.data$logarea <- log(region.data$area)
 lat <- GOA_lat
 lon <- GOA_lon
 
-raster.stack <- raster::stack(lon, lat, bathy, btemp, slope, sponge)
+raster.stack <-raster_stack
 names(raster.stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
 
 nice.names <- data.frame(
