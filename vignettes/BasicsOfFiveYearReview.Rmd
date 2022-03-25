@@ -84,7 +84,7 @@ random.folds <- rep(LETTERS[1:10], length.out = nrow(species.data))
 species.data$Folds <- sample(random.folds, size = nrow(species.data), replace = F)
 
 # a good start is to map the presence data
-hd <- quantile(species.data[species.data[, species] > 0, species], .9)
+hd <- stats::quantile(species.data[species.data[, species] > 0, species], .9)
 
 MakeAKGFDotplot(
   presence = species.data[species.data[, species] > 0, ],
@@ -93,7 +93,7 @@ MakeAKGFDotplot(
   dataCRS = raster.stack@crs, region = "goa", title.name = figure.name
 )
 
-gam.form <- formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) +
+gam.form <- stats::formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) +
                     s(btemp, bs='tp',m=1,k=4) + s(slope, bs='tp',m=1,k=4) + as.factor(sponge) + offset(logarea)")
 ```
 
@@ -174,7 +174,7 @@ cloglog.rmse <- RMSE(pred = cloglog.errors$cvpred, obs = cloglog.errors$abund)
 
 ziplss GAMs require a separate formula for the probability part of the model, and it should leave off the dependent variable
 ```{r eval=F}
-prob.form <- formula("~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) +
+prob.form <- stats::formula("~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) +
                     s(btemp, bs='tp',m=1,k=4) + s(slope, bs='tp',m=1,k=4) + as.factor(sponge) + offset(logarea)")
 
 hpoisson.model <- FitHurdleGAM(
