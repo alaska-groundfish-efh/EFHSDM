@@ -14,6 +14,16 @@ MakeDevianceTable(
 )
 }
 \arguments{
+\item{model.names}{optional vector of names for the models, should match ordering of dev.list}
+
+\item{model.types}{optional vector of model types, should match ordering of dev.list}
+
+\item{nice.names}{optional data.frame with nicer names matched to abbreviated version used in models}
+
+\item{dev.list}{a list of named vectors giving the deviance explained values for each model}
+
+\item{model.weights}{optional vector of ensemble weights}
+
 \item{filename}{path to files}
 }
 \value{

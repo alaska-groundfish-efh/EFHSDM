@@ -12,7 +12,8 @@
 # require(xtable)
 # require(XML)
 
-#' Make deviance explained table
+
+#' Make deviance explained table with constituent model statistics
 #'
 #' @description Make a table of deviance explained for a model object.
 #' @details This is a slightly over-complicated function, but it automatically adjusts the table to whatever data is supplied to it. Basically, first it makes a lot of notes as to where things should go, then it takes a second pass construct the table and put everything in the right place. Known issue: does not calculate the degrees of freedom for factors.
@@ -311,9 +312,10 @@ MakeXtable<-function(model,             # a model object
 
 
 
+
 #' Make deviance explained table (for ensemble)
 #'
-#' @description Make an HTML table of deviance explained for a model ensemble.
+#' @description Make an HTML table of deviance explained and fit metrics for a model ensemble.
 #' @details For now, you need to include each of the elements for the ensemble table to work, so no shortcuts. It is kind of cumbersome and unlikely to be useful for others. May soon be deprecated.
 #' @param model.names vector of names for the models
 #' @param ensemble logical; is an ensemble included
@@ -421,8 +423,8 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
     etable[model.rows,pred.cols[4]]<-format(round(pde.vec, 2),nsmall=2)
 
     if(ensemble){
-      ensemble.dat<-stats::na.omit(subset(preds.table,Model=="ensemble"))
 
+      ensemble.dat<-stats::na.omit(subset(preds.table,Model=="ensemble"))
       etable[n.models+3,N.col]<-sum(ensemble.dat$abund>0,na.rm=T)
       etable[n.models+3,pred.cols[1]]<-format(round(RMSE(obs=ensemble.dat$abund,pred=ensemble.dat$pred),digs),nsmall=digs,big.mark = ",")
       etable[n.models+3,pred.cols[2]]<-format(round(stats::cor(ensemble.preds$abund,ensemble.preds$pred,method=cor.method), 2),nsmall=2)
@@ -491,16 +493,18 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
 
 
 
+
 #' Make deviance table
-#'
-#' @param model.names optional vector of names for the models, should match ordering of dev.list
-#' @param model.types optional vector of model types, should match ordering of dev.list
-#' @param nice.names optional data.frame with nicer names matched to abbreviated version used in models
+#' @description Make an HTML table of deviance explained for a model ensemble.
+#' @details Makes a simple html table of deviance explained values for models and the ensemble.
+#' @param model.names character vector with names for the models, should match order of dev.list
+#' @param model.types character vector with types of model, should match order of dev.list
+#' @param nice.names dataframe matching abbreviated names to nicer versions
 #' @param dev.list a list of named vectors giving the deviance explained values for each model
-#' @param model.weights optional vector of ensemble weights
-#' @param filename path to files
+#' @param model.weights numeric vector with weights for each model, should match order of dev.list
+#' @param filename a filename to use for saving the output
 #'
-#' @return
+#' @return does not return anything, but writes two tables at based on the supplied filename
 #' @export
 #'
 #' @examples
