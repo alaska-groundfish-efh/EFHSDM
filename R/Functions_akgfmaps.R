@@ -418,7 +418,7 @@ MakeAKGFDensityplot <- function(region,
 #' @description Create EFH map for a species/lifestage combination
 #' @param region character; which region is being used, must correspond to an akgfmaps baselayer
 #' @param efh.map raster of factors to be interpretted as EFH
-#' @drop a buffer that prevents outlining of small isolated pixels, makes it look nicer
+#' @param drop a buffer that prevents outlining of small isolated pixels, makes it look nicer
 #' @param survey.area sf or raster layer to use, if the desired survey area is different from akgfmaps
 #' @param ext.adjust vector of length four, representing xmin,xmax, ymin,ymax, to adjust the extent
 #' @param legend.pos vector of length two with decimal position of legend box
@@ -437,7 +437,7 @@ MakeAKGFDensityplot <- function(region,
 #' @examples
 MakeAKGFEFHplot <- function(region,
                             efh.map,
-                            drop = 10^6,
+                            drop = 10^8,
                             survey.area = "default",
                             ext.adjust = "default", # vector of length four, representing xmin,xmax, ymin,ymax, to adjust the extent
                             legend.pos = "default", # a vector of length two with a location for the legend, use NA to suppress
@@ -767,7 +767,7 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
       legend.key = ggplot2::element_rect(fill = NA, color = NA),
       legend.position = leg.pos, legend.justification = c(0, 1),
       axis.title = ggplot2::element_blank(), axis.text = element_text(size = 12),
-      legend.text = ggplot2::element_text(size = 12), legend.title = element_text(size = 12),
+      legend.text = ggplot2::element_text(size = 12), legend.title = ggplot2::element_text(size = 12),
       plot.background = ggplot2::element_rect(fill = NA, color = NA)
     ) +
     ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size = 4, shape = 15)))
@@ -837,7 +837,7 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
       yname <- nice.names$name[which(nice.names$var == effect.names[2])]
 
       if (xname %in% c("lon", "Longitude", "long")) {
-        con.data <- contourLines(x = sort(unique(e.data$x)), y = sort(unique(e.data$y)), z = matrix(nrow = 40, ncol = 40, data = e.data$effect))
+        con.data <- grDevices::contourLines(x = sort(unique(e.data$x)), y = sort(unique(e.data$y)), z = matrix(nrow = 40, ncol = 40, data = e.data$effect))
 
         con.data2 <- data.frame(lon = con.data[[1]]$x, lat = con.data[[1]]$y, effect = con.data[[1]]$level, group = 1)
         label.spots <- data.frame(con.data2[round(nrow(con.data2) / 2), 1:2], tag = con.data[[1]]$level)
@@ -885,8 +885,8 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
           ggplot2::geom_sf(data = MAP$bathymetry, col = "grey60") +
           ggplot2::geom_path(data = e.data2, ggplot2::aes(x = lon, y = lat, group = group), size = 1) +
           ggplot2::geom_label(
-            data = spot.data2, aes(x = X, y = Y, label = label), fill = rgb(1, 1, 1, .9),
-            label.size = NA, size = 4, label.padding = unit(.10, "lines"), nudge_x = -1000
+            data = spot.data2, ggplot2::aes(x = X, y = Y, label = label), fill = grDevices::rgb(1, 1, 1, .9),
+            label.size = NA, size = 4, label.padding = ggplot2::unit(.10, "lines"), nudge_x = -1000
           ) +
           ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust.x, ylim = MAP$plot.boundary$y + ext.adjust.y) +
           ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
@@ -901,7 +901,7 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
       } else {
         # for options other than lat.lon
 
-        con.data <- contourLines(
+        con.data <- grDevices::contourLines(
           x = sort(unique(e.data[, 1])), y = sort(unique(e.data[, 2])),
           z = matrix(nrow = 40, ncol = 40, data = e.data$effect), nlevels = 10
         )
