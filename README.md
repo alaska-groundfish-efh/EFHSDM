@@ -97,9 +97,9 @@ The functions are typically called top to bottom. Begin by fitting a model using
 
 ## Simple example
 
-First, make sure you are connected to the VPN and have access to the `Y:/` drive.
+All of the rasters used for the EFH 2022 Five-Year Review are stored on a shared drive at NOAA. For the purposes of the following example, the datasets are embedded in the package. For additional rasters and datasets, contact the package developers or submit a data [product request](https://github.com/alaska-groundfish-efh/product-requests/issues).
 
-Begin by loading the data and the covariate rasters. For example purposes, we will used only the last  years of data and only a few covariates. *Note that this means that the map you produce will look different from the final map produced in the 2022 EFH 5-year Review.*
+For example purposes, we will used only the last  years of data and only a few covariates. *Note that this means that the map you produce will look different from the final map produced in the 2022 EFH 5-year Review.*
 
 ### Load EFHSDM
 ```r
@@ -147,7 +147,7 @@ dev.off()
 ### Get the covariate effects
 ``` r
 poisson.effects <- GetGAMEffects(poisson.model, data = region.data)
-plotEffects(poisson.effects)
+Effectsplot(poisson.effects)
 ```
 
 ### Crossvalidate the model
