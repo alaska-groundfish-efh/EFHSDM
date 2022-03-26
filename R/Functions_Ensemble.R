@@ -279,7 +279,7 @@ GetEnsembleEffects<-function(effects.list,
   list.index<-1
 
   for(m in 1:length(effects.list)){
-    if(is.na(effects.list[[m]])==F & model.weights[m]>0){
+    if(is.list(effects.list[[m]]) & model.weights[m]>0){
       effects.list1[[list.index]]<-effects.list[[m]]
       names(effects.list1)[list.index]<-names(effects.list)[m]
       model.weights1<-c(model.weights1,model.weights[m])

@@ -313,7 +313,7 @@ GetMaxnetEffects<-function(model,
       if(is.null(cv.models)==F){
         cv.dat<-matrix(data=NA,nrow=100,ncol=length(cv.models))
         for(f in 1:length(cv.models)){
-          if(is.na(cv.models[[f]])==F){
+          if(is.list(cv.models[[f]])){
             suppressWarnings(cv.dat[,f]<-maxnet::response.plot(cv.models[[f]],type = "link",v = xvars[i],plot=F)$pred
                              +cv.models[[f]]$entropy*as.integer(add.entropy))
           }else{
@@ -355,7 +355,7 @@ GetMaxnetEffects<-function(model,
       if(is.null(cv.models)==F){
         cv.dat<-matrix(data=NA,nrow=nrow(dat),ncol=length(cv.models))
         for(f in 1:length(cv.models)){
-          if(is.na(cv.models[[f]])==F){
+          if(is.list(cv.models[[f]])){
             cv.dat[,f]<-maxnet::response.plot(cv.models[[f]],type = "link",
                                       v = xfacs[i],plot=F,levels = dat$x)$pred+ent
           }else{
