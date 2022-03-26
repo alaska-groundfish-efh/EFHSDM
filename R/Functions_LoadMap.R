@@ -394,7 +394,7 @@ MakeCrossValidationPlots<-function(error.data,           # a data frame, typical
   graphics::par(mfcol = c(ifelse(make.hist==T,3,2),2), family = "sans", mar = c(4,4,3,1))
 
   stats::qqnorm((error.data$pred[keepers] - error.data$abund[keepers]), main = "Model Predictions")
-  graphics::qqline((error.data$pred[keepers] - error.data$abund[keepers]))
+  stats::qqline((error.data$pred[keepers] - error.data$abund[keepers]))
   if(make.hist==T){graphics::hist((error.data$pred[keepers] - error.data$abund[keepers]), xlab = "Residuals", main = "")}
   pred.max <- ifelse(method=="pearson",stats::quantile(error.data2$pred[keepers],probs=.99,na.rm=T),nrow(error.data2))
   abund.max <- ifelse(method=="pearson",stats::quantile(error.data2$pred[keepers],probs=.99,na.rm=T),nrow(error.data2))
@@ -458,7 +458,7 @@ MakeVarianceRasters<-function(model.list,            # a list of models for each
   list.index<-1
   model.list2<-list()
   for(m in 1:length(model.list)){
-    if(is.na(model.list[[m]])==F){
+    if(is.list(model.list[[m]])){
       model.list2[[list.index]]<-model.list[[m]]
       list.index<-list.index+1
     }

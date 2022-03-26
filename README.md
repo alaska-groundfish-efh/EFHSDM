@@ -147,7 +147,7 @@ dev.off()
 ### Get the covariate effects
 ``` r
 poisson.effects <- GetGAMEffects(poisson.model, data = region.data)
-Effectsplot(poisson.effects)
+Effectsplot(poisson.effects,region="goa",crs=raster.stack@crs)
 ```
 
 ### Crossvalidate the model

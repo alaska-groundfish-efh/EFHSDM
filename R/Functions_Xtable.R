@@ -55,9 +55,12 @@ MakeXtable<-function(model,             # a model object
                      devs=NULL,         # a named vector of deviance %s from one of the ___Stats functions
                      area=NULL){        # a single value for the area of the EFH
 
+  # fix user input
+  if(length(devs)==1 && is.na(devs[1])){devs<-NULL}
+  if(length(group)==1 && is.na(group)){group<-NULL}
+
   dim.names1<-""
   dim.names2<-"Model term"
-  if(length(devs)>0){if(is.na(devs)){devs<-NULL}}
 
   if(tolower(model.type)=="maxnet"){
     if(is.null(ncoefs)==F){
@@ -182,7 +185,7 @@ MakeXtable<-function(model,             # a model object
     dim.names2<-c(dim.names2,"Area")
   }
   # Covers a weird edge case if the table is very small
-  if(length(dim.names1)<7 & is.na(group)==F & is.null(group)==F){
+  if(length(dim.names1)<7 & is.null(group)==F){
     diff<-7-length(dim.names1)
     dim.names1<-c(dim.names1,rep("",diff))
     dim.names2<-c(dim.names2,rep("",diff))
@@ -253,7 +256,7 @@ MakeXtable<-function(model,             # a model object
 
   # make a spacer so the table is formatted nice and readable, if necessary
   spacer<-NULL
-  if(is.na(group)==F & is.null(group)==F | is.null(train)==F |is.null(test)==F){
+  if(is.null(group)==F | is.null(train)==F |is.null(test)==F){
     spacer<-array("",dim=c(2,length(dim.names1)))
     spacer[,1]<-"."
   }
@@ -276,7 +279,7 @@ MakeXtable<-function(model,             # a model object
 
   cv.table<-NULL
   #now, add in a table for the cross-validation info
-  if(is.na(group)==F & is.null(group)==F){
+  if(is.null(group)==F){
 
     cv.rows<-length(unique(group))+3
     cv.table<-array("",dim = c(cv.rows,length(dim.names1)))

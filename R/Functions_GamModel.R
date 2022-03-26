@@ -77,10 +77,10 @@ AssembleGAMFormula <- function(yvar, gam.table, hgam = F) {
         out.term0 <- paste0(out.term0, ",m=", g.table$m[t])
       }
       if (is.na(g.table$m[t]) == F & is.na(g.table$m2[t]) == F) {
-        out.term0 <- paste0(out.term0, ",m=c(", g.table$m[t], ",", g.table$m2, ")")
+        out.term0 <- paste0(out.term0, ",m=c(", g.table$m[t], ",", g.table$m2[t], ")")
       }
       out.terms[t] <- paste0(out.term0, ")")
-      if (g.table$type == "linear") {
+      if (g.table$type[t] == "linear") {
         out.terms[t] <- g.table$term[t]
       }
     }
@@ -450,7 +450,6 @@ AutodetectGAMTerms <- function(model, hgam = "all") {
             if ("c" %in% strsplit(formula.options[m.spot], split = "")[[1]]) {
               m.spot <- c(m.spot, m.spot + 1)
             }
-            formula.options[m.spot]
             for (n in 1:length(m.spot)) {
               m1 <- trimws(formula.options[m.spot][n])
               if (n == 1) {
@@ -459,7 +458,7 @@ AutodetectGAMTerms <- function(model, hgam = "all") {
                 m2 <- m1
               }
               m3 <- trimws(strsplit(m2, split = "[()]")[[1]])
-              type.dat[t, 6 + n] <- stats::na.omit(as.numeric(m3))
+              type.dat[t, 6 + n] <- suppressWarnings(stats::na.omit(as.numeric(m3))[1])
             }
           }
         }
@@ -525,7 +524,7 @@ GAMStats <- function(model, # a gam model
   # Need some code to get the terms and format them
   terms <- AutodetectGAMTerms(model)
 
-  if (gamfam == "ziplss") {
+  if (gamfam[1] == "ziplss") {
     d.terms <- terms[[1]]
     p.terms <- terms[[2]]
     x.vars <- unique(c(d.terms$term[d.terms$type != "offset"], p.terms$term[p.terms$type != "offset"]))
@@ -541,7 +540,7 @@ GAMStats <- function(model, # a gam model
   for (i in 1:length(x.vars)) {
 
     # build a formula and fit a new gam
-    if (gamfam == "ziplss") {
+    if (gamfam[1] == "ziplss") {
       d.terms1 <- d.terms[d.terms$term != x.vars[i], ]
       p.terms1 <- p.terms[p.terms$term != x.vars[i], ]
 
@@ -574,7 +573,7 @@ GAMStats <- function(model, # a gam model
     dev.exp <- dev.lost * 1 / sum(dev.lost, na.rm = T) * 100
 
 
-    if (gamfam == "ziplss") {
+    if (gamfam[1] == "ziplss") {
       name.terms <- unique(rbind(terms[[1]], terms[[2]]))
     } else {
       name.terms <- terms[terms$type != "offset", c("term", "term2")]
@@ -735,7 +734,7 @@ GetGAMEffects <- function(model,
     list.index <- 1
     cv.model.list1 <- list()
     for (m in 1:length(cv.model.list)) {
-      if (is.na(cv.model.list[[m]]) == F) {
+      if (is.list(cv.model.list[[m]])) {
         cv.model.list1[[list.index]] <- cv.model.list[[m]]
         list.index <- list.index + 1
       }
@@ -883,7 +882,7 @@ GetGAMEffects <- function(model,
       if (is.null(cv.model.list) == F) {
         effect.dat <- matrix(nrow = 100, ncol = length(cv.model.list))
         for (f in 1:length(cv.model.list)) {
-          if (is.na(cv.model.list[[f]]) == F) {
+          if (is.list(cv.model.list[[f]])) {
             cv.pred <- as.numeric(mgcv::predict.gam(cv.model.list[[f]],
                                           newdata = v.data, type = "terms",
                                           terms = v.name
@@ -970,7 +969,7 @@ GetGAMEffects <- function(model,
       if (is.null(cv.model.list) == F) {
         effect.dat <- matrix(nrow = length(main.pred), ncol = length(cv.model.list))
         for (f in 1:length(cv.model.list)) {
-          if (is.na(cv.model.list[[f]]) == F) {
+          if (is.list(cv.model.list[[f]])) {
             cv.pred <- as.numeric(mgcv::predict.gam(cv.model.list[[f]],
                                           newdata = f.data, type = "terms",
                                           terms = fac.name
