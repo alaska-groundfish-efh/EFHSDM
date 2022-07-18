@@ -385,17 +385,11 @@ MakeAKGFDensityplot <- function(region,
 
   # set up the basic map, will add more customization later
   densityplot <- ggplot2::ggplot() +
-    ggplot2::geom_sf(data = survey.sf, fill = "grey95") +
+    ggplot2::geom_sf(data = density.sf, ggplot2::aes(col = density), size = .05)+
+    ggplot2::geom_sf(data = survey.sf, fill = NA) +
     ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
     ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
-    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60")
-
-  # add the density plot
-  densityplot <- densityplot +
-    ggplot2::geom_sf(data = density.sf, ggplot2::aes(col = density), size = .05)
-
-  # add the themes
-  densityplot <- densityplot +
+    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60",size=.3)+
     ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust[1:2], ylim = MAP$plot.boundary$y + ext.adjust[3:4]) +
     ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
     ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
@@ -563,17 +557,15 @@ MakeAKGFEFHplot <- function(region,
   efh.y <- efhdummy2$geometry[-c(outside, toosmall)]
   efhdummy3 <- sf::st_sf(efh.x, efh.y)
 
+
   # set up the basic map, will add more customization later
   efhplot <- ggplot2::ggplot() +
-    ggplot2::geom_sf(data = survey.sf, fill = "grey95") +
+    ggplot2::geom_sf(data = survey.sf, fill = "grey95")+
+    ggplot2::geom_sf(data = efhpoly2, ggplot2::aes(fill = as.factor(layer)), col = NA) +
+    ggplot2::geom_sf(data = efhdummy3,fill=NA, size = .3) +
     ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
     ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
-    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60")
-
-  # add the efh polys
-  efhplot <- efhplot +
-    ggplot2::geom_sf(data = efhpoly2, ggplot2::aes(fill = as.factor(layer)), col = NA) +
-    ggplot2::geom_sf(data = efhdummy3,fill=NA, size = .3)
+    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60",size=.3)
 
   # add the themes
   efhplot <- efhplot +
