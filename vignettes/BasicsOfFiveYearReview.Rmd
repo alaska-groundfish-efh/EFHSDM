@@ -15,7 +15,8 @@ knitr::opts_chunk$set(
 ```
 
 This is an example vignette for the EFHSDM package. It provides an simplified example that includes several types of SDMs and an example of how to construct a weighted ensemble average. 
-<!-- Note, revise these lines once the data is loading correctly -->
+
+<!-- Note: Jodi, please add text here with some background on the EFH process. You can make edits directly in the browser with the little pencil icon at top right. If this ends up being annoying or a drag for any reason, I can set up a google docs workaround without too much trouble. -->
 
 ```{r setup}
 library(EFHSDM)
