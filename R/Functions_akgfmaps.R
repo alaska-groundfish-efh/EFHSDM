@@ -389,7 +389,7 @@ MakeAKGFDensityplot <- function(region,
     ggplot2::geom_sf(data = survey.sf, fill = NA) +
     ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
     ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
-    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60",size=.3)+
+    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60",size=.25)+
     ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust[1:2], ylim = MAP$plot.boundary$y + ext.adjust[3:4]) +
     ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
     ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
@@ -565,7 +565,7 @@ MakeAKGFEFHplot <- function(region,
     ggplot2::geom_sf(data = efhdummy3,fill=NA, size = .3) +
     ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
     ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
-    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60",size=.3)
+    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60",size=.25)+
 
   # add the themes
   efhplot <- efhplot +

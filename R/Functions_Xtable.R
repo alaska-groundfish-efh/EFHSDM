@@ -430,7 +430,7 @@ MakeEnsembleXtable<-function(model.names=c("maxnet","cloglog","hpoisson","poisso
       ensemble.dat<-stats::na.omit(subset(preds.table,Model=="ensemble"))
       etable[n.models+3,N.col]<-sum(ensemble.dat$abund>0,na.rm=T)
       etable[n.models+3,pred.cols[1]]<-format(round(RMSE(obs=ensemble.dat$abund,pred=ensemble.dat$pred),digs),nsmall=digs,big.mark = ",")
-      etable[n.models+3,pred.cols[2]]<-format(round(stats::cor(ensemble.preds$abund,ensemble.preds$pred,method=cor.method), 2),nsmall=2)
+      etable[n.models+3,pred.cols[2]]<-format(round(stats::cor(ensemble.preds$abund,round(ensemble.preds$pred,2),method=cor.method), 2),nsmall=2)
       etable[n.models+3,pred.cols[3]]<-format(round(PresenceAbsence::auc(data.frame(1:nrow(ensemble.dat),ensemble.preds$abund,ensemble.preds$prob))[[1]], 2),nsmall=2)
       etable[n.models+3,pred.cols[4]]<-format(round(PDE(obs = ensemble.preds$abund,pred = ensemble.preds$pred), 2),nsmall=2)
     }
