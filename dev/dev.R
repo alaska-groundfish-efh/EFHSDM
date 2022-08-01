@@ -52,7 +52,7 @@ usethis::use_package("XML", type = "Imports", min_version = NULL)
 
 
 # Packages in development
-usethis::use_dev_package("akgfmaps", type = "Imports", remote = "git::https://github.com/sean-rohan-NOAA/akgfmaps.git@master")
+usethis::use_dev_package("akgfmaps", type = "Imports", remote = "git::https://github.com/afsc-gap-products/akgfmaps.git@master")
 #devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
 
 
