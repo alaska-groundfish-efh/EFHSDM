@@ -954,12 +954,20 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
     if (nrow(e.data) == 100) {
       xname <- nice.names$name[which(nice.names$var == names(effects.list2)[j])]
 
+      span<-max(e.data$effect,na.rm=T)-min(e.data$effect,na.rm=T)
+      upper.lim<-max(e.data$effect,na.rm=T)+3*span
+      lower.lim<-min(e.data$effect,na.rm=T)-3*span
+
+      y.lim<-c(ifelse(min(e.data$lower,na.rm=T)<lower.lim,lower.lim,NA),
+               ifelse(max(e.data$upper,na.rm=T)>upper.lim,upper.lim,NA))
+
       # now the single dimension smoothed terms
       var.plot <- ggplot2::ggplot() +
         ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = effect)) +
         ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = upper), linetype = 2) +
-        ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = lower), linetype = 2) +
-        ggplot2::xlab(xname) +
+        ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = lower), linetype = 2)
+      if(any(!is.na(y.lim))){var.plot<-var.plot+ylim(y.lim)}
+      var.plot<-var.plot +ggplot2::xlab(xname) +
         ggplot2::ylab("Variable Effect") +
         ggplot2::theme_bw() +
         ggplot2::theme(
