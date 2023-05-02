@@ -565,7 +565,7 @@ MakeAKGFEFHplot <- function(region,
     ggplot2::geom_sf(data = efhdummy3,fill=NA, size = .3) +
     ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
     ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
-    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60",size=.25)+
+    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60",size=.25)
 
   # add the themes
   efhplot <- efhplot +
