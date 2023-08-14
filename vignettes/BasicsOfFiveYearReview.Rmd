@@ -139,7 +139,7 @@ maxnet.effects <- GetMaxnetEffects(
 
 We could go through and get deviance and variance estimates for the model now, but it's better to wait and see which models actually are included in the ensemble, in order to save on processing time.
 
-# Cloglong paGAM
+# Cloglog paGAM
 
 ```{r eval=F}
 cloglog.model <- FitGAM(
