@@ -26,6 +26,7 @@ usethis::use_package("MASS", type = "Imports", min_version = NULL)
 usethis::use_package("scales", type = "Imports", min_version = NULL)
 usethis::use_package("labeling", type = "Imports", min_version = NULL)
 usethis::use_package("magrittr", type = "Imports", min_version = NULL)
+usethis::use_package("terra", type = "Imports", min_version = NULL)
 
 #GamModel dependencies
 usethis::use_package("mgcv", type = "Imports", min_version = NULL) #used by multiple fns
@@ -78,15 +79,15 @@ usethis::use_build_ignore(files = "R/Meatgrinder5.R")
 
 # These are all in the current example; more will probably need to be added
 region_data_all <- read.csv("Y:/RACE_EFH_Variables/Trawl_Models/GOA/all_GOA_data_2021.csv")
-GOA_bathy <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Bathy")
-GOA_btemp <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Btemp")
-GOA_slope <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Slope")
-GOA_sponge <- raster::raster("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Spongefactor")
+GOA_bathy <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Bathy")
+GOA_btemp <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Btemp")
+GOA_slope <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Slope")
+GOA_sponge <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Spongefactor")
 
-GOA_lat <- raster::init(GOA_bathy, v = "y")
-GOA_lat <- raster::mask(lat, GOA_bathy, overwrite = F)
-GOA_lon <- raster::init(GOA_bathy, v = "x")
-GOA_lon <- raster::mask(lon, GOA_bathy, overwrite = F)
+GOA_lat <- terra::init(GOA_bathy, v = "y")
+GOA_lat <- terra::mask(lat, GOA_bathy, overwrite = F)
+GOA_lon <- terra::init(GOA_bathy, v = "x")
+GOA_lon <- terra::mask(lon, GOA_bathy, overwrite = F)
 
 # region.data <- subset(region_data_all, year >= 2012)
 # region.data$sponge <- as.integer(region.data$sponge > 0)
@@ -95,7 +96,7 @@ GOA_lon <- raster::mask(lon, GOA_bathy, overwrite = F)
 # this step formulates lon and lat so they can easily be used as variables, and stacks them in one object
 
 #Multiply raster by one to get "free-floating" raster w no filenames attached (good because we don't want paths in there)
-raster_stack <- 1*raster::stack(GOA_lon, GOA_lat, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge)
+raster_stack <- 1*terra::rast(list(GOA_lon, GOA_lat, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge))
 
 names(raster_stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
 

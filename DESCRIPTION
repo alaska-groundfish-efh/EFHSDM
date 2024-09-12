@@ -41,7 +41,8 @@ Imports:
     ENMeval,
     xtable,
     XML,
-    magrittr
+    magrittr,
+    terra
 Remotes: 
     git::https://github.com/afsc-gap-products/akgfmaps.git@master
 Depends: 
