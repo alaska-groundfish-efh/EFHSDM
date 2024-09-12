@@ -33,8 +33,8 @@ usethis::use_package("raster", type = "Imports", min_version = NULL) #used by mu
 usethis::use_package("PresenceAbsence", type = "Imports", min_version = NULL)
 
 #LoadMap dependencies
-usethis::use_package("rgdal", type = "Imports", min_version = NULL)
-usethis::use_package("sp", type = "Imports", min_version = NULL)
+#usethis::use_package("rgdal", type = "Imports", min_version = NULL)
+#usethis::use_package("sp", type = "Imports", min_version = NULL)
 usethis::use_package("gstat", type = "Imports", min_version = NULL)
 #usethis::use_package("viridis", type = "Imports", min_version = NULL)
 #usethis::use_package("mgcv", type = "Imports", min_version = NULL)
