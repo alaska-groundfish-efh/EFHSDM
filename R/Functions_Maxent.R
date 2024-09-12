@@ -123,7 +123,7 @@ MakeMaxEntAbundance<-function(model,
   # Somewhat counterintuitive, but this is the type if using the cloglog link to make an abundance estimate
   if(type=="cloglog"){
     # since ENMeval 2.0, they got rid of the useful function and I need to make the predictions the long way
-    dat<-raster::getValues(maxent.stack)
+    dat<-terra::values(maxent.stack)
 
     # using predict with maxnet will quietly remove the NAs, so need to track them manually
     na.spots<-which(apply(X = dat,MARGIN = 1,FUN = function(x){return(any(is.na(x)))}))
@@ -134,11 +134,11 @@ MakeMaxEntAbundance<-function(model,
     new.vals<-vector(length=nrow(dat))
     new.vals[na.spots]<-NA
     new.vals[dat.spots]<-preds2
-    habitat.prediction<-raster::setValues(x = raster::raster(maxent.stack),values = new.vals)
+    habitat.prediction<-terra::setValues(x = terra::rast(maxent.stack),values = new.vals)
   }
   # this makes a habitat suitability map from a maxnet model
   if(type=="maxnet"){
-    dat<-raster::getValues(maxent.stack)
+    dat<-terra::getValues(maxent.stack)
 
     # using predict with maxnet will quietly remove the NAs, so need to track them manually
     na.spots<-which(apply(X = dat,MARGIN = 1,FUN = function(x){return(any(is.na(x)))}))
@@ -148,7 +148,7 @@ MakeMaxEntAbundance<-function(model,
     new.vals<-vector(length=nrow(dat))
     new.vals[na.spots]<-NA
     new.vals[dat.spots]<-preds
-    habitat.prediction<-raster::setValues(x = raster::raster(maxent.stack),values = new.vals)
+    habitat.prediction<-terra::setValues(x = terra::rast(maxent.stack),values = new.vals)
   }
   # need to add a check to see about the strange problems with the EBS
   if(is.null(land)==F){
@@ -156,17 +156,17 @@ MakeMaxEntAbundance<-function(model,
   }
 
   # For some reason, the crs info isn't always carrying over
-  habitat.prediction@crs<-maxent.stack@crs
-  if(filename!=""){raster::writeRaster(x = habitat.prediction,filename = filename, overwrite = TRUE)}
+  terra::crs(habitat.prediction) <- terra::crs(maxent.stack)
+  if(filename!=""){terra::writeRaster(x = habitat.prediction,filename = filename, overwrite = TRUE)}
 
   # Apply additional masks if necessary
   if(is.null(land)==F){
-    habitat.prediction<-raster::mask(habitat.prediction, land, inverse = T, overwrite = TRUE,
+    habitat.prediction<-terra::mask(habitat.prediction, land, inverse = T, overwrite = TRUE,
                                      filename = filename)
   }
   # Apply additional masks if necessary
   if(is.null(mask)==F){
-    habitat.prediction<-raster::mask(habitat.prediction, mask, overwrite = TRUE,
+    habitat.prediction<-terra::mask(habitat.prediction, mask, overwrite = TRUE,
                                      filename = filename)
   }
   return(habitat.prediction)

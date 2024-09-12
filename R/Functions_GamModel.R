@@ -639,12 +639,11 @@ MakeGAMAbundance <- function(model,
   if ("offset" %in% model.terms$type) {
     off.name <- model.terms$term[which(model.terms$type == "offset")]
     off.val <- ifelse(is.list(model$offset), mean(model$offset[[1]]), mean(model$offset))
-    off.raster <- raster::raster(
-      ext = r.stack@extent, crs = r.stack@crs, nrow = r.stack@nrows, ncol = r.stack@ncols,
+    off.raster <- terra::rast(ext = terra::ext(r.stack), crs = terra::crs(r.stack), nrow = terra::nrow(r.stack), ncol = terra::ncol(r.stack),
       vals = off.val
     )
     names(off.raster) <- off.name
-    r.stack <- raster::stack(list(r.stack, off.raster))
+    r.stack <- c(r.stack, off.raster)
   }
 
   # will also need to detect factors and format them into a list
@@ -652,30 +651,31 @@ MakeGAMAbundance <- function(model,
   gam.factors2 <- list()
   if (length(gam.factors) > 0) {
     for (t in 1:length(gam.factors)) {
-      range <- raster::subset(x = r.stack, subset = which(names(r.stack) == gam.factors[t]))
-      gam.factors2[[t]] <- sort(unique(stats::na.omit(raster::getValues(range))))
+      range <- terra::subset(x = r.stack, subset = which(names(r.stack) == gam.factors[t]))
+      gam.factors2[[t]] <- sort(unique(stats::na.omit(terra::values(range))))
     }
     names(gam.factors2) <- gam.factors
   } else {
     gam.factors2 <- NULL
   }
 
-  # Detect the link function and make the predictions
+  ## Detect the link function and make the predictions
   pred.type <- ifelse(model$family$link == "cloglog", "link", "response")[1]
 
   # predict raster function malfunctions if ziplss model has no factors, so need a special case
   if(model$family$family == "ziplss" & is.null(gam.factors2)){
-    r.vals<-as.data.frame(raster::getValues(r.stack))
+    r.vals<-as.data.frame(terra::values(r.stack))
     if ("offset" %in% model.terms$type) {
       r.vals<-cbind(r.vals,data.frame(off.val))
       names(r.vals[ncol(r.vals)])<-off.name
     }
     pred.vals<-mgcv::predict.gam(model,newdata=r.vals,type="response")
-    predict.raster<-raster::setValues(x = raster::raster(r.stack),values = pred.vals)
+    predict.raster<-terra::setValues(r.stack, pred.vals)
   }else{
-    predict.raster <- raster::predict(r.stack, model,factors = gam.factors2, progress = "text",
-                              overwrite = TRUE,type = pred.type, newdata.guaranteed = TRUE)
+    predict.raster <- terra::predict(r.stack, model, factors = gam.factors2, progress = "text",
+                                     overwrite = TRUE, type = pred.type)
   }
+
   # Detects and apply the cloglog approximation if appropriate
   if (model$family$link[1] == "cloglog") {
     predict.raster <- exp(predict.raster)
@@ -684,18 +684,18 @@ MakeGAMAbundance <- function(model,
   predict.raster <- predict.raster * scale.factor
 
   if (filename != "") {
-    raster::writeRaster(x = predict.raster, filename = filename, overwrite = TRUE)
+    terra::writeRaster(x = predict.raster, filename = filename, overwrite = TRUE)
   }
 
   # now apply masks if appropriate
   if (is.null(land) == F) {
-    predict.raster <- raster::mask(predict.raster, land,
+    predict.raster <- terra::mask(predict.raster, land,
                                    inverse = TRUE, overwrite = TRUE,
                                    filename = filename
     )
   }
   if (is.null(mask) == F) {
-    predict.raster <- raster::mask(predict.raster, mask,
+    predict.raster <- terra::mask(predict.raster, mask,
                                    overwrite = TRUE,
                                    filename = filename
     )
@@ -725,9 +725,6 @@ GetGAMEffects <- function(model,
                           vars = "all",
                           scale = "log",
                           scale.factor = 1) {
-  if (is.null(cv.model.list) == F && is.na(cv.model.list)) {
-    cv.model.list <- NULL
-  }
 
   # detect and remove any models that are NULL or NA, and the accompanying types
   if (is.null(cv.model.list) == F) {
