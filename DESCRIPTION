@@ -20,7 +20,9 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    sp,
+    rgdal
 VignetteBuilder: knitr
 Imports: 
     ggplot2,
@@ -36,8 +38,6 @@ Imports:
     mgcv,
     raster,
     PresenceAbsence,
-    rgdal,
-    sp,
     gstat,
     maxnet,
     ENMeval,
