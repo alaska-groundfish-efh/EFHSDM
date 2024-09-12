@@ -21,8 +21,6 @@ RoxygenNote: 7.1.2
 Suggests: 
     knitr,
     rmarkdown,
-    sp,
-    rgdal
 VignetteBuilder: knitr
 Imports: 
     ggplot2,
