@@ -994,13 +994,14 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
       e.data$x <- as.numeric(as.character(e.data$x))
 
       var.plot <- ggplot2::ggplot() +
-        ggplot2::geom_segment(data = e.data, ggplot2::aes(y = effect, yend = effect, x = x - .35, xend = x + .35), size = 2)
+        ggplot2::geom_segment(data = e.data, ggplot2::aes(y = effect, yend = effect, x = x - .35, xend = x + .35), linewidth = 2)
 
       if("lower"%in%names(e.data)){
         var.plot<-var.plot+
-          ggplot2::geom_segment(data = e.data, ggplot2::aes(y = lower, yend = lower, x = x - .35, xend = x + .35), size = 1, linetype = 2) +
-          ggplot2::geom_segment(data = e.data, ggplot2::aes(y = upper, yend = upper, x = x - .35, xend = x + .35), size = 1, linetype = 2)
+          ggplot2::geom_segment(data = e.data, ggplot2::aes(y = lower, yend = lower, x = x - .35, xend = x + .35), linewidth = 1, linetype = 2) +
+          ggplot2::geom_segment(data = e.data, ggplot2::aes(y = upper, yend = upper, x = x - .35, xend = x + .35), linewidth = 1, linetype = 2)
       }
+      var.plot+
         ggplot2::xlab(xname) +
         ggplot2::ylab("Variable Effect") +
         ggplot2::scale_x_continuous(breaks = (e.data$x)) +
