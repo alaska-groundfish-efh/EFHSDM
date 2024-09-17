@@ -1,10 +1,13 @@
+
 ---
 title: "BasicsOfFiveYearReview"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{BasicsOfFiveYearReview}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, include = FALSE}
@@ -46,8 +49,12 @@ region.data$logarea <- log(region.data$area)
 lat <- GOA_lat
 lon <- GOA_lon
 
-raster.stack <-raster_stack
+raster.stack <- terra::rast(raster_stack, crs=3338)
 names(raster.stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
+
+  # Using terra, the raster values are not automatically passed as factors when plugged into 
+  # terra::predict() as they were with raster::predict(), so we need to tell terra which are factors here.
+raster.stack$sponge <- terra::as.factor(raster.stack$sponge)
 
 nice.names <- data.frame(
   stringsAsFactors = F,
@@ -91,7 +98,7 @@ MakeAKGFDotplot(
   presence = species.data[species.data[, species] > 0, ],
   absence = species.data[species.data[, species] == 0, ],
   highdensity = species.data[species.data[, species] >= hd, ],
-  dataCRS = raster.stack@crs, region = "goa", title.name = figure.name
+  dataCRS = terra::crs(raster.stack), region = "goa", title.name = figure.name
 )
 
 gam.form <- stats::formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) +
@@ -253,6 +260,8 @@ negbin.abund <- MakeGAMAbundance(
   filename = ""
 )
 
+negbin.abund <- readRDS("negbin.abund.rds")
+
 negbin.cv <- CrossValidateModel(
   model = negbin.model, model.type = "gam", species = species, data = species.data,
   group = "Folds", key = "hauljoin", scale.preds = T
@@ -303,6 +312,8 @@ poisson.variance <- MakeVarianceRasters(
   model.type = "gam", scale.factor = poisson.scale
 )
 
+
+
 ##############################
 # and the deviance estimates
 # in order to keep the deviance estimates consistent with the GAM, specify a "maxnet2d" argument as a list
@@ -346,12 +357,12 @@ ensemble.breaks <- FindEFHbreaks(
 
 ##############################
 # and the efh map
-ensemble.efh <- raster::cut(ensemble.abund, breaks = ensemble.breaks)
+ensemble.efh <- terra::classify(ensemble.abund, ensemble.breaks)
 
 MakeAKGFEFHplot(region = "goa", efh.map = ensemble.efh, title.name = figure.name)
 
 # this gives the area of the 95% EFH in km2
-sum(raster::getValues(ensemble.efh) > 1, na.rm = T)
+sum(terra::values(ensemble.efh) > 1, na.rm = T)
 
 ############################
 # this calculates the ensemble effects from the effects lists produced earlier
@@ -362,7 +373,7 @@ ensemble.effects <- GetEnsembleEffects(
 )
 
 ensemble.plots <- Effectsplot(
-  effects.list = ensemble.effects, region = "goa", crs = raster.stack@crs,
+  effects.list = ensemble.effects, region = "goa", crs = terra::crs(raster.stack),
   nice.names = nice.names, vars = "all"
 )
 gridExtra::grid.arrange(grobs = ensemble.plots, ncol = 3, nrow = 2)
@@ -378,7 +389,9 @@ ensemble.preds <- ValidateEnsemble(
 
 ##############################
 # ensemble variance & cv map
+
 var.list <- list(maxnet = maxnet.variance, cloglog = cloglog.variance, hpoisson = hpoisson.variance, poisson = poisson.variance)
+
 ensemble.var <- GetEnsembleVariance(
   model.weights = model.weights, variance.list = var.list, abund.list = abund.list,
   ensemble.abund = ensemble.abund
@@ -392,3 +405,5 @@ MakeAKGFDensityplot(
 
 # All Done. This covers the essentials produced during the 2022 EFH 5-year Review.
 ```
+
+

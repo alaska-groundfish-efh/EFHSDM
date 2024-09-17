@@ -134,7 +134,7 @@ MakeMaxEntAbundance<-function(model,
     new.vals<-vector(length=nrow(dat))
     new.vals[na.spots]<-NA
     new.vals[dat.spots]<-preds2
-    habitat.prediction<-terra::setValues(x = terra::rast(maxent.stack),values = new.vals)
+    habitat.prediction<-terra::setValues(x = terra::rast(maxent.stack[[1]]),values = new.vals) #terra needs to call just one raster in the stack
   }
   # this makes a habitat suitability map from a maxnet model
   if(type=="maxnet"){

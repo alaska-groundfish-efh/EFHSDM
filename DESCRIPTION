@@ -42,7 +42,8 @@ Imports:
     xtable,
     XML,
     magrittr,
-    terra
+    terra,
+    tidyterra
 Remotes: 
     git::https://github.com/afsc-gap-products/akgfmaps.git@master
 Depends: 
