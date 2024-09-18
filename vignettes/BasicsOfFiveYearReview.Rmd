@@ -260,8 +260,6 @@ negbin.abund <- MakeGAMAbundance(
   filename = ""
 )
 
-negbin.abund <- readRDS("negbin.abund.rds")
-
 negbin.cv <- CrossValidateModel(
   model = negbin.model, model.type = "gam", species = species, data = species.data,
   group = "Folds", key = "hauljoin", scale.preds = T

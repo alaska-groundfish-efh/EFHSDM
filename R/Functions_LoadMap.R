@@ -521,8 +521,8 @@ MakeVarianceRasters<-function(model.list,            # a list of models for each
   close(pb)
   # now tally things up
 
-  #raster.template<-terra::rast(raster.stack[[1]]) #isolate only one of the layers in the raster stack for the template
-  raster.template<-terra::rast(raster.stack)
+  raster.template<-terra::rast(raster.stack[[1]]) #isolate only one of the layers in the raster stack for the template
+  #raster.template<-terra::rast(raster.stack)
   names(raster.template) <- "layer"
 
   variances<-apply(X = out.data*scale.factor,MARGIN = 1,FUN = stats::var)

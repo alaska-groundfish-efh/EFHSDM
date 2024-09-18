@@ -395,11 +395,11 @@ MakeAKGFDensityplot <- function(region,
   # set up the basic map, will add more customization later
   #geom_sf changed to geom_spatvector from the tidyterra package
   densityplot <- ggplot2::ggplot() +
-    tidyterra::geom_spatvector(data = density.sf, ggplot2::aes(col = density), size = .05) +
     tidyterra::geom_spatvector(data = survey.sf, fill = NA) +
     tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$akland), "epsg:3338"), fill = "grey40") +
-    tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$graticule), "epsg:3338"), color = "grey70", alpha = 0.5) +
     tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$bathymetry), "epsg:3338"), color = "grey60",linewidth=.25) +
+    tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$graticule), "epsg:3338"), color = "grey70", alpha = 0.5) +
+    tidyterra::geom_spatvector(data = density.sf, ggplot2::aes(col = density), size = .05) +
     ggplot2::coord_sf(xlim = plot.boundary$x , ylim = plot.boundary$y ) + #linked to plot.boundary above
     ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
     ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
@@ -556,13 +556,12 @@ MakeAKGFEFHplot <- function(region,
 
   # set up the basic map, will add more customization later
   efhplot <- ggplot2::ggplot() +
-    tidyterra::geom_spatvector(data = survey.sf, fill = "grey95")+
     tidyterra::geom_spatvector(data = efhpoly2, ggplot2::aes(fill = as.factor(lyr1)), col = NA) +
     tidyterra::geom_spatvector(data = efhdummy3,fill=NA, linewidth = .3) +
     tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$akland), "EPSG:3338"), fill = "grey40") +
     tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$graticule), "EPSG:3338"), color = "grey70", alpha = 0.5) +
     tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$bathymetry), "EPSG:3338"), color = "grey60",linewidth=.25)
-
+  tidyterra::geom_spatvector(data = survey.sf, fill = "grey95")+
   # project the bounding box for plotting terra spatvectors
   plot.boundary <- terra::ext(survey.sf)
   plot.boundary.df2 <- data.frame(x=c(plot.boundary[1], plot.boundary[2]),
