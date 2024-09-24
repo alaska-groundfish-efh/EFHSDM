@@ -20,7 +20,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
 VignetteBuilder: knitr
 Imports: 
     ggplot2,
@@ -36,14 +36,14 @@ Imports:
     mgcv,
     raster,
     PresenceAbsence,
-    rgdal,
-    sp,
     gstat,
     maxnet,
     ENMeval,
     xtable,
     XML,
-    magrittr
+    magrittr,
+    terra,
+    tidyterra
 Remotes: 
     git::https://github.com/afsc-gap-products/akgfmaps.git@master
 Depends: 
