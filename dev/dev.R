@@ -21,7 +21,7 @@ usethis::use_package("viridis", type = "Imports", min_version = NULL) #used by m
 usethis::use_package("stars", type = "Imports", min_version = NULL)
 usethis::use_package("sf", type = "Imports", min_version = NULL)
 usethis::use_package("gridExtra", type = "Imports", min_version = NULL)
-usethis::use_package("patchwork", type = "Imports", min_version = NULL)
+#usethis::use_package("patchwork", type = "Imports", min_version = NULL)
 usethis::use_package("MASS", type = "Imports", min_version = NULL)
 usethis::use_package("scales", type = "Imports", min_version = NULL)
 usethis::use_package("labeling", type = "Imports", min_version = NULL)

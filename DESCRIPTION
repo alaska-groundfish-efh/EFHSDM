@@ -20,7 +20,8 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.2
 Suggests: 
     knitr,
-    rmarkdown
+    rmarkdown,
+    gridExtra
 VignetteBuilder: knitr
 Imports: 
     ggplot2,
@@ -28,8 +29,6 @@ Imports:
     viridis,
     stars,
     sf,
-    gridExtra,
-    patchwork,
     MASS,
     scales,
     labeling,
@@ -43,7 +42,8 @@ Imports:
     ENMeval,
     xtable,
     XML,
-    magrittr
+    magrittr,
+    terra
 Remotes: 
     git::https://github.com/afsc-gap-products/akgfmaps.git@master
 Depends: 

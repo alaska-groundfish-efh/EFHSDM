@@ -24,11 +24,11 @@ devtools::install_github("alaska-groundfish-efh/EFHSDM@main", dependencies = TRU
 
 
 ## Dependencies
-This project requires the following packages. Bear in mind that the `maxnet` package is still under development and changes occasionally. The `akgfmaps` package must be installed from Sean Rohan's GitHub.
+This project requires the following packages. Bear in mind that the `maxnet` package is still under development and changes occasionally. The `akgfmaps` package must be installed from the afsc-gap-products org page.
 
 ```r
 # Packages
-xtable, XML, raster, rgdal, gstat, sp, sf, stars, akgfmaps, ggplot, viridis, gridExtra, patchwork, MASS, scales, labeling, maxnet, ENMeval, PresenceAbsence, mgcv
+xtable, XML, raster, rgdal, gstat, sp, sf, stars, akgfmaps, ggplot, viridis, gridExtra, MASS, scales, labeling, maxnet, ENMeval, PresenceAbsence, mgcv
 ```
 
 # Roadmap
