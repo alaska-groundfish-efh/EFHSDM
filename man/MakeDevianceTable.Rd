@@ -26,9 +26,6 @@ MakeDevianceTable(
 
 \item{filename}{path to files}
 }
-\value{
-
-}
 \description{
 Make deviance table
 }
