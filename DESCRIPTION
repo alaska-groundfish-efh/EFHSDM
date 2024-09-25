@@ -17,7 +17,7 @@ Description: This package fits species distribution models (SDMs) to groundfish 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.3.2
 Suggests: 
     knitr,
     rmarkdown,
@@ -49,3 +49,4 @@ Depends:
     R (>= 3.5.0)
 LazyData: 
     true
+LazyDataCompression: xz
