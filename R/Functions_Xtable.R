@@ -36,6 +36,7 @@
 #'
 #' @return no return value; writes an html table at filename
 #' @export
+#' @importFrom stats aggregate
 #'
 #' @examples
 MakeXtable<-function(model,             # a model object
