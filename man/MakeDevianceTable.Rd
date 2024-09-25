@@ -14,18 +14,24 @@ MakeDevianceTable(
 )
 }
 \arguments{
-\item{model.names}{optional vector of names for the models, should match ordering of dev.list}
+\item{model.names}{character vector with names for the models, should match order of dev.list}
 
-\item{model.types}{optional vector of model types, should match ordering of dev.list}
+\item{model.types}{character vector with types of model, should match order of dev.list}
 
-\item{nice.names}{optional data.frame with nicer names matched to abbreviated version used in models}
+\item{nice.names}{dataframe matching abbreviated names to nicer versions}
 
 \item{dev.list}{a list of named vectors giving the deviance explained values for each model}
 
-\item{model.weights}{optional vector of ensemble weights}
+\item{model.weights}{numeric vector with weights for each model, should match order of dev.list}
 
-\item{filename}{path to files}
+\item{filename}{a filename to use for saving the output}
+}
+\value{
+does not return anything, but writes two tables at based on the supplied filename
 }
 \description{
-Make deviance table
+Make an HTML table of deviance explained for a model ensemble.
+}
+\details{
+Makes a simple html table of deviance explained values for models and the ensemble.
 }

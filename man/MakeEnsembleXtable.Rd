@@ -45,7 +45,7 @@ MakeEnsembleXtable(
 does not return anything, but instead writes a html table at filename
 }
 \description{
-Make an HTML table of deviance explained for a model ensemble.
+Make an HTML table of deviance explained and fit metrics for a model ensemble.
 }
 \details{
 For now, you need to include each of the elements for the ensemble table to work, so no shortcuts. It is kind of cumbersome and unlikely to be useful for others. May soon be deprecated.
