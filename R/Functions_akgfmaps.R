@@ -349,10 +349,11 @@ MakeAKGFDensityplot <- function(region,
 
   # detect and set up the outline, for now it is required
   if (is.character(survey.area) && survey.area[1] == "default") {
-    survey.sf <- MAP$survey.area
+    survey.sf <- terra::vect(MAP$survey.area)
+    survey.sf <- terra::project(survey.sf, "epsg:3338")
   } else {
     if (class(survey.area)[1] == "sf") {
-      survey.sf <- sf::st_transform(survey.area, sf::st_crs(MAP$akland))[1:(nrow(survey.area) - 1), ]
+      survey.sf <- terra::project(survey.area, "epsg:3338")
     }
     if (class(survey.area)[1] == "RasterLayer") {
       survey.sf1<-stars::st_as_stars(is.na(survey.area))
@@ -368,30 +369,38 @@ MakeAKGFDensityplot <- function(region,
     density.sf <- sf::st_transform(density.map, sf::st_crs(MAP$akland))
     names(density.sf[1]) <- "density"
   }
-  if (class(density.map)[1] == "RasterLayer") {
-    density.dat0 <- as.data.frame(raster::xyFromCell(density.map, 1:raster::ncell(density.map)))
-    vals <- raster::getValues(density.map)
+  if (class(density.map)[1] == "SpatRaster") {
+    density.dat0 <- as.data.frame(terra::xyFromCell(density.map, 1:terra::ncell(density.map)))
+    vals <- terra::values(density.map)
 
     # convert the raster to ggplot format
-    density.dat <- data.frame(lat = density.dat0$y, lon = density.dat0$x, density = vals)
-
-    density.sf0 <- sf::st_as_sf(x = subset(density.dat, is.na(density) == F),
-                                coords = c("lon", "lat"), crs = 3338) #formerly crs = density.map@crs
-    density.sf <- sf::st_transform(density.sf0, sf::st_crs(MAP$akland))
+    density.dat <- data.frame(lat = density.dat0$y, lon = density.dat0$x, density=vals)
+    colnames(density.dat) <- c("lat", "lon", "density")
+    density.sf0 <- terra::vect(x = subset(density.dat, is.na(density) == F),
+                                geom = c("lon", "lat"), crs = "epsg:3338") #formerly crs = density.map@crs
+    #density.sf <- sf::st_transform(density.sf0, sf::st_crs(MAP$akland))
+    density.sf <- density.sf0 #don't need to transform
   }
 
   # often helps to remove some of the high points
   upper<-stats::quantile(density.sf$density, buffer, na.rm = T)
   density.sf$density[density.sf$density > upper] <- upper
 
+  # project the bounding box for plotting terra spatvectors
+  plot.boundary <- terra::ext(density.sf)
+  plot.boundary.df2 <- data.frame(x=c(plot.boundary[1], plot.boundary[2]),
+                                  y=c(plot.boundary[3], plot.boundary[4]))
+  plot.boundary <- plot.boundary.df2
+
   # set up the basic map, will add more customization later
+  #geom_sf changed to geom_spatvector from the tidyterra package
   densityplot <- ggplot2::ggplot() +
-    ggplot2::geom_sf(data = density.sf, ggplot2::aes(col = density), size = .05)+
-    ggplot2::geom_sf(data = survey.sf, fill = NA) +
-    ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
-    ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
-    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60",size=.25)+
-    ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust[1:2], ylim = MAP$plot.boundary$y + ext.adjust[3:4]) +
+    tidyterra::geom_spatvector(data = survey.sf, fill = NA) +
+    tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$akland), "epsg:3338"), fill = "grey40") +
+    tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$bathymetry), "epsg:3338"), color = "grey60",linewidth=.25) +
+    tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$graticule), "epsg:3338"), color = "grey70", alpha = 0.5) +
+    tidyterra::geom_spatvector(data = density.sf, ggplot2::aes(col = density), size = .05) +
+    ggplot2::coord_sf(xlim = plot.boundary$x , ylim = plot.boundary$y ) + #linked to plot.boundary above
     ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
     ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
     viridis::scale_color_viridis(
@@ -402,7 +411,7 @@ MakeAKGFDensityplot <- function(region,
       panel.border = ggplot2::element_rect(color = "black", fill = NA),
       panel.background = ggplot2::element_rect(fill = NA, color = "black"),
       legend.key = ggplot2::element_rect(fill = NA, color = "grey30"),
-      legend.position = legend.pos, legend.margin = ggplot2::margin(0, 0, 0, 0),
+      legend.position.inside = legend.pos, legend.margin = ggplot2::margin(0, 0, 0, 0),
       axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_text(size = 12),
       legend.text = ggplot2::element_text(size = 12), legend.title = ggplot2::element_text(size = 12),
       plot.background = ggplot2::element_rect(fill = NA, color = NA)
@@ -515,7 +524,8 @@ MakeAKGFEFHplot <- function(region,
   }
   # detect and set up the outline, for now it is required
   if (is.character(survey.area) && survey.area[1] == "default") {
-    survey.sf <- MAP$survey.area
+    survey.sf <- terra::vect(MAP$survey.area)
+    survey.sf <- terra::project(survey.sf, "EPSG:3338")
   } else {
     if (class(survey.area)[1] == "sf") {
       survey.sf <- sf::st_transform(survey.area, sf::st_crs(MAP$akland))[1:(nrow(survey.area) - 1), ]
@@ -530,47 +540,37 @@ MakeAKGFEFHplot <- function(region,
   }
 
   # set up the factor maps
-  efh.vals <- raster::getValues(efh.map)
+  efh.vals <- terra::values(efh.map)
   efh.vals[efh.vals == 1] <- NA
 
   # convert the raster to polygons
-  efhpoly0 <- stars::st_as_stars(efh.map)
-  efhpoly <- sf::st_as_sf(efhpoly0,merge = TRUE)
-  efhpoly2 <- efhpoly[efhpoly$layer != 1, ]
+  efhpoly <- terra::as.polygons(efh.map)
+  names(efhpoly) <- "lyr1"
+  efhpoly2 <- efhpoly[efhpoly$lyr1 != 1, ]
+  efhpoly2 <- terra::project(efhpoly2, "EPSG:3338")
 
   # we'll need a new outline
-  efh.dummy.raster <- raster::raster(efh.map)
-  efh.vals2 <- is.na(efh.vals) == F
-  efh.dummy.raster <- raster::setValues(efh.dummy.raster, values = efh.vals2)
-
-  efhdummy0 <- stars::st_as_stars(efh.dummy.raster)
-  efhdummy <- sf::st_cast(sf::st_as_sf(efhdummy0,merge = TRUE))
-  efhdummy2 <- sf::st_transform(efhdummy, sf::st_crs(MAP$akland))
-
-  # Now we need to get rid of a lot of the tiniest bits, which we'll do by dropping the smallest areas
-  efhdummy.poly <- sf::st_cast(efhdummy2, "POLYGON")
-  areas <- sf::st_area(efhdummy.poly)
-
-  outside <- order(areas, decreasing = T)[1]
-  toosmall <- which(as.numeric(areas) < drop)
-
-  efh.x <- efhdummy2$layer[-c(outside, toosmall)]
-  efh.y <- efhdummy2$geometry[-c(outside, toosmall)]
-  efhdummy3 <- sf::st_sf(efh.x, efh.y)
+  efhdummy2 <- efhpoly2
+  efhdummy3 <- terra::aggregate(efhdummy2)
 
 
   # set up the basic map, will add more customization later
   efhplot <- ggplot2::ggplot() +
-    ggplot2::geom_sf(data = survey.sf, fill = "grey95")+
-    ggplot2::geom_sf(data = efhpoly2, ggplot2::aes(fill = as.factor(layer)), col = NA) +
-    ggplot2::geom_sf(data = efhdummy3,fill=NA, size = .3) +
-    ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
-    ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
-    ggplot2::geom_sf(data = MAP$bathymetry, color = "grey60",size=.25)
+    tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$akland), "EPSG:3338"), fill = "grey40") +
+    tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$graticule), "EPSG:3338"), color = "grey70", alpha = 0.5) +
+    tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$bathymetry), "EPSG:3338"), color = "grey60",linewidth=.25) +
+    tidyterra::geom_spatvector(data = survey.sf, fill = "grey95") +
+    tidyterra::geom_spatvector(data = efhpoly2, ggplot2::aes(fill = as.factor(lyr1)), col = NA) +
+    tidyterra::geom_spatvector(data = efhdummy3,fill=NA, linewidth = .3)
+  # project the bounding box for plotting terra spatvectors
+  plot.boundary <- terra::ext(survey.sf)
+  plot.boundary.df2 <- data.frame(x=c(plot.boundary[1], plot.boundary[2]),
+                                  y=c(plot.boundary[3], plot.boundary[4]))
+  plot.boundary <- plot.boundary.df2
 
   # add the themes
   efhplot <- efhplot +
-    ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust[1:2], ylim = MAP$plot.boundary$y + ext.adjust[3:4]) +
+    ggplot2::coord_sf(xlim = plot.boundary$x , ylim = plot.boundary$y ) + #linked to plot.boundary above
     ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
     ggplot2::scale_y_continuous(name = "Latitude", breaks = MAP$lat.breaks) +
     viridis::scale_fill_viridis(discrete = T, name = legend.title, labels = legend.labels) +
@@ -579,7 +579,7 @@ MakeAKGFEFHplot <- function(region,
       panel.border = ggplot2::element_rect(color = "black", fill = NA),
       panel.background = ggplot2::element_rect(fill = NA, color = "black"),
       legend.key = ggplot2::element_rect(fill = NA, color = "grey30"),
-      legend.position = legend.pos,
+      legend.position.inside = legend.pos,
       axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_text(size = 12),
       legend.text = ggplot2::element_text(size = 12), legend.title = ggplot2::element_text(size = 12),
       plot.background = ggplot2::element_rect(fill = NA, color = NA))
@@ -700,26 +700,26 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
   try(new.present <- is.na(new@crs) == F)
 
   if (exists("old.present") & exists("new.present")) {
-    comp.raster <- raster::cut(background, breaks = c(-Inf, Inf))
+    comp.raster <- terra::cut(background, breaks = c(-Inf, Inf))
 
     # find which areas are EFH in each version
-    old2 <- raster::cut(x = old, breaks = c(0, nonEFH + .5, Inf))
-    new2 <- raster::cut(x = new, breaks = c(0, nonEFH + .5, Inf))
+    old2 <- terra::cut(x = old, breaks = c(0, nonEFH + .5, Inf))
+    new2 <- terra::cut(x = new, breaks = c(0, nonEFH + .5, Inf))
 
-    vals <- raster::getValues(comp.raster)
+    vals <- terra::values(comp.raster)
 
-    both <- which(raster::getValues(old2) == 2 & raster::getValues(new2) == 2)
-    justold <- which(raster::getValues(old2) == 2 &
-                       ((raster::getValues(new2) == 1) | is.na(raster::getValues(new2))))
-    justnew <- which(((raster::getValues(old2) == 1) | is.na(raster::getValues(old2))) &
-                       raster::getValues(new2) == 2)
+    both <- which(terra::values(old2) == 2 & terra::values(new2) == 2)
+    justold <- which(terra::values(old2) == 2 &
+                       ((terra::values(new2) == 1) | is.na(terra::values(new2))))
+    justnew <- which(((terra::values(old2) == 1) | is.na(terra::values(old2))) &
+                       terra::values(new2) == 2)
 
     # assign new values to each category
     vals[justold] <- 2
     vals[justnew] <- 3
     vals[both] <- 4
 
-    comp.raster <- raster::setValues(x = comp.raster, values = vals)
+    comp.raster <- terra::setValues(x = comp.raster, values = vals)
 
     efhpoly0 <- stars::st_as_stars(comp.raster)
     efhpoly<-  sf::st_as_sf(efhpoly0,merge = TRUE)
@@ -740,8 +740,8 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
       efhpoly2$layer[order(sf::st_area(efhpoly2))[1 + n]] <- 4
     }
 
-    area1 <- sum(raster::getValues(old) > nonEFH, na.rm = T)
-    area2 <- sum(raster::getValues(new) > nonEFH, na.rm = T)
+    area1 <- sum(terra::values(old) > nonEFH, na.rm = T)
+    area2 <- sum(terra::values(new) > nonEFH, na.rm = T)
     main <- paste0(main, "\nChange = ", round((area2 / area1 - 1) * 100, 1), "%")
 
     old.col <- col.vec[1]
@@ -765,7 +765,7 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
   out.plot <- ggplot2::ggplot() +
     ggplot2::geom_sf(data = dummy.sf3, fill = "grey95") +
     ggplot2::geom_sf(data = MAP$survey.area, fill = "grey95") +
-    ggplot2::geom_sf(data = efhpoly2, ggplot2::aes(fill = factor(layer)), col = 1, size = .05) +
+    ggplot2::geom_sf(data = efhpoly2, ggplot2::aes(fill = factor(layer)), col = 1, linewidth = .05) +
     ggplot2::geom_sf(data = MAP$akland, fill = "grey40") +
     ggplot2::geom_sf(data = MAP$graticule, color = "grey70", alpha = 0.5) +
     ggplot2::geom_sf(data = MAP$bathymetry, col = "grey60", size = .25) +
@@ -871,24 +871,25 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
         MAP <- akgfmaps::get_base_layers(select.region = tolower(region), set.crs = "auto")
 
         if (is.na(crs)) {
-          crs <- MAP$crs
+          crs <- "epsg:3338"
         }
         # ok, now you can transform it to the right projection
-        e.ef <- sf::st_as_sf(x = con.data2, coords = c("lon", "lat"), crs = crs)
-        e.ef2 <- sf::st_transform(e.ef, sf::st_crs(MAP$akland))
+        e.ef <- terra::vect(x = con.data2, geom = c("lon", "lat"), crs = crs)
+        e.ef2 <- terra::project(e.ef, "epsg:3338")
 
-        spots.sf <- sf::st_as_sf(x = label.spots, coords = c("lon", "lat"), crs = crs)
-        spots.sf2 <- sf::st_transform(spots.sf, sf::st_crs(MAP$akland))
-        spot.data2 <- data.frame(sf::st_coordinates(spots.sf2), label = spots.sf2$tag)
+        spots.sf <- terra::vect(x = label.spots, geom = c("lon", "lat"), crs = crs)
+        spots.sf2 <- terra::project(spots.sf, "epsg:3338")
+        spot.data2 <- data.frame(terra::geom(spots.sf2), label = spots.sf2$tag)
 
-        e.data2 <- data.frame(sf::st_coordinates(e.ef2), e.ef2$effect, group = e.ef2$group)
+        e.data2 <- data.frame(terra::geom(e.ef2), e.ef2$effect, group = e.ef2$group)
+        e.data2 <- e.data2[, c(3,4,6,7)] #select columns
         names(e.data2) <- c("lon", "lat", "effect", "group")
 
         ext.adjust.x <- c(0, 0)
         ext.adjust.y <- c(0, 0)
         if (tolower(region) == "goa") {
-          ext.adjust.x <- c(400000, -200000)
-          ext.adjust.y <- c(-490000, 600000)
+          ext.adjust.x <- c(400000, 400000)
+          ext.adjust.y <- c(500000, 900000)
           MAP$graticule$degree_label[c(1,3,5,7,9)]<-""
           MAP$lon.breaks<-c(-170,-160,-150,-140,-130)
         }
@@ -898,11 +899,11 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
         }
 
         var.plot <- ggplot2::ggplot() +
-          ggplot2::geom_sf(data = MAP$akland, fill = "grey70") +
-          ggplot2::geom_sf(data = MAP$bathymetry, col = "grey60") +
-          ggplot2::geom_path(data = e.data2, ggplot2::aes(x = lon, y = lat, group = group), size = 1) +
+          tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$akland), "epsg:3338"), fill = "grey70") +
+          tidyterra::geom_spatvector(data = terra::project(terra::vect(MAP$bathymetry), "epsg:3338"), col = "grey60") +
+          ggplot2::geom_path(data = e.data2, ggplot2::aes(x = lon, y = lat, group = group), linewidth = 1) +
           ggplot2::geom_label(
-            data = spot.data2, ggplot2::aes(x = X, y = Y, label = label), fill = grDevices::rgb(1, 1, 1, .9),
+            data = spot.data2, ggplot2::aes(x = x, y = y, label = label), fill = grDevices::rgb(1, 1, 1, .9),
             label.size = NA, size = 4, label.padding = ggplot2::unit(.10, "lines"), nudge_x = -1000
           ) +
           ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust.x, ylim = MAP$plot.boundary$y + ext.adjust.y) +
@@ -959,14 +960,22 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
       upper.lim<-max(e.data$effect,na.rm=T)+3*span
       lower.lim<-min(e.data$effect,na.rm=T)-3*span
 
-      y.lim<-c(ifelse(min(e.data$lower,na.rm=T)<lower.lim,lower.lim,NA),
-               ifelse(max(e.data$upper,na.rm=T)>upper.lim,upper.lim,NA))
-
-      # now the single dimension smoothed terms
+      # start the plot
       var.plot <- ggplot2::ggplot() +
-        ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = effect)) +
-        ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = upper), linetype = 2) +
-        ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = lower), linetype = 2)
+        ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = effect))
+
+      # check if there are CIs, and plot the CIs if present
+      if("lower"%in%names(e.data)){
+        y.lim<-c(ifelse(min(e.data$lower,na.rm=T)<lower.lim,lower.lim,NA),
+                 ifelse(max(e.data$upper,na.rm=T)>upper.lim,upper.lim,NA))
+        var.plot<-var.plot+
+          ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = upper), linetype = 2) +
+          ggplot2::geom_line(data = e.data, ggplot2::aes(x = x, y = lower), linetype = 2)
+      }else{
+        # If no CIs, just continue on
+        y.lim<-c(lower.lim,upper.lim)
+      }
+
       if(any(!is.na(y.lim))){var.plot<-var.plot+ylim(y.lim)}
       var.plot<-var.plot +ggplot2::xlab(xname) +
         ggplot2::ylab("Variable Effect") +
@@ -984,9 +993,14 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
       e.data$x <- as.numeric(as.character(e.data$x))
 
       var.plot <- ggplot2::ggplot() +
-        ggplot2::geom_segment(data = e.data, ggplot2::aes(y = effect, yend = effect, x = x - .35, xend = x + .35), size = 2) +
-        ggplot2::geom_segment(data = e.data, ggplot2::aes(y = lower, yend = lower, x = x - .35, xend = x + .35), size = 1, linetype = 2) +
-        ggplot2::geom_segment(data = e.data, ggplot2::aes(y = upper, yend = upper, x = x - .35, xend = x + .35), size = 1, linetype = 2) +
+        ggplot2::geom_segment(data = e.data, ggplot2::aes(y = effect, yend = effect, x = x - .35, xend = x + .35), linewidth = 2)
+
+      if("lower"%in%names(e.data)){
+        var.plot<-var.plot+
+          ggplot2::geom_segment(data = e.data, ggplot2::aes(y = lower, yend = lower, x = x - .35, xend = x + .35), linewidth = 1, linetype = 2) +
+          ggplot2::geom_segment(data = e.data, ggplot2::aes(y = upper, yend = upper, x = x - .35, xend = x + .35), linewidth = 1, linetype = 2)
+      }
+      var.plot+
         ggplot2::xlab(xname) +
         ggplot2::ylab("Variable Effect") +
         ggplot2::scale_x_continuous(breaks = (e.data$x)) +

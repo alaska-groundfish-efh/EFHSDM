@@ -188,8 +188,8 @@ MakeEnsembleAbundance<-function(model.weights,
 
   # intialize a raster with appropriate properties
   good.abund<-which(is.na(abund.list)==F)
-  new.abund<-raster::raster(abund.list[[good.abund[1]]])
-  new.abund<-raster::setValues(new.abund,values = 0)
+  new.abund<-terra::rast(abund.list[[good.abund[1]]])
+  new.abund<-terra::setValues(new.abund,values = 0)
 
   #To make the raster, we'll need another loop
   for(i in 1:length(model.weights)){
@@ -198,7 +198,7 @@ MakeEnsembleAbundance<-function(model.weights,
     }
   }
   if(filename!=""){
-    raster::writeRaster(x = new.abund,filename = filename,overwrite=T)
+    terra::writeRaster(x = new.abund,filename = filename,overwrite=T)
   }
   return(new.abund)
 }
@@ -228,33 +228,36 @@ GetEnsembleVariance<-function(model.weights,variance.list,abund.list,ensemble.ab
     abund.list2[[k]]<-abund.list[[keepers[k]]]
   }
 
-  data.spots<-which(is.na(raster::getValues(abund.list2[[1]]))==F)
+  data.spots<-which(is.na(terra::values(abund.list2[[1]]))==F)
   if(length(abund.list2)>1){
     for(r in 2:length(abund.list2)){
-      spots<-which(is.na(raster::getValues(abund.list2[[r]]))==F)
+      spots<-which(is.na(terra::values(abund.list2[[r]]))==F)
       data.spots<-data.spots[data.spots%in%spots]
     }
   }
-  e.abund<-raster::extract(ensemble.abund,data.spots)
+  e.abund<-as.numeric(terra::extract(ensemble.abund,data.spots, raw=TRUE))
 
   dat<-matrix(nrow=length(data.spots),ncol=length(keepers))
 
   for(m in 1:length(keepers)){
-    a.dat<-raster::extract(abund.list2[[m]],data.spots)
-    v.dat<-raster::extract(variance.list2[[m]],data.spots)
+    a.dat<-terra::extract(abund.list2[[m]],data.spots, raw=TRUE)
+    v.dat<-terra::extract(variance.list2[[m]],data.spots, raw=TRUE)
 
     dat[,m]<-weights2[m]*sqrt(v.dat+(a.dat-e.abund)^2)
   }
 
   std.error<-apply(dat,MARGIN = 1,FUN = sum)
 
-  out.raster<-raster::raster(abund.list2[[1]])
-  val.vec<-raster::getValues(out.raster)
+  out.raster<-abund.list2[[1]]
+  val.vec<-terra::values(out.raster)
   val.vec[data.spots]<-std.error
 
-  out.raster<-raster::setValues(out.raster,val.vec)
+  out.raster<-terra::setValues(out.raster,val.vec)
   return(out.raster)
 }
+
+
+
 
 #' Get ensemble effects
 #'

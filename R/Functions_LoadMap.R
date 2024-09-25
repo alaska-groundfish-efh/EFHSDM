@@ -84,7 +84,7 @@ FindEFHbreaks<-function(abund.raster,                  # an abundance raster
 
   # choose an EFH method
   if(method=="percentile"){
-    sample <- stats::na.omit(raster::getValues(abund.raster))
+    sample <- stats::na.omit(terra::values(abund.raster))
     sample[sample <= threshold] <- NA
     breaks <- stats::quantile(sample, probs = quants, na.rm = TRUE, names = FALSE)
     breaks[1]<-0
@@ -93,7 +93,7 @@ FindEFHbreaks<-function(abund.raster,                  # an abundance raster
   if(method=="cumulative"){
     # Decide whether to sample at given locations or use the whole thing
     if(is.null(data)){
-      vals<-stats::na.omit(sort(raster::getValues(abund.raster)))
+      vals<-stats::na.omit(sort(terra::values(abund.raster)))
       vals2<-cumsum(vals)/sum(vals)
     }else{
       vals<-stats::na.omit(sort(raster::extract(abund.raster,data.frame(data$lon,data$lat))))
@@ -110,6 +110,15 @@ FindEFHbreaks<-function(abund.raster,                  # an abundance raster
       vals2<-cumsum(vals)/sum(vals)
     }
   }
+
+    #create matrix for terra classification
+    breaks.matrix <- c(breaks[1], breaks[2], 1,
+                       breaks[2], breaks[3], 2,
+                       breaks[3], breaks[4], 3,
+                       breaks[4], breaks[5], 4,
+                       breaks[5], breaks[6], 5)
+    breaks <- matrix(breaks.matrix, ncol=3, byrow=TRUE)
+
   return(breaks)
 }
 
@@ -447,9 +456,9 @@ MakeVarianceRasters<-function(model.list,            # a list of models for each
 
 
   # to speed things up and preserve memory, we're going to separate out the NAs
-  data.spots<-which(is.na(raster::getValues(raster.stack[[1]]))==F)
-  for(r in 2:raster::nlayers(raster.stack)){
-    spots<-which(is.na(raster::getValues(raster.stack[[r]]))==F)
+  data.spots<-which(is.na(terra::values(raster.stack[[1]]))==F)
+  for(r in 2:terra::nlyr(raster.stack)){
+    spots<-which(is.na(terra::values(raster.stack[[r]]))==F)
     data.spots<-data.spots[data.spots%in%spots]
   }
   data<-extract(raster.stack,data.spots)
@@ -512,18 +521,20 @@ MakeVarianceRasters<-function(model.list,            # a list of models for each
   close(pb)
   # now tally things up
 
-  raster.template<-raster::raster(raster.stack)
+  raster.template<-terra::rast(raster.stack[[1]]) #isolate only one of the layers in the raster stack for the template
+  #raster.template<-terra::rast(raster.stack)
+  names(raster.template) <- "layer"
 
   variances<-apply(X = out.data*scale.factor,MARGIN = 1,FUN = stats::var)
-  var.vec<-rep(NA,times=raster::ncell(raster.stack))
+  var.vec<-rep(NA,times=terra::ncell(raster.stack))
   var.vec[data.spots]<-variances
-  var.raster<-raster::setValues(raster.template,values = var.vec)
+  var.raster<-terra::setValues(raster.template,values = var.vec)
 
   if(is.na(efh.break)==F){
     percents<-apply(X = out.data>efh.break,MARGIN = 1,FUN = sum)/ncol(out.data)
-    per.vec<-rep(NA,times=raster::ncell(raster.stack))
+    per.vec<-rep(NA,times=terra::ncell(raster.stack))
     per.vec[data.spots]<-percents
-    per.raster<-raster::setValues(raster.template,values = per.vec)
+    per.raster<-terra::setValues(raster.template,values = per.vec)
     return(list(var.raster,per.raster))
   }else{
     return(var.raster)
