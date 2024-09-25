@@ -30,13 +30,13 @@ usethis::use_package("terra", type = "Imports", min_version = NULL)
 
 #GamModel dependencies
 usethis::use_package("mgcv", type = "Imports", min_version = NULL) #used by multiple fns
-usethis::use_package("raster", type = "Imports", min_version = NULL) #used by multiple fns
+#usethis::use_package("raster", type = "Imports", min_version = NULL) #used by multiple fns
 usethis::use_package("PresenceAbsence", type = "Imports", min_version = NULL)
 
 #LoadMap dependencies
 #usethis::use_package("rgdal", type = "Imports", min_version = NULL)
 #usethis::use_package("sp", type = "Imports", min_version = NULL)
-usethis::use_package("gstat", type = "Imports", min_version = NULL)
+#usethis::use_package("gstat", type = "Imports", min_version = NULL)
 #usethis::use_package("viridis", type = "Imports", min_version = NULL)
 #usethis::use_package("mgcv", type = "Imports", min_version = NULL)
 #usethis::use_package("raster", type = "Imports", min_version = NULL)
@@ -79,15 +79,15 @@ usethis::use_build_ignore(files = "R/Meatgrinder5.R")
 
 # These are all in the current example; more will probably need to be added
 region_data_all <- read.csv("Y:/RACE_EFH_Variables/Trawl_Models/GOA/all_GOA_data_2021.csv")
-GOA_bathy <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Bathy")
-GOA_btemp <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Btemp")
-GOA_slope <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Slope")
-GOA_sponge <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Spongefactor")
+GOA_bathy <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Bathy.grd")
+GOA_btemp <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Btemp.grd")
+GOA_slope <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Slope.grd")
+GOA_sponge <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Spongefactor.grd")
 
-GOA_lat <- terra::init(GOA_bathy, v = "y")
-GOA_lat <- terra::mask(lat, GOA_bathy, overwrite = F)
-GOA_lon <- terra::init(GOA_bathy, v = "x")
-GOA_lon <- terra::mask(lon, GOA_bathy, overwrite = F)
+GOA_lat0 <- terra::init(GOA_bathy, fun = "y")
+GOA_lat <- terra::mask(GOA_lat0, GOA_bathy, overwrite = F)
+GOA_lon0 <- terra::init(GOA_bathy, fun = "x")
+GOA_lon <- terra::mask(GOA_lon0, GOA_bathy, overwrite = F)
 
 # region.data <- subset(region_data_all, year >= 2012)
 # region.data$sponge <- as.integer(region.data$sponge > 0)
@@ -107,7 +107,7 @@ usethis::use_data(GOA_slope)
 usethis::use_data(GOA_sponge)
 usethis::use_data(GOA_lat)
 usethis::use_data(GOA_lon)
-usethis::use_data(raster_stack)
+usethis::use_data(raster_stack, overwrite = TRUE)
 #save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, GOA_lat, GOA_lon, file = here::here("R","sysdata.rda"))
 
 
