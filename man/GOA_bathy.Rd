@@ -21,11 +21,17 @@ A raster layer with 12 slots
 }
 \source{
 Compiled by Jeremy Harris using 1-km resolution data from Mark Zimmerman
+
+Compiled by Jeremy Harris using 1-km resolution data from Mark Zimmerman
 }
 \usage{
 GOA_bathy
+
+GOA_bathy
 }
 \description{
+A raster layer containing bathymetry covariates for SDMs.
+
 A raster layer containing bathymetry covariates for SDMs.
 }
 \keyword{datasets}

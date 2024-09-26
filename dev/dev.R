@@ -100,15 +100,35 @@ raster_stack <- 1*terra::rast(list(GOA_lon, GOA_lat, GOA_bathy, GOA_btemp, GOA_s
 
 names(raster_stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
 
-usethis::use_data(region_data_all)
-usethis::use_data(GOA_bathy)
-usethis::use_data(GOA_btemp)
-usethis::use_data(GOA_slope)
-usethis::use_data(GOA_sponge)
-usethis::use_data(GOA_lat)
-usethis::use_data(GOA_lon)
-usethis::use_data(raster_stack, overwrite = TRUE)
-#save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, GOA_lat, GOA_lon, file = here::here("R","sysdata.rda"))
+# Multiply them all by 1
+GOA_bathy <- terra::wrap(GOA_bathy)
+GOA_lon <-terra::wrap(GOA_lon)
+GOA_lat <-terra::wrap(GOA_lat)
+GOA_btemp <-terra::wrap(OA_btemp)
+GOA_slope <-terra::wrap(GOA_slope)
+GOA_sponge <-terra::wrap(GOA_sponge)
+raster_stack <-terra::wrap(raster_stack)
+
+# Save new raster objects
+save(GOA_bathy, file = here::here("data","GOA_bathy.rda"))
+save(GOA_lon, file = here::here("data","GOA_lon.rda"))
+save(GOA_lat, file = here::here("data","GOA_lat.rda"))
+save(GOA_btemp, file = here::here("data","GOA_btemp.rda"))
+save(GOA_slope, file = here::here("data","GOA_slope.rda"))
+save(GOA_sponge, file = here::here("data","GOA_sponge.rda"))
+save(raster_stack, file = here::here("data","raster_stack.rda"))
+
+# usethis::use_data(region_data_all)
+# usethis::use_data(GOA_bathy)
+# usethis::use_data(GOA_btemp)
+# usethis::use_data(GOA_slope)
+# usethis::use_data(GOA_sponge)
+# usethis::use_data(GOA_lat)
+# usethis::use_data(GOA_lon)
+# usethis::use_data(raster_stack, overwrite = TRUE)
+
+save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, GOA_lat, GOA_lon, file = here::here("R","sysdata.rda"))
+save()
 
 
 # Build package -----------------------------------------------------------
