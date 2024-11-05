@@ -104,7 +104,8 @@ FitMaxnet<-function(data,
 #'
 #' @return a raster map with the desired prediction
 #' @export
-#' @importFrom terra getValues
+#' @importFrom terra values
+#' @importFrom terra setValues
 #'
 #' @examples
 MakeMaxEntAbundance<-function(model,
@@ -139,7 +140,7 @@ MakeMaxEntAbundance<-function(model,
   }
   # this makes a habitat suitability map from a maxnet model
   if(type=="maxnet"){
-    dat<-terra::getValues(maxent.stack)
+    dat<-terra::values(maxent.stack)
 
     # using predict with maxnet will quietly remove the NAs, so need to track them manually
     na.spots<-which(apply(X = dat,MARGIN = 1,FUN = function(x){return(any(is.na(x)))}))

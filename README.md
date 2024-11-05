@@ -93,7 +93,7 @@ There are numerous plotting functions. The ones based on `akgfmaps` are recommen
 
 First one will need to prepare any data and covariate rasters. Data should be organized in a data frame with columns for species and any covariates, offsets, etc. Rasters should be combined into a stack. 
 
-The functions are typically called top to bottom. Begin by fitting a model using `FitGAM()`, `FitHurdleGAM()`, or `FitMaxnet()`. The resulting model is used with `MakeGAMAbundance()` (or `MakeMaxEntAbundance()`) to create an abundance raster, `GetGAMEffects()` to estimate covariate effects, and `GAMStats()` to obtain covariate contributions. Then one follows with `CrossValidateModel()` to output a useful dataframe of both in-bag and out-of-bag predictions. This dataframe can be used to calculate PDE and RMSE. `MakeVarianceRasters()` produces a variance map. `FindEFHbreaks()` gives the abundance thresholds that define each EFH quantile. The final EFH map is made by passing the result of `EFHbreaks()` to the `cut()` function from the raster package. 
+The functions are typically called top to bottom. Begin by fitting a model using `FitGAM()`, `FitHurdleGAM()`, or `FitMaxnet()`. The resulting model is used with `MakeGAMAbundance()` (or `MakeMaxEntAbundance()`) to create an abundance raster, `GetGAMEffects()` to estimate covariate effects, and `GAMStats()` to obtain covariate contributions. Then one follows with `CrossValidateModel()` to output a useful dataframe of both in-bag and out-of-bag predictions. This dataframe can be used to calculate PDE and RMSE. `MakeVarianceRasters()` produces a variance map. `FindEFHbreaks()` gives the abundance thresholds that define each EFH quantile. The final EFH map is made by passing the result of `EFHbreaks()` to the `cut()` function from the terra package. 
 
 ## Simple example
 
@@ -163,7 +163,7 @@ PDE(obs = poisson.preds$abund, pred = poisson.preds$cvpred)
 ### And find the EFH
 ``` r
 poisson.breaks <- FindEFHbreaks(poisson.abundance, method = "percentile")
-poisson.efh <- raster::cut(poisson.abundance, poisson.breaks)
+poisson.efh <- terra::classify(poisson.abundance, poisson.breaks)
 efh.plot <- MakeAKGFEFHplot(region = "goa", efh.map = poisson.efh, title.name = "Adult ATF", legend.title = "Percentiles")
 ```
 
@@ -198,7 +198,7 @@ EFH can be made in exactly the same way as for the consistuent models:
 
 ```r
 FindEFHbreaks(ensemble.abundance, method = "percentile")
-raster::cut(ensemble.abundance, ensemble.breaks)
+terra::cut(ensemble.abundance, ensemble.breaks)
 ```
 
 ## Legal disclaimer

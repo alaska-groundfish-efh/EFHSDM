@@ -618,7 +618,8 @@ MakeAKGFEFHplot <- function(region,
 #' @param nonEFH integer; the value corresponding to non-EFH in the old and new rasters
 #' @importFrom akgfmaps get_base_layers
 #' @importFrom magrittr %>%
-#' @importFrom terra cut
+#' @importFrom terra classify
+#' @importFrom terra values
 #'
 #' @return ggplot object with the comparison map
 #' @export
@@ -701,11 +702,11 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
   try(new.present <- is.na(new@crs) == F)
 
   if (exists("old.present") & exists("new.present")) {
-    comp.raster <- terra::cut(background, breaks = c(-Inf, Inf))
+    comp.raster <- terra::classify(background, breaks = c(-Inf, Inf))
 
     # find which areas are EFH in each version
-    old2 <- terra::cut(x = old, breaks = c(0, nonEFH + .5, Inf))
-    new2 <- terra::cut(x = new, breaks = c(0, nonEFH + .5, Inf))
+    old2 <- terra::classify(x = old, breaks = c(0, nonEFH + .5, Inf))
+    new2 <- terra::classify(x = new, breaks = c(0, nonEFH + .5, Inf))
 
     vals <- terra::values(comp.raster)
 
