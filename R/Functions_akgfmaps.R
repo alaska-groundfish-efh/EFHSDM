@@ -84,7 +84,7 @@ MakeAKGFDotplot <- function(presence,
                             hd.size = 1) {
   # start by getting the map
   region <- tolower(region)
-  #browser()
+
   if (region %in% c(
     "ebs", "bs.all", "sebs", "bs.south", "ecs", "ebs.ecs", "ai",
     "ai.west", "ai.central", "ai.east", "goa", "goa.west", "goa.east"
@@ -618,6 +618,7 @@ MakeAKGFEFHplot <- function(region,
 #' @param nonEFH integer; the value corresponding to non-EFH in the old and new rasters
 #' @importFrom akgfmaps get_base_layers
 #' @importFrom magrittr %>%
+#' @importFrom terra cut
 #'
 #' @return ggplot object with the comparison map
 #' @export

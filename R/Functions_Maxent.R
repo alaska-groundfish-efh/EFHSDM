@@ -104,6 +104,7 @@ FitMaxnet<-function(data,
 #'
 #' @return a raster map with the desired prediction
 #' @export
+#' @importFrom terra getValues
 #'
 #' @examples
 MakeMaxEntAbundance<-function(model,
