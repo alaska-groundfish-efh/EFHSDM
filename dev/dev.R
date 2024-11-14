@@ -107,7 +107,7 @@ GOA_btemp <-terra::wrap(GOA_btemp)
 GOA_slope <-terra::wrap(GOA_slope)
 GOA_sponge <-terra::wrap(GOA_sponge)
 
-raster_stack <-terra::wrap(raster_stack)
+raster_stack <-terra::wrap(raster_stack) # Makes PackedSpatRaster object, need to unwrap to use
 
 # Save new raster objects
 # save(GOA_bathy, file = here::here("data","GOA_bathy.rda"))
