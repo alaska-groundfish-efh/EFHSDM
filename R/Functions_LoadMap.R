@@ -154,7 +154,6 @@ CrossValidateModel<-function(model,
                              species=NA,
                              folds=10,
                              group="random"){
-
   if(model.type!="maxnet"){
     species<-ifelse(model$family$family=="ziplss",as.character(stats::formula(model)[[1]])[[2]],as.character(stats::formula(model))[[2]])
   }
@@ -244,16 +243,16 @@ CrossValidateModel<-function(model,
     error.data$abund[start.vec[i]:end.vec[i]]<-test.data[,species]
 
     if(model.type=="maxnet"){
-      preds<-exp(mgcv::predict.gam(object = model,newdata=test.data,response="link")+model$entropy)
-      probs<-mgcv::predict.gam(object = model,newdata=test.data,type="cloglog")
+      preds<-exp(predict(object = model,newdata=test.data,response="link")+model$entropy)
+      probs<-predict(object = model,newdata=test.data,type="cloglog")
       # then on to the cv model
       vars0<-names(model$samplemeans)
       facs<-vars0[vars0%in%names(model$varmax)==F]
 
       try(cv.model<-FitMaxnet(data = train.data,species = species,vars = names(model$varmax),facs = facs,regmult = regmult))
       if(exists("cv.model")){
-        cvpreds<-exp(mgcv::predict.gam(object = cv.model,newdata=test.data,response="link")+cv.model$entropy)
-        cvprobs<-mgcv::predict.gam(object = cv.model,newdata=test.data,type="cloglog")
+        cvpreds<-exp(predict(object = cv.model,newdata=test.data,response="link")+cv.model$entropy)
+        cvprobs<-predict(object = cv.model,newdata=test.data,type="cloglog")
       }else{
         cvpreds<-rep(NA,times=nrow(test.data))
         cvprobs<-rep(NA,times=nrow(test.data))
