@@ -29,11 +29,20 @@ library(akgfmaps)
 # Load the data and add more info
 
 ```{r eval=F}
+data("region_data_all") 
+data("GOA_bathy") 
+data("GOA_btemp")
+data("GOA_lat")
+data("GOA_lon")
+data("GOA_slope")
+data("GOA_sponge")
+data("raster_stack")
+
 region.data <- region_data_all
 
 bathy <- GOA_bathy
 btemp <- GOA_btemp
-btemp <- raster::crop(x = btemp, y = bathy)
+#btemp <- raster::crop(x = btemp, y = bathy)
 slope <- GOA_slope
 sponge <- GOA_sponge
 
@@ -49,7 +58,7 @@ region.data$logarea <- log(region.data$area)
 lat <- GOA_lat
 lon <- GOA_lon
 
-raster.stack <- terra::rast(raster_stack, crs=3338)
+raster.stack <- terra::rast(raster_stack)
 names(raster.stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
 
   # Using terra, the raster values are not automatically passed as factors when plugged into 
@@ -126,7 +135,7 @@ maxnet.abund <- MakeMaxEntAbundance(
   scale.fac = maxnet.scale, type = "cloglog"
 )
 
-# Now crossvalidate and get fit metrics
+# Now cross-validate and get fit metrics
 maxnet.cv <- CrossValidateModel(
   model = maxnet.model, data = species.data, species = species, group = "Folds",
   model.type = "maxnet", key = "hauljoin", scale.preds = T, regmult = 1
@@ -195,7 +204,7 @@ hpoisson.scale <- mean(species.data[, species]) / mean(predict(hpoisson.model, t
 hpoisson.abund <- MakeGAMAbundance(
   model = hpoisson.model, r.stack = raster.stack, scale.factor = hpoisson.scale,
   filename = ""
-)
+) # This makes a SpatRaster object
 
 hpoisson.cv <- CrossValidateModel(
   model = hpoisson.model, model.type = "hgam", data = species.data,
