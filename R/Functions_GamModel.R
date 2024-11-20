@@ -560,7 +560,7 @@ GAMStats <- function(model, # a gam model
       # update progress bar
       utils::setTxtProgressBar(pb, i)
     } else {
-      utils::setTxtProgressBar(pb, length(gam.terms))
+      utils::setTxtProgressBar(pb, length(gam.terms)) # maybe change this to just 'terms'?
       print("Deviance could not be estimated for model; returning NAs")
       break
     }

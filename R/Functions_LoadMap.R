@@ -1,22 +1,5 @@
 # This script contains various functions mostly related to either mapping or plotting the output from other analyses
 # In general, they should be capatible with all types of models, though be careful to set the appropriate options
-#
-# rpackages <- c("rgdal", "sp","gstat","viridis","raster")
-#
-# which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
-#
-# if(length(which_not_installed) > 1){
-#   install.packages(rpackages[which_not_installed], dep = TRUE)
-# }
-# rm(rpackages,which_not_installed)
-#
-# require(rgdal)
-# require(sp)
-# require(gstat)
-# require(viridis)
-# require(raster)
-
-
 #' Calculate RMSE
 #'
 #' @description A quick function to calculate the RMSE.
@@ -96,7 +79,7 @@ FindEFHbreaks<-function(abund.raster,                  # an abundance raster
       vals<-stats::na.omit(sort(terra::values(abund.raster)))
       vals2<-cumsum(vals)/sum(vals)
     }else{
-      vals<-stats::na.omit(sort(raster::extract(abund.raster,data.frame(data$lon,data$lat))))
+      vals<-stats::na.omit(sort(terra::extract(abund.raster,data.frame(data$lon,data$lat))))
       vals2<-cumsum(vals)/sum(vals)
     }
 
@@ -192,8 +175,8 @@ CrossValidateModel<-function(model,
       pres.group<-c(pres.group,rep(LETTERS[i],times=pres.scheme[i]))
       abs.group<-c(abs.group,rep(LETTERS[i],times=abs.scheme[i]))
     }
-    pres.data<-data.frame(data[pres[pres.randos],],group=pres.group)
-    abs.data<-data.frame(data[abs[abs.randos],],group=abs.group)
+    pres.data<-data.frame(data[pres[pres.randos],],"group"=pres.group)
+    abs.data<-data.frame(data[abs[abs.randos],],"group"=abs.group)
 
     data<-rbind(pres.data,abs.data)
     group<-"group"
@@ -243,16 +226,16 @@ CrossValidateModel<-function(model,
     error.data$abund[start.vec[i]:end.vec[i]]<-test.data[,species]
 
     if(model.type=="maxnet"){
-      preds<-exp(predict(object = model,newdata=test.data,response="link")+model$entropy)
-      probs<-predict(object = model,newdata=test.data,type="cloglog")
+      preds<-exp(stats::predict(object = model,newdata=test.data,response="link")+model$entropy)
+      probs<-stats::predict(object = model,newdata=test.data,type="cloglog")
       # then on to the cv model
       vars0<-names(model$samplemeans)
       facs<-vars0[vars0%in%names(model$varmax)==F]
 
       try(cv.model<-FitMaxnet(data = train.data,species = species,vars = names(model$varmax),facs = facs,regmult = regmult))
       if(exists("cv.model")){
-        cvpreds<-exp(predict(object = cv.model,newdata=test.data,response="link")+cv.model$entropy)
-        cvprobs<-predict(object = cv.model,newdata=test.data,type="cloglog")
+        cvpreds<-exp(stats::predict(object = cv.model,newdata=test.data,response="link")+cv.model$entropy)
+        cvprobs<-stats::predict(object = cv.model,newdata=test.data,type="cloglog")
       }else{
         cvpreds<-rep(NA,times=nrow(test.data))
         cvprobs<-rep(NA,times=nrow(test.data))
@@ -442,6 +425,8 @@ MakeCrossValidationPlots<-function(error.data,           # a data frame, typical
 #' @param model.type character; the type of model ("maxnet","cloglog","hgam","gam")
 #' @param scale.factor numeric; a scale factor to be applied
 #' @param efh.break numeric; the EFH breakpoint for the full model, optionally creates an extra map
+#' @importFrom terra extract
+#' @importFrom stats density
 #'
 #' @return raster of estimate non-parametric variance in model predictions
 #' @export
@@ -460,7 +445,7 @@ MakeVarianceRasters<-function(model.list,            # a list of models for each
     spots<-which(is.na(terra::values(raster.stack[[r]]))==F)
     data.spots<-data.spots[data.spots%in%spots]
   }
-  data<-extract(raster.stack,data.spots)
+  data<-terra::extract(raster.stack,data.spots)
 
   #check for empty models
   list.index<-1

@@ -748,7 +748,7 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
     ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust.x, ylim = MAP$plot.boundary$y + ext.adjust.y) +
     ggplot2::geom_label(
       data = data.frame(x = label.pos[1], y = label.pos[2], label = main),
-      aes(x = x, y = y, label = main, hjust = 0, vjust = 1), size = 5
+      ggplot2::aes(x = x, y = y, label = main, hjust = 0, vjust = 1), size = 5
     ) +
     ggplot2::scale_fill_manual(values = c(old.col, new.col, mix.col), labels = leg.labels, name = leg.name) +
     ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
@@ -759,8 +759,10 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
       panel.background = ggplot2::element_rect(fill = NA, color = "black"),
       legend.key = ggplot2::element_rect(fill = NA, color = NA),
       legend.position = leg.pos, legend.justification = c(0, 1),
-      axis.title = ggplot2::element_blank(), axis.text = element_text(size = 12),
-      legend.text = ggplot2::element_text(size = 12), legend.title = ggplot2::element_text(size = 12),
+      axis.title = ggplot2::element_blank(),
+      axis.text = ggplot2::element_text(size = 12),
+      legend.text = ggplot2::element_text(size = 12),
+      legend.title = ggplot2::element_text(size = 12),
       plot.background = ggplot2::element_rect(fill = NA, color = NA)
     ) +
     ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size = 4, shape = 15)))
