@@ -33,7 +33,7 @@ usethis::use_package("mgcv", type = "Imports", min_version = NULL) #used by mult
 usethis::use_package("PresenceAbsence", type = "Imports", min_version = NULL)
 
 #LoadMap dependencies
-#usethis::use_package("rgdal", type = "Imports", min_version = NULL)
+
 #usethis::use_package("sp", type = "Imports", min_version = NULL)
 #usethis::use_package("gstat", type = "Imports", min_version = NULL)
 usethis::use_package("viridis", type = "Imports", min_version = NULL)
@@ -54,11 +54,6 @@ usethis::use_package("xtable", type = "Imports", min_version = NULL)
 # Packages in development
 usethis::use_dev_package("akgfmaps", type = "Imports", remote = "git::https://github.com/afsc-gap-products/akgfmaps.git@master")
 #devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
-
-
-# Ignore meatgrinder file -------------------------------------------------
-usethis::use_build_ignore(files = "R/Meatgrinder5.R")
-
 
 # Datasets ----------------------------------------------------------------
 # Advice from Sean:

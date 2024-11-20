@@ -30,14 +30,11 @@ This project requires the following packages. Bear in mind that the `maxnet` pac
 
 ```r
 # Packages
-xtable, XML, raster, rgdal, gstat, sp, sf, stars, akgfmaps, ggplot, viridis, gridExtra, MASS, scales, labeling, maxnet, ENMeval, PresenceAbsence, mgcv
+xtable, XML, raster, gstat, sf, stars, akgfmaps, ggplot, viridis, gridExtra, MASS, scales, labeling, maxnet, ENMeval, PresenceAbsence, mgcv
 ```
 
 # Roadmap
 Sections of the analysis are included as separate scripts. The general strategy is to use the functions provided in `Functions_Maxent.R` and `Functions_GamModel.R` to produce models, abundance rasters, effects estimates, and other outputs in a standard-ish format. Then, the scripts `Functions_LoadMap.R` and `Functions_Ensemble.R` provide more general methods for mapping or plotting model outputs and combining inferences from multiple models.
-
-The `Meatgrinder.R` script provides an example of a workflow that combines these functions to make an ensemble SDM and the accompanying maps. It contains control logic designed to accommodate the needs of the 2023 EFH 5-year Review process, which involved running and keeping track of over 200 individual species/lifestages.
-
 
 1) `Functions_Maxent.R` - this script provides the functions for quickly using maxnet models. 
 2) `Functions_GamModel.R` - this script provides functions for conducting several operations with GAMs. The code has been tested with binomial, poisson, negative binomial, and ziplss hurdle models. 
