@@ -41,7 +41,7 @@ Sections of the analysis are included as separate scripts. The general strategy 
 3) `Functions_LoadMap.R` - this script provides versatile functions for mapping or plotting the model types mentioned above. It also contains some functions used to set up data specific to the EFH program that are unlikely to be broadly useful. 
 4) `Functions_Ensemble.R` - this script provides functions designed to combine models and model products produced in the previous scripts
 5) `Functions_Xtable.R` - this script produces a few standard output tables to summarize model or ensemble performance.
-6) Functions_akgfmaps.R - this script provides standard functions to plot maps using the akgfmaps package that are of higher quality than those included elsewhere
+6) `Functions_akgfmaps.R` - this script provides standard functions to plot maps using the akgfmaps package that are of higher quality than those included elsewhere
 
 Functions may be general or specific to a type of model
 
@@ -53,7 +53,7 @@ Functions may be general or specific to a type of model
 | `FitHurdleGAM()`       | Fit and term selection for ziplss hurdle GAMs                 |
 | `MakeGAMAbundance()`   | Produce a prediction raster from a GAM model and covariate stack |
 | `GetGAMEffects()`      | Produce covariate effect estimates and CIs for GAM models        |
-| `GAMStats()`           | Produce jacknife estimates of relative deviance explained (slow) |
+| `GAMStats()`           | Produce jackknife estimates of relative deviance explained (slow) |
 
 * The functions `AutodetectGAMTerms()` and `AssembleGAMFormula()` are used internally by other
 functions, but are not strictly necessary for all users.
@@ -92,13 +92,15 @@ There are numerous plotting functions. The ones based on `akgfmaps` are recommen
 
 First one will need to prepare any data and covariate rasters. Data should be organized in a data frame with columns for species and any covariates, offsets, etc. Rasters should be combined into a stack. 
 
-The functions are typically called top to bottom. Begin by fitting a model using `FitGAM()`, `FitHurdleGAM()`, or `FitMaxnet()`. The resulting model is used with `MakeGAMAbundance()` (or `MakeMaxEntAbundance()`) to create an abundance raster, `GetGAMEffects()` to estimate covariate effects, and `GAMStats()` to obtain covariate contributions. Then one follows with `CrossValidateModel()` to output a useful dataframe of both in-bag and out-of-bag predictions. This dataframe can be used to calculate PDE and RMSE. `MakeVarianceRasters()` produces a variance map. `FindEFHbreaks()` gives the abundance thresholds that define each EFH quantile. The final EFH map is made by passing the result of `EFHbreaks()` to the `cut()` function from the terra package. 
+The functions are typically called top to bottom. Begin by fitting a model using `FitGAM()`, `FitHurdleGAM()`, or `FitMaxnet()`. The resulting model is used with `MakeGAMAbundance()` (or `MakeMaxEntAbundance()`) to create an abundance raster, `GetGAMEffects()` to estimate covariate effects, and `GAMStats()` to obtain covariate contributions. Then one follows with `CrossValidateModel()` to output a useful dataframe of both in-bag and out-of-bag predictions. This dataframe can be used to calculate PDE and RMSE. `MakeVarianceRasters()` produces a variance map. `FindEFHbreaks()` gives the abundance thresholds that define each EFH quantile. The final EFH map is made by passing the result of `EFHbreaks()` to the `cut()` function from the `terra` package. 
 
 ## Simple example
 
 All of the rasters used for the EFH 2023 Five-Year Review are stored on a shared drive at NOAA. For the purposes of the following example, the datasets are embedded in the package. For additional rasters and datasets, contact the package developers or submit a data [product request](https://github.com/alaska-groundfish-efh/product-requests/issues).
 
 For example purposes, we will used only the last  years of data and only a few covariates. *Note that this means that the map you produce will look different from the final map produced in the 2023 EFH 5-year Review.*
+
+## Example: adult arrowtooth flounder in the Gulf of Alaska
 
 ### Load EFHSDM
 ```r
@@ -110,13 +112,15 @@ library(EFHSDM)
 
 Currently, the raster for this example is stored with the package, and is just called `raster_stack`. You may eventually want to make your own raster stack and use it here. 
 ``` r
-region.data <- subset(region_data_all, year >= 2012)
+data(region_data_all) # These are catch counts from the GOA bottom trawl survey
+data(raster_stack) # This is a raster stack of covariates
+
+region.data <- subset(region_data_all, year >= 2012) # Limit the timeframe to speed things up
 region.data$sponge <- as.integer(region.data$sponge > 0)
 region.data$logarea <- log(region.data$area)
 
-
-raster.stack <- terra::rast(terra::unwrap(raster_stack))
-#raster.stack <- raster::raster(raster.stack) # option to turn this spatraster stack into a regular raster stack (only works if you don't crop )
+raster.stack <- terra::rast(raster_stack)
+names(raster.stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
 ```
 
 ### Next we will fit a basic Poisson model and generate an abundance map
@@ -132,6 +136,7 @@ poisson.model <- FitGAM(gam.formula = gam.form, data = region.data, family.gam =
 ### Make the abundance map
 ``` r
 poisson.abundance <- MakeGAMAbundance(model = poisson.model, r.stack = raster.stack)
+
 abundance.plot <- MakeAKGFDensityplot(region = "goa", density.map = poisson.abundance, buffer = .98, title.name = "Adult ATF", legend.title = "Abundance")
 
 # Display abundance plot. Note: this may take a minute to render!
@@ -147,7 +152,7 @@ dev.off()
 ### Get the covariate effects
 ``` r
 poisson.effects <- GetGAMEffects(poisson.model, data = region.data)
-Effectsplot(poisson.effects,region="goa",crs=raster.stack@crs)
+Effectsplot(poisson.effects,region="goa",crs=crs(raster.stack,describe=TRUE,proj=TRUE)$proj)
 ```
 
 ### Crossvalidate the model
@@ -180,6 +185,7 @@ dev.off()
 ![Raster of ATF EFH](https://github.com/alaska-groundfish-efh/EFHSDM/blob/main/inst/readme_images/EFHMap.png)
 
 ### Ensembles
+
 An ensemble is not presented here, as it would take too long and be too complex to organize in this document. However, here is a pseudo-code illustration of how an ensemble can be constructed from previously constructed poisson and maxnet models.
 
 First one performs all the steps shown above from both models. Then use the RMSE values to get the weights.
