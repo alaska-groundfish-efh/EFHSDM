@@ -8,12 +8,16 @@ Authors@R:
            comment = c(ORCID = "0000-0003-2663-9243")),
       person(c("James", "T."), "Thorson", email = "james.thorson@noaa.gov", role = c("aut"),
            comment = c(ORCID = "0000-0001-7415-1010")),
-      person("Jodi", "Pirtle", ,email = "jodi.pirtle@noaa.gov", role = c("aut"),
+      person(c("Jodi", "L."), "Pirtle", email = "jodi.pirtle@noaa.gov", role = c("aut"),
            comment = c(ORCID = "0000-0002-4421-8234")),
       person(c("Margaret","C."), "Siple", email = "margaret.siple@noaa.gov", role = c("aut", "com"),
-           comment = c(ORCID = "0000-0002-4260-9856"))     
+           comment = c(ORCID = "0000-0002-4260-9856")),
+      person(c("Mason","J."), "Smith", email = "mason.smith@noaa.gov", role = c("aut", "com"),
+           comment = c(ORCID = "0000-0002-3132-6869")),
+      person(c("Mallarie", "E."), "Yeager", email = "mallarie.yeager@noaa.gov", role = c("aut", "com"),
+           comment = c(ORCID = " 0000-0002-5513-2583"))     
            )
-Description: This package fits species distribution models (SDMs) to groundfish and crab data from the Eastern Bering Sea, Aleutian Islands, and Gulf of Alaska. These SDMs were used in the 2022 EFH 5-Year Review. 
+Description: This package fits species distribution models (SDMs) to groundfish and crab data from the Eastern Bering Sea, Aleutian Islands, and Gulf of Alaska. These SDMs were used in the 2023 EFH 5-Year Review. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
