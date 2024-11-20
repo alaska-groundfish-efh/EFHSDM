@@ -9,7 +9,6 @@
 #' @return Returns a formula object, or list of formulas for hgam
 #' @export
 #'
-#'
 #' @examples
 AssembleGAMFormula <- function(yvar, gam.table, hgam = F) {
 
@@ -485,7 +484,7 @@ AutodetectGAMTerms <- function(model, hgam = "all") {
 #' @param model a GAM model object
 #' @param data a data frame; usually the same one used to fit the GAM model
 #'
-#' @return a named vector of decimal values indicating the percent contribution
+#' @return a named vector of decimal values indicating the percent contribution to deviance explained
 #' @export
 #'
 #' @examples
