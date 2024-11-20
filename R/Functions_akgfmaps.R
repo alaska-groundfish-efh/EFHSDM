@@ -832,11 +832,14 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
       if (xname %in% c("lon", "Longitude", "long")) {
         con.data <- grDevices::contourLines(x = sort(unique(e.data$x)), y = sort(unique(e.data$y)), z = matrix(nrow = 40, ncol = 40, data = e.data$effect))
 
-        con.data2 <- data.frame(lon = con.data[[1]]$x, lat = con.data[[1]]$y, effect = con.data[[1]]$level, group = 1)
-        label.spots <- data.frame(con.data2[round(nrow(con.data2) / 2), 1:2], tag = con.data[[1]]$level)
+        con.data2 <- data.frame("lon" = con.data[[1]]$x,
+                                "lat" = con.data[[1]]$y,
+                                "effect" = con.data[[1]]$level,
+                                "group" = 1)
+        label.spots <- data.frame(con.data2[round(nrow(con.data2) / 2), 1:2], "tag" = con.data[[1]]$level)
         for (i in 2:length(con.data)) {
-          c.dat <- data.frame(lon = con.data[[i]]$x, lat = con.data[[i]]$y, effect = con.data[[i]]$level, group = i)
-          label.spots <- rbind(label.spots, data.frame(c.dat[round(nrow(c.dat) / 2), 1:2], tag = con.data[[i]]$level))
+          c.dat <- data.frame("lon" = con.data[[i]]$x, "lat" = con.data[[i]]$y, "effect" = con.data[[i]]$level, group = i)
+          label.spots <- rbind(label.spots, data.frame(c.dat[round(nrow(c.dat) / 2), 1:2], "tag" = con.data[[i]]$level))
           con.data2 <- rbind(con.data2, c.dat)
         }
         if (nrow(label.spots) > 10) {
@@ -899,12 +902,12 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
           x = sort(unique(e.data[, 1])), y = sort(unique(e.data[, 2])),
           z = matrix(nrow = 40, ncol = 40, data = e.data$effect), nlevels = 10
         )
-        con.data2 <- data.frame(x = con.data[[1]]$x, y = con.data[[1]]$y, effect = con.data[[1]]$level, group = 1)
-        label.spots <- data.frame(con.data2[round(nrow(con.data2) / 2), 1:2], tag = con.data[[1]]$level)
+        con.data2 <- data.frame("x" = con.data[[1]]$x, "y" = con.data[[1]]$y, "effect" = con.data[[1]]$level, group = 1)
+        label.spots <- data.frame(con.data2[round(nrow(con.data2) / 2), 1:2], "tag" = con.data[[1]]$level)
 
         for (i in 2:length(con.data)) {
-          c.dat <- data.frame(x = con.data[[i]]$x, y = con.data[[i]]$y, effect = con.data[[i]]$level, group = i)
-          label.spots <- rbind(label.spots, data.frame(c.dat[round(nrow(c.dat) / 2), 1:2], tag = con.data[[i]]$level))
+          c.dat <- data.frame("x" = con.data[[i]]$x, "y" = con.data[[i]]$y, "effect" = con.data[[i]]$level, group = i)
+          label.spots <- rbind(label.spots, data.frame(c.dat[round(nrow(c.dat) / 2), 1:2], "tag" = con.data[[i]]$level))
           con.data2 <- rbind(con.data2, c.dat)
         }
         names(e.data)[1:2] <- c("x", "y")
@@ -952,7 +955,7 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
         y.lim<-c(lower.lim,upper.lim)
       }
 
-      if(any(!is.na(y.lim))){var.plot<-var.plot+ylim(y.lim)}
+      if(any(!is.na(y.lim))){var.plot<-var.plot+ggplot2::ylim(y.lim)}
       var.plot<-var.plot +ggplot2::xlab(xname) +
         ggplot2::ylab("Variable Effect") +
         ggplot2::theme_bw() +
