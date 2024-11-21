@@ -1,30 +1,4 @@
-# this script will make some more generalized functions for mapping things with the akgfmaps package
-
-# rpackages <- c("viridis", "stars", "sf", "gridExtra", "patchwork", "MASS", "scales", "labeling", "ggplot2")
-#
-# which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
-#
-# if (length(which_not_installed) > 1) {
-#   install.packages(rpackages[which_not_installed], dep = TRUE)
-# }
-#
-# if ("akgfmaps" %in% rownames(installed.packages()) == F) {
-#   devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
-# }
-# rm(rpackages, which_not_installed)
-
-# require(ggplot2)
-# require(akgfmaps)
-# require(viridis)
-# require(stars)
-# require(sf)
-# require(gridExtra)
-# require(patchwork)
-# require(MASS)
-# require(scales)
-# require(labeling)
-#
-#
+# this script contains more generalized functions for mapping things with the akgfmaps package
 #' Make dotplot with akfgmaps
 #'
 #' @description makes a pretty good dotplot; needs additional testing with areas other than "bs.all", "goa", and "ai".
@@ -84,7 +58,7 @@ MakeAKGFDotplot <- function(presence,
                             hd.size = 1) {
   # start by getting the map
   region <- tolower(region)
-  #browser()
+
   if (region %in% c(
     "ebs", "bs.all", "sebs", "bs.south", "ecs", "ebs.ecs", "ai",
     "ai.west", "ai.central", "ai.east", "goa", "goa.west", "goa.east"
@@ -618,6 +592,8 @@ MakeAKGFEFHplot <- function(region,
 #' @param nonEFH integer; the value corresponding to non-EFH in the old and new rasters
 #' @importFrom akgfmaps get_base_layers
 #' @importFrom magrittr %>%
+#' @importFrom terra classify
+#' @importFrom terra values
 #'
 #' @return ggplot object with the comparison map
 #' @export
@@ -700,11 +676,11 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
   try(new.present <- is.na(new@crs) == F)
 
   if (exists("old.present") & exists("new.present")) {
-    comp.raster <- terra::cut(background, breaks = c(-Inf, Inf))
+    comp.raster <- terra::classify(background, breaks = c(-Inf, Inf))
 
     # find which areas are EFH in each version
-    old2 <- terra::cut(x = old, breaks = c(0, nonEFH + .5, Inf))
-    new2 <- terra::cut(x = new, breaks = c(0, nonEFH + .5, Inf))
+    old2 <- terra::classify(x = old, breaks = c(0, nonEFH + .5, Inf))
+    new2 <- terra::classify(x = new, breaks = c(0, nonEFH + .5, Inf))
 
     vals <- terra::values(comp.raster)
 
@@ -772,7 +748,7 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
     ggplot2::coord_sf(xlim = MAP$plot.boundary$x + ext.adjust.x, ylim = MAP$plot.boundary$y + ext.adjust.y) +
     ggplot2::geom_label(
       data = data.frame(x = label.pos[1], y = label.pos[2], label = main),
-      aes(x = x, y = y, label = main, hjust = 0, vjust = 1), size = 5
+      ggplot2::aes(x = x, y = y, label = main, hjust = 0, vjust = 1), size = 5
     ) +
     ggplot2::scale_fill_manual(values = c(old.col, new.col, mix.col), labels = leg.labels, name = leg.name) +
     ggplot2::scale_x_continuous(name = "Longitude", breaks = MAP$lon.breaks) +
@@ -783,8 +759,10 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
       panel.background = ggplot2::element_rect(fill = NA, color = "black"),
       legend.key = ggplot2::element_rect(fill = NA, color = NA),
       legend.position = leg.pos, legend.justification = c(0, 1),
-      axis.title = ggplot2::element_blank(), axis.text = element_text(size = 12),
-      legend.text = ggplot2::element_text(size = 12), legend.title = ggplot2::element_text(size = 12),
+      axis.title = ggplot2::element_blank(),
+      axis.text = ggplot2::element_text(size = 12),
+      legend.text = ggplot2::element_text(size = 12),
+      legend.title = ggplot2::element_text(size = 12),
       plot.background = ggplot2::element_rect(fill = NA, color = NA)
     ) +
     ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size = 4, shape = 15)))
@@ -856,11 +834,14 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
       if (xname %in% c("lon", "Longitude", "long")) {
         con.data <- grDevices::contourLines(x = sort(unique(e.data$x)), y = sort(unique(e.data$y)), z = matrix(nrow = 40, ncol = 40, data = e.data$effect))
 
-        con.data2 <- data.frame(lon = con.data[[1]]$x, lat = con.data[[1]]$y, effect = con.data[[1]]$level, group = 1)
-        label.spots <- data.frame(con.data2[round(nrow(con.data2) / 2), 1:2], tag = con.data[[1]]$level)
+        con.data2 <- data.frame("lon" = con.data[[1]]$x,
+                                "lat" = con.data[[1]]$y,
+                                "effect" = con.data[[1]]$level,
+                                "group" = 1)
+        label.spots <- data.frame(con.data2[round(nrow(con.data2) / 2), 1:2], "tag" = con.data[[1]]$level)
         for (i in 2:length(con.data)) {
-          c.dat <- data.frame(lon = con.data[[i]]$x, lat = con.data[[i]]$y, effect = con.data[[i]]$level, group = i)
-          label.spots <- rbind(label.spots, data.frame(c.dat[round(nrow(c.dat) / 2), 1:2], tag = con.data[[i]]$level))
+          c.dat <- data.frame("lon" = con.data[[i]]$x, "lat" = con.data[[i]]$y, "effect" = con.data[[i]]$level, group = i)
+          label.spots <- rbind(label.spots, data.frame(c.dat[round(nrow(c.dat) / 2), 1:2], "tag" = con.data[[i]]$level))
           con.data2 <- rbind(con.data2, c.dat)
         }
         if (nrow(label.spots) > 10) {
@@ -923,12 +904,12 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
           x = sort(unique(e.data[, 1])), y = sort(unique(e.data[, 2])),
           z = matrix(nrow = 40, ncol = 40, data = e.data$effect), nlevels = 10
         )
-        con.data2 <- data.frame(x = con.data[[1]]$x, y = con.data[[1]]$y, effect = con.data[[1]]$level, group = 1)
-        label.spots <- data.frame(con.data2[round(nrow(con.data2) / 2), 1:2], tag = con.data[[1]]$level)
+        con.data2 <- data.frame("x" = con.data[[1]]$x, "y" = con.data[[1]]$y, "effect" = con.data[[1]]$level, group = 1)
+        label.spots <- data.frame(con.data2[round(nrow(con.data2) / 2), 1:2], "tag" = con.data[[1]]$level)
 
         for (i in 2:length(con.data)) {
-          c.dat <- data.frame(x = con.data[[i]]$x, y = con.data[[i]]$y, effect = con.data[[i]]$level, group = i)
-          label.spots <- rbind(label.spots, data.frame(c.dat[round(nrow(c.dat) / 2), 1:2], tag = con.data[[i]]$level))
+          c.dat <- data.frame("x" = con.data[[i]]$x, "y" = con.data[[i]]$y, "effect" = con.data[[i]]$level, group = i)
+          label.spots <- rbind(label.spots, data.frame(c.dat[round(nrow(c.dat) / 2), 1:2], "tag" = con.data[[i]]$level))
           con.data2 <- rbind(con.data2, c.dat)
         }
         names(e.data)[1:2] <- c("x", "y")
@@ -976,7 +957,7 @@ Effectsplot <- function(effects.list, region = NA, crs = NA, nice.names = NULL, 
         y.lim<-c(lower.lim,upper.lim)
       }
 
-      if(any(!is.na(y.lim))){var.plot<-var.plot+ylim(y.lim)}
+      if(any(!is.na(y.lim))){var.plot<-var.plot+ggplot2::ylim(y.lim)}
       var.plot<-var.plot +ggplot2::xlab(xname) +
         ggplot2::ylab("Variable Effect") +
         ggplot2::theme_bw() +

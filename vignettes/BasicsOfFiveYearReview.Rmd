@@ -17,9 +17,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-This is an example vignette for the EFHSDM package. It provides an simplified example that includes several types of SDMs and an example of how to construct a weighted ensemble average. 
-
-<!-- Note: Jodi, please add text here with some background on the EFH process. You can make edits directly in the browser with the little pencil icon at top right. If this ends up being annoying or a drag for any reason, I can set up a google docs workaround without too much trouble. -->
+This is an example vignette for the EFHSDM package. It provides an simplified example that includes several types of SDMs and an example of how to construct a weighted ensemble. 
 
 ```{r setup}
 library(EFHSDM)
@@ -28,12 +26,21 @@ library(akgfmaps)
 
 # Load the data and add more info
 
-```{r eval=F}
+```{r eval=FALSE}
+data("region_data_all") 
+data("GOA_bathy") 
+data("GOA_btemp")
+data("GOA_lat")
+data("GOA_lon")
+data("GOA_slope")
+data("GOA_sponge")
+data("raster_stack")
+
 region.data <- region_data_all
 
 bathy <- GOA_bathy
 btemp <- GOA_btemp
-btemp <- raster::crop(x = btemp, y = bathy)
+#btemp <- raster::crop(x = btemp, y = bathy)
 slope <- GOA_slope
 sponge <- GOA_sponge
 
@@ -49,7 +56,7 @@ region.data$logarea <- log(region.data$area)
 lat <- GOA_lat
 lon <- GOA_lon
 
-raster.stack <- terra::rast(raster_stack, crs=3338)
+raster.stack <- terra::rast(raster_stack)
 names(raster.stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
 
   # Using terra, the raster values are not automatically passed as factors when plugged into 
@@ -80,7 +87,7 @@ figure.name <- "Adult arrowtooth flounder"
 
 For the example, we will restrict the dataset to the last ten years, note that some species were not adequately identified until a particular year and the dataset should be subsetted accordingly.
 
-```{r eval=F}
+```{r eval=FALSE}
 start.year <- 2012
 
 species.data <- subset(region.data, year >= start.year)
@@ -110,7 +117,7 @@ gam.form <- stats::formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bde
 
  In practice, one should try several different values for `regmult`, and test the best one. For now we'll just use `1`. Also note that `maxnet` models frequently fail to converge.
 
-```{r eval=F}
+```{r eval=FALSE}
 maxnet.model <- FitMaxnet(
   data = species.data, species = species,
   vars = c("lon", "lat", "btemp", "bdepth", "slope"), facs = "sponge",
@@ -126,7 +133,7 @@ maxnet.abund <- MakeMaxEntAbundance(
   scale.fac = maxnet.scale, type = "cloglog"
 )
 
-# Now crossvalidate and get fit metrics
+# Now cross-validate and get fit metrics
 maxnet.cv <- CrossValidateModel(
   model = maxnet.model, data = species.data, species = species, group = "Folds",
   model.type = "maxnet", key = "hauljoin", scale.preds = T, regmult = 1
@@ -148,7 +155,7 @@ We could go through and get deviance and variance estimates for the model now, b
 
 # Cloglog paGAM
 
-```{r eval=F}
+```{r eval=FALSE}
 cloglog.model <- FitGAM(
   gam.formula = gam.form, data = species.data,
   family.gam = "binomial", link.fx = "cloglog", reduce = T, select = T,
@@ -181,7 +188,7 @@ cloglog.rmse <- RMSE(pred = cloglog.errors$cvpred, obs = cloglog.errors$abund)
 #Hurdle GAM
 
 ziplss GAMs require a separate formula for the probability part of the model, and it should leave off the dependent variable
-```{r eval=F}
+```{r eval=FALSE}
 prob.form <- stats::formula("~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) +
                     s(btemp, bs='tp',m=1,k=4) + s(slope, bs='tp',m=1,k=4) + as.factor(sponge) + offset(logarea)")
 
@@ -195,7 +202,7 @@ hpoisson.scale <- mean(species.data[, species]) / mean(predict(hpoisson.model, t
 hpoisson.abund <- MakeGAMAbundance(
   model = hpoisson.model, r.stack = raster.stack, scale.factor = hpoisson.scale,
   filename = ""
-)
+) # This makes a SpatRaster object
 
 hpoisson.cv <- CrossValidateModel(
   model = hpoisson.model, model.type = "hgam", data = species.data,
@@ -215,7 +222,7 @@ hpoisson.rmse <- RMSE(pred = hpoisson.errors$cvpred, obs = hpoisson.errors$abund
 
 # Poisson GAM
 
-```{r eval=F}
+```{r eval=FALSE}
 poisson.model <- FitGAM(
   gam.formula = gam.form, data = species.data, verbose = F,
   reduce = T, select = T, family.gam = "poisson"
@@ -247,7 +254,7 @@ poisson.rmse <- RMSE(pred = poisson.errors$cvpred, obs = poisson.errors$abund)
 
 # Negative binomial GAM
 
-```{r eval=F}
+```{r eval=FALSE}
 negbin.model <- FitGAM(
   gam.formula = gam.form, data = species.data, verbose = F, select = T,
   reduce = T, family.gam = "nb"
@@ -281,7 +288,7 @@ negbin.rmse <- RMSE(pred = negbin.errors$cvpred, obs = negbin.errors$abund)
 
 All of the models converged and passed the abundance check, so we will test all of them in the ensemble.
 
-```{r eval=F}
+```{r eval=FALSE}
 # assemble some things
 rmse.vec <- c(maxnet = maxnet.rmse, cloglog = cloglog.rmse, hpoisson = hpoisson.rmse, poisson = poisson.rmse, negbin = negbin.rmse)
 

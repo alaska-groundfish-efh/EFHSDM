@@ -2,7 +2,7 @@
 % Please edit documentation in R/Functions_Xtable.R
 \name{MakeXtable}
 \alias{MakeXtable}
-\title{Make deviance explained table}
+\title{Make deviance explained table with constituent model statistics}
 \usage{
 MakeXtable(
   model,
@@ -42,7 +42,7 @@ MakeXtable(
 
 \item{abund}{vector of abundance observations}
 
-\item{train}{vector of predictions from the model trained ont he full data set}
+\item{train}{vector of predictions from the model trained on the full data set}
 
 \item{test}{vector of out-of-bag predictions}
 

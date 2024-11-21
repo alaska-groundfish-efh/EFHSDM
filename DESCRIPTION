@@ -14,39 +14,32 @@ Authors@R:
            comment = c(ORCID = "0000-0002-4260-9856"))     
            )
 Description: This package fits species distribution models (SDMs) to groundfish and crab data from the Eastern Bering Sea, Aleutian Islands, and Gulf of Alaska. These SDMs were used in the 2022 EFH 5-Year Review. 
-License: `use_mit_license()`
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.3.2
 Suggests: 
     knitr,
     rmarkdown,
+    gridExtra
 VignetteBuilder: knitr
 Imports: 
     ggplot2,
-    akgfmaps (>= 1.7.4),
+    akgfmaps,
     viridis,
     stars,
     sf,
-    gridExtra,
-    patchwork,
-    MASS,
     scales,
-    labeling,
     mgcv,
     raster,
     PresenceAbsence,
-    gstat,
     maxnet,
-    ENMeval,
     xtable,
-    XML,
     magrittr,
     terra,
     tidyterra
-Remotes: 
-    git::https://github.com/afsc-gap-products/akgfmaps.git@master
+Remotes: afsc-gap-products/akgfmaps
 Depends: 
     R (>= 3.5.0)
 LazyData: 
-    true
+    false

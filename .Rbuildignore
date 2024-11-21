@@ -2,3 +2,6 @@
 ^\.Rproj\.user$
 ^dev$
 ^R/Meatgrinder5\.R$
+^LICENSE\.md$
+^doc$
+^Meta$

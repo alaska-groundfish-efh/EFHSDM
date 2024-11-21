@@ -30,4 +30,4 @@
 #' @name region_data_all
 #' @usage data(region_data_all)
 #' @format A data frame with 15592 rows and 184 variables
-NULL
+"region_data_all"

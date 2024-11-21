@@ -26,7 +26,7 @@
 #' @param nice.names data frame; table linking abbreviated covariate names to nicer versions
 #' @param filename character; a file name for the html table produced
 #' @param abund vector of abundance observations
-#' @param train vector of predictions from the model trained ont he full data set
+#' @param train vector of predictions from the model trained on the full data set
 #' @param test vector of out-of-bag predictions
 #' @param group vector of group labels
 #' @param forecast vector of predictions from a third group (not used much anymore)
@@ -36,6 +36,7 @@
 #'
 #' @return no return value; writes an html table at filename
 #' @export
+#' @importFrom stats aggregate
 #'
 #' @examples
 MakeXtable<-function(model,             # a model object

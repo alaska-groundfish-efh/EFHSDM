@@ -1,21 +1,3 @@
-# This script includes functions for fitting GAM and HGAM models
-
-# Setting lists of required packages & installing it
-# rpackages <- c("mgcv", "raster", "PresenceAbsence")
-#
-# # rJava, rgeos, maps
-# which_not_installed <- which(rpackages %in% rownames(installed.packages()) == FALSE)
-#
-# if (length(which_not_installed) > 1) {
-#   install.packages(rpackages[which_not_installed], dep = TRUE)
-# }
-# rm(rpackages, which_not_installed)
-#
-# require(mgcv)
-# require(raster)
-# require(PresenceAbsence)
-
-
 #' Make a GAM formula
 #'
 #' @description Improved version designed to use the tables produced by the Autodetect functions
@@ -26,7 +8,6 @@
 #'
 #' @return Returns a formula object, or list of formulas for hgam
 #' @export
-#'
 #'
 #' @examples
 AssembleGAMFormula <- function(yvar, gam.table, hgam = F) {
@@ -123,6 +104,13 @@ AssembleGAMFormula <- function(yvar, gam.table, hgam = F) {
 #' @export
 #'
 #' @examples
+#' gam.form <- formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) + s(btemp, bs='tp',m=1,k=4) + s(slope, bs='tp',m=1,k=4) + offset(logarea)")
+#' data("region_data_all")
+#' region_data_all$sponge <- as.integer(region_data_all$sponge > 0)
+#' region_data_all$logarea <- log(region_data_all$area)
+#'
+#' poisson.model <- FitGAM(gam.formula = gam.form, data = region_data_all, family.gam = "poisson")
+
 FitGAM <- function(data,
                    gam.formula = NULL,
                    reduce = F,
@@ -496,7 +484,7 @@ AutodetectGAMTerms <- function(model, hgam = "all") {
 #' @param model a GAM model object
 #' @param data a data frame; usually the same one used to fit the GAM model
 #'
-#' @return a named vector of decimal values indicating the percent contribution
+#' @return a named vector of decimal values indicating the percent contribution to deviance explained
 #' @export
 #'
 #' @examples
@@ -560,7 +548,7 @@ GAMStats <- function(model, # a gam model
       # update progress bar
       utils::setTxtProgressBar(pb, i)
     } else {
-      utils::setTxtProgressBar(pb, length(gam.terms))
+      utils::setTxtProgressBar(pb, length(gam.terms)) # maybe change this to just 'terms'?
       print("Deviance could not be estimated for model; returning NAs")
       break
     }

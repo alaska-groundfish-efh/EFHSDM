@@ -266,6 +266,7 @@ GetEnsembleVariance<-function(model.weights,variance.list,abund.list,ensemble.ab
 #' @param model.weights vector of numeric weights for each model, must match order of effects.list
 #' @param vars character; vector of desired term names or "all"
 #' @param scale character; should effects be in "log" or "abund" scale
+#' @importFrom stats var
 #'
 #' @return list of data frames containing the estimated covariate effects in the ensemble
 #' @export
