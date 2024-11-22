@@ -41,3 +41,13 @@ Fit a GAM that predicts abundance based on the data. One should  supply a formul
 \details{
 If verbose=T, printouts of the model selection process are produced.
 }
+\examples{
+gam.form <- formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) +
+s(bdepth, bs='tp',m=1,k=4) + s(btemp, bs='tp',m=1,k=4) +
+s(slope, bs='tp',m=1,k=4) + offset(logarea)")
+data("region_data_all")
+region_data_all$sponge <- as.integer(region_data_all$sponge > 0)
+region_data_all$logarea <- log(region_data_all$area)
+
+poisson.model <- FitGAM(gam.formula = gam.form, data = region_data_all, family.gam = "poisson")
+}

@@ -86,3 +86,23 @@ makes a pretty good dotplot; needs additional testing with areas other than "bs.
 \details{
 Settings are set to work with 8x8 in 300 res output, so results may vary when making different size figures.
 }
+\examples{
+data("region_data_all")
+region.data <- region_data_all
+region.data$sponge <- as.integer(region.data$sponge > 0)
+region.data$coral <- as.integer(region.data$coral > 0)
+region.data$pen <- as.integer(region.data$pen > 0)
+region.data$logarea <- log(region.data$area)
+data("raster_stack")
+raster.stack <- terra::rast(raster_stack)
+species.data <- subset(region.data, year >= 2012)
+species <- "a_atf"
+hd <- stats::quantile(species.data[species.data[, species] > 0, species], .9)
+MakeAKGFDotplot(
+  presence = species.data[species.data[, species] > 0, ],
+  absence = species.data[species.data[, species] == 0, ],
+  highdensity = species.data[species.data[, species] >= hd, ],
+  dataCRS = terra::crs(raster.stack), region = "goa",
+  title.name = "Adult arrowtooth flounder"
+)
+}

@@ -3,25 +3,22 @@
 \docType{data}
 \name{region_data_all}
 \alias{region_data_all}
-\title{Region data for abundance for all the EFH species included in the 2022 Review}
+\title{GOA region data for abundance for EFH species and lifestages included in the 2023 Review}
 \format{
-A data frame with 15592 rows and 184 variables
+a data frame with 8,507 rows and 184 variables (each species/lifestage gets a column):
+\describe{
+\item{hauljoin}
+\item{region}{EFH area (EBS, GOA, or AI)}
+\item{subregion}{Subregion.}
+\item{vessel}{Vessel ID from the survey; matches RACEBASE, FOSS, others}
+\item{cruise}{Cruise ID number}
+\item{haul}{Haul number}
+}
 }
 \usage{
 data(region_data_all)
 }
 \description{
 The variables are as follows:
-}
-\details{
-\itemize{
-\item hauljoin.
-\item region. EFH area (EBS, GOA, or AI)
-\item subregion.
-\item vessel. Vessel ID from the survey; matches RACEBASE, FOSS, others
-\item cruise. Cruise ID number.
-\item haul. Haul number.
-...
-}
 }
 \keyword{datasets}

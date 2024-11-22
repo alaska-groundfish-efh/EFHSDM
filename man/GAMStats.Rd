@@ -12,7 +12,7 @@ GAMStats(model, data)
 \item{data}{a data frame; usually the same one used to fit the GAM model}
 }
 \value{
-a named vector of decimal values indicating the percent contribution
+a named vector of decimal values indicating the percent contribution to deviance explained
 }
 \description{
 Make a quick and dirty jackknife estimate of the deviance explained by each variable

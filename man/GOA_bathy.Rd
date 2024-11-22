@@ -9,7 +9,6 @@ A raster layer with 12 slots
 \describe{
 \item{name}{character string with path to raster layer}
 \item{datanotation}{Raster file native format}
-...
 }
 }
 \source{
