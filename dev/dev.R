@@ -21,10 +21,7 @@ usethis::use_package("viridis", type = "Imports", min_version = NULL) #used by m
 usethis::use_package("stars", type = "Imports", min_version = NULL)
 usethis::use_package("sf", type = "Imports", min_version = NULL)
 usethis::use_package("gridExtra", type = "Imports", min_version = NULL)
-#usethis::use_package("patchwork", type = "Imports", min_version = NULL)
-#usethis::use_package("MASS", type = "Imports", min_version = NULL)
 usethis::use_package("scales", type = "Imports", min_version = NULL)
-#usethis::use_package("labeling", type = "Imports", min_version = NULL)
 usethis::use_package("magrittr", type = "Imports", min_version = NULL)
 usethis::use_package("terra", type = "Imports", min_version = NULL)
 
@@ -33,15 +30,10 @@ usethis::use_package("mgcv", type = "Imports", min_version = NULL) #used by mult
 usethis::use_package("PresenceAbsence", type = "Imports", min_version = NULL)
 
 #LoadMap dependencies
-
-#usethis::use_package("sp", type = "Imports", min_version = NULL)
-#usethis::use_package("gstat", type = "Imports", min_version = NULL)
 usethis::use_package("viridis", type = "Imports", min_version = NULL)
-#usethis::use_package("mgcv", type = "Imports", min_version = NULL)
-#usethis::use_package("raster", type = "Imports", min_version = NULL)
+
 
 #Maxent dependencies
-#usethis::use_package("raster", type = "Imports", min_version = NULL)
 usethis::use_package("PresenceAbsence", type = "Imports", min_version = NULL)
 usethis::use_package("maxnet", type = "Imports", min_version = NULL)
 #usethis::use_package("ENMeval", type = "Imports", min_version = NULL)
@@ -128,6 +120,10 @@ usethis::use_data(GOA_lon,overwrite = TRUE)
 usethis::use_data(raster_stack, overwrite = TRUE)
 
 save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, GOA_lat, GOA_lon, file = here::here("R","sysdata.rda"))
+
+
+# Document datasets -------------------------------------------------------
+devtools::document(roclets = c('rd', 'collate', 'namespace'))
 
 
 # Build package -----------------------------------------------------------
