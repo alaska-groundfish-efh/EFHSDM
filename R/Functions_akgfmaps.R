@@ -1,4 +1,5 @@
 # this script contains more generalized functions for mapping things with the akgfmaps package
+
 #' Make dotplot with akfgmaps
 #'
 #' @description makes a pretty good dotplot; needs additional testing with areas other than "bs.all", "goa", and "ai".
@@ -33,6 +34,28 @@
 #' @export
 #'
 #' @examples
+#' data("region_data_all")
+#' region.data <- region_data_all
+#' region.data$sponge <- as.integer(region.data$sponge > 0)
+#' region.data$coral <- as.integer(region.data$coral > 0)
+#' region.data$pen <- as.integer(region.data$pen > 0)
+#' region.data$logarea <- log(region.data$area)
+
+#' data("raster_stack")
+#' raster.stack <- terra::rast(raster_stack)
+
+#' species.data <- subset(region.data, year >= 2012)
+#' species <- "a_atf"
+#' hd <- stats::quantile(species.data[species.data[, species] > 0, species], .9)
+
+#' MakeAKGFDotplot(
+#'   presence = species.data[species.data[, species] > 0, ],
+#'   absence = species.data[species.data[, species] == 0, ],
+#'   highdensity = species.data[species.data[, species] >= hd, ],
+#'   dataCRS = terra::crs(raster.stack), region = "goa",
+#'   title.name = "Adult arrowtooth flounder"
+#' )
+
 MakeAKGFDotplot <- function(presence,
                             absence = NA,
                             highdensity = NA,
@@ -204,7 +227,7 @@ MakeAKGFDotplot <- function(presence,
       panel.border = ggplot2::element_rect(color = "black", fill = NA),
       panel.background = ggplot2::element_rect(fill = NA, color = "black"),
       legend.key = ggplot2::element_rect(fill = NA, color = "grey30"),
-      legend.position = legend.pos,
+      legend.position.inside = legend.pos,
       axis.title = ggplot2::element_blank(), axis.text = ggplot2::element_text(size = 12),
       legend.text = ggplot2::element_text(size = 12), legend.title = ggplot2::element_text(size = 12),
       plot.background = ggplot2::element_rect(fill = NA, color = NA)
@@ -758,7 +781,7 @@ PlotEFHComparison <- function(old = NA, new = NA, main = "", background, leg.nam
       panel.border = ggplot2::element_rect(color = "black", fill = NA),
       panel.background = ggplot2::element_rect(fill = NA, color = "black"),
       legend.key = ggplot2::element_rect(fill = NA, color = NA),
-      legend.position = leg.pos, legend.justification = c(0, 1),
+      legend.position.inside = leg.pos, legend.justification = c(0, 1),
       axis.title = ggplot2::element_blank(),
       axis.text = ggplot2::element_text(size = 12),
       legend.text = ggplot2::element_text(size = 12),
