@@ -104,7 +104,9 @@ AssembleGAMFormula <- function(yvar, gam.table, hgam = F) {
 #' @export
 #'
 #' @examples
-#' gam.form <- formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) + s(bdepth, bs='tp',m=1,k=4) + s(btemp, bs='tp',m=1,k=4) + s(slope, bs='tp',m=1,k=4) + offset(logarea)")
+#' gam.form <- formula("a_atf ~ s(lon,lat,bs = 'ds',m=c(1,.5), k=10) +
+#' s(bdepth, bs='tp',m=1,k=4) + s(btemp, bs='tp',m=1,k=4) +
+#' s(slope, bs='tp',m=1,k=4) + offset(logarea)")
 #' data("region_data_all")
 #' region_data_all$sponge <- as.integer(region_data_all$sponge > 0)
 #' region_data_all$logarea <- log(region_data_all$area)
