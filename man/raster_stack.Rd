@@ -10,7 +10,8 @@ A terra PackedSpatRaster with 6 slots
 \item{lon}{Longitude}
 \item{lat}{Latitude}
 \item{bdepth}{Bottom depth in meters}
-\item{btemp}{slope}{The rate of change in bathymetry over a defined area, measured as the first derivative of the bathymetric surface, in degrees of incline (Horn 1981, Dolan and Lucieer 2014.)}
+\item{btemp}{Bottom temperature in deg C}
+\item{slope}{The rate of change in bathymetry over a defined area, measured as the first derivative of the bathymetric surface, in degrees of incline (Horn 1981, Dolan and Lucieer 2014.)}
 \item{sponge}{CPUE of sponge from bottom trawl surveys. Usually, this is transformed into sponge presence-absence when fitting EFH SDMs.}
 }
 }

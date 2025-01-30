@@ -7,7 +7,7 @@
 \format{
 a data frame with 8,507 rows and 184 variables (each species/lifestage gets a column):
 \describe{
-\item{hauljoin}
+\item{hauljoin}{A numeric value for joining catch data between catch and haul tables.}
 \item{region}{EFH area (EBS, GOA, or AI)}
 \item{subregion}{Subregion.}
 \item{vessel}{Vessel ID from the survey; matches RACEBASE, FOSS, others}
