@@ -126,6 +126,11 @@ save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, GOA_lat, GOA_
 devtools::document(roclets = c('rd', 'collate', 'namespace'))
 
 
+
+# Setup testing -----------------------------------------------------------
+
+usethis::use_testthat()
+
 # Build package -----------------------------------------------------------
 
 devtools::build()

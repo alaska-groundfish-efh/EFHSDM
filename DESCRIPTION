@@ -25,7 +25,8 @@ RoxygenNote: 7.3.2
 Suggests: 
     knitr,
     rmarkdown,
-    gridExtra
+    gridExtra,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Imports: 
     ggplot2,
@@ -47,3 +48,4 @@ Depends:
     R (>= 3.5.0)
 LazyData: 
     false
+Config/testthat/edition: 3
