@@ -16,7 +16,7 @@
 #' @format a data frame with 8,507 rows and 184 variables (each species/lifestage gets a column):
 #' \describe{
 #'   \item{hauljoin}{A numeric value for joining catch data between catch and haul tables.}
-#'   \item{region}{EFH area (EBS, GOA, or AI)}
+#'   \item{region}{EFH area (GOA)}
 #'   \item{subregion}{Subregion.}
 #'   \item{vessel}{Vessel ID from the survey; matches RACEBASE, FOSS, others}
 #'   \item{cruise}{Cruise ID number}
@@ -24,6 +24,36 @@
 #' }
 #' @usage data(region_data_goa)
 "region_data_goa"
+
+#' EBS region data for abundance for EFH species and lifestages included in the 2023 Review
+#'
+#' The variables are as follows:
+#' @format a data frame with 15,592 rows and 184 variables (each species/lifestage gets a column):
+#' \describe{
+#'   \item{hauljoin}{A numeric value for joining catch data between catch and haul tables.}
+#'   \item{region}{EFH area (EBS)}
+#'   \item{subregion}{Subregion.}
+#'   \item{vessel}{Vessel ID from the survey; matches RACEBASE, FOSS, others}
+#'   \item{cruise}{Cruise ID number}
+#'   \item{haul}{Haul number}
+#' }
+#' @usage data(region_data_ebs)
+"region_data_ebs"
+
+#' AI region data for abundance for EFH species and lifestages included in the 2023 Review
+#'
+#' The variables are as follows:
+#' @format a data frame with 5,347 rows and 184 variables (each species/lifestage gets a column):
+#' \describe{
+#'   \item{hauljoin}{A numeric value for joining catch data between catch and haul tables.}
+#'   \item{region}{EFH area (AI)}
+#'   \item{subregion}{Subregion.}
+#'   \item{vessel}{Vessel ID from the survey; matches RACEBASE, FOSS, others}
+#'   \item{cruise}{Cruise ID number}
+#'   \item{haul}{Haul number}
+#' }
+#' @usage data(region_data_ai)
+"region_data_ai"
 
 #' GOA covariate data
 #'
@@ -45,3 +75,5 @@
 #' @name raster_stack
 #' @usage data(raster_stack)
 "raster_stack"
+
+
