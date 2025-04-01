@@ -32,8 +32,8 @@
 #' @export
 #'
 #' @examples
-#' data("region_data_all")
-#' region.data <- region_data_all
+#' data("region_data_goa")
+#' region.data <- region_data_goa
 #' region.data$sponge <- as.integer(region.data$sponge > 0)
 #' region.data$coral <- as.integer(region.data$coral > 0)
 #' region.data$pen <- as.integer(region.data$pen > 0)

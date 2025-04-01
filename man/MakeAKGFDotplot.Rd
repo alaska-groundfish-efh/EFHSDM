@@ -87,8 +87,8 @@ makes a pretty good dotplot; needs additional testing with areas other than "bs.
 Settings are set to work with 8x8 in 300 res output, so results may vary when making different size figures.
 }
 \examples{
-data("region_data_all")
-region.data <- region_data_all
+data("region_data_goa")
+region.data <- region_data_goa
 region.data$sponge <- as.integer(region.data$sponge > 0)
 region.data$coral <- as.integer(region.data$coral > 0)
 region.data$pen <- as.integer(region.data$pen > 0)

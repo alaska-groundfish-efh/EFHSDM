@@ -22,8 +22,8 @@
 #'   \item{cruise}{Cruise ID number}
 #'   \item{haul}{Haul number}
 #' }
-#' @usage data(region_data_all)
-"region_data_all"
+#' @usage data(region_data_goa)
+"region_data_goa"
 
 #' GOA covariate data
 #'

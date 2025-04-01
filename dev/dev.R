@@ -64,7 +64,7 @@ usethis::use_dev_package("akgfmaps", type = "Imports", remote = "git::https://gi
 # Set up sysdata.rda, which includes data that should be automatically loaded with the package and will not be avail to users outside the package
 
 # These are all in the current example; more will probably need to be added
-region_data_all <- read.csv("Y:/RACE_EFH_Variables/Trawl_Models/GOA/all_GOA_data_2021.csv")
+region_data_goa <- read.csv("Y:/RACE_EFH_Variables/Trawl_Models/GOA/all_GOA_data_2021.csv")
 GOA_bathy <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Bathy.grd")
 GOA_btemp <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Btemp.grd")
 GOA_slope <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Slope.grd")
@@ -75,7 +75,7 @@ GOA_lat <- terra::mask(GOA_lat0, GOA_bathy, overwrite = F)
 GOA_lon0 <- terra::init(GOA_bathy, fun = "x")
 GOA_lon <- terra::mask(GOA_lon0, GOA_bathy, overwrite = F)
 
-# region.data <- subset(region_data_all, year >= 2012)
+# region.data <- subset(region_data_goa, year >= 2012)
 # region.data$sponge <- as.integer(region.data$sponge > 0)
 # region.data$logarea <- log(region.data$area)
 
@@ -106,7 +106,7 @@ raster_stack <-terra::wrap(raster_stack) # Makes PackedSpatRaster object, need t
 # save(raster_stack, file = here::here("data","raster_stack.rda"))
 
 
-usethis::use_data(region_data_all,overwrite = TRUE)
+usethis::use_data(region_data_goa,overwrite = TRUE)
 
 # Only do this if you want to save each raster layer separately
 usethis::use_data(GOA_bathy,overwrite = TRUE)
@@ -119,7 +119,7 @@ usethis::use_data(GOA_lon,overwrite = TRUE)
 # Do this if you want to save the full raster stack as one stacked object
 usethis::use_data(raster_stack, overwrite = TRUE)
 
-save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, GOA_lat, GOA_lon, file = here::here("R","sysdata.rda"))
+save(region_data_goa, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, GOA_lat, GOA_lon, file = here::here("R","sysdata.rda"))
 
 
 # Document datasets -------------------------------------------------------
@@ -128,8 +128,11 @@ devtools::document(roclets = c('rd', 'collate', 'namespace'))
 
 
 # Setup testing -----------------------------------------------------------
-
 usethis::use_testthat()
+
+# Example script for drafting a test
+# usethis::use_test("name")
+usethis::use_test("name")
 
 # Build package -----------------------------------------------------------
 

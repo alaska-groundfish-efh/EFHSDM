@@ -110,10 +110,10 @@ library(EFHSDM)
 
 Currently, the raster for this example is stored with the package, and is just called `raster_stack`. You may eventually want to make your own raster stack and use it here. 
 ``` r
-data(region_data_all) # These are catch counts from the GOA bottom trawl survey
+data(region_data_goa) # These are catch counts from the GOA bottom trawl survey
 data(raster_stack) # This is a raster stack of covariates
 
-region.data <- subset(region_data_all, year >= 2012) # Limit the timeframe to speed things up
+region.data <- subset(region_data_goa, year >= 2012) # Limit the timeframe to speed things up
 region.data$sponge <- as.integer(region.data$sponge > 0)
 region.data$logarea <- log(region.data$area)
 
