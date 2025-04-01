@@ -1,5 +1,5 @@
 test_that("MakeAKGFDotPlot() creates a ggplot object", {
-  # Do I need this system.file() part?
+  # use the system.file() part if you are using data that are automatically included in the package
   species.data <- readRDS(system.file("test_files", "goa_data_logarea_folds.rds", package = "EFHSDM"))
   hd <- quantile(species.data[species.data[, "dogfish"] > 0, "dogfish"], probs = .9)
   testfig <- MakeAKGFDotplot(
