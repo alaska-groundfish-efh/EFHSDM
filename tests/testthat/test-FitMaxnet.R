@@ -77,7 +77,7 @@ test_that("FitMaxnet handles factor variables", {
 
 test_that("FitMaxnet removes rows with NA", {
   temp_data <- mock_data
-  temp_data$var1[1:5] <- NA  # introduce NA
+  temp_data$var1[1:5] <- NA # introduce NA
 
   model <- FitMaxnet(
     data = temp_data,
@@ -95,7 +95,7 @@ test_that("FitMaxnet removes rows with NA", {
 test_that("FitMaxnet produces a maxnet object", {
   # Create data where one variable is noise
   noisy_data <- mock_data
-  noisy_data$noise <- rnorm(n) * 1e-6  # basically noise
+  noisy_data$noise <- rnorm(n) * 1e-6 # basically noise
 
   model_full <- FitMaxnet(
     data = noisy_data,
