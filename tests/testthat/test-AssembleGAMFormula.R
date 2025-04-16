@@ -1,4 +1,3 @@
-
 test_that("AssembleGAMFormula creates an object of class formula", {
   test.gam.table <- data.frame(
     type = c("smooth", "smooth"),
@@ -10,7 +9,7 @@ test_that("AssembleGAMFormula creates an object of class formula", {
     m = c(1, 1),
     m2 = c(0.5, 0.5)
   )
-  x <- AssembleGAMFormula(gam.table = test.gam.table,yvar = "dogfish", hgam = FALSE)
+  x <- AssembleGAMFormula(gam.table = test.gam.table, yvar = "dogfish", hgam = FALSE)
   expect_s3_class(object = x, class = "formula")
 })
 
