@@ -28,9 +28,9 @@ MakeMaxEntAbundance(
 
 \item{type}{character; use "maxnet" for prob suitable habitat or "cloglog" for approximate abundance}
 
-\item{clamp}{Logical; just leave this as F; shoudl the covariates be restricted to the range observe in fitting the model?}
+\item{clamp}{Logical; just leave this as F; should the covariates be restricted to the range observe in fitting the model?}
 
-\item{filename}{a filename to save results, "" writes to active memory}
+\item{filename}{a filename to save results; "" writes to active memory}
 }
 \value{
 a raster map with the desired prediction
