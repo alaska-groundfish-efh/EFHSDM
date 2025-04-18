@@ -1,9 +1,16 @@
 # Scripts use to run pkg development
+library(usethis)
+library(devtools)
 
+
+# Set up package skeleton -------------------------------------------------
+
+usethis::create_package()
+usethis::use_git()
 
 # Documentation -----------------------------------------------------------
-# Package-level documentation
-use_package_doc(open = rlang::is_interactive())
+
+usethis::use_package_doc(open = rlang::is_interactive()) # Package-level documentation
 usethis::use_vignette("EFHSDM") # package-level vignette
 
 # Function documentation
