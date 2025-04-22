@@ -27,7 +27,7 @@ library(akgfmaps)
 # Load the data and add more info
 
 ```{r eval=FALSE}
-data("region_data_all") 
+data("region_data_goa") 
 data("GOA_bathy") 
 data("GOA_btemp")
 data("GOA_lat")
@@ -36,7 +36,7 @@ data("GOA_slope")
 data("GOA_sponge")
 data("raster_stack")
 
-region.data <- region_data_all
+region.data <- region_data_goa
 
 bathy <- GOA_bathy
 btemp <- GOA_btemp

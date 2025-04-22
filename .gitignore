@@ -44,3 +44,5 @@ vignettes/*.pdf
 inst/doc
 /doc/
 /Meta/
+
+Meatgrinder6_mcs.R

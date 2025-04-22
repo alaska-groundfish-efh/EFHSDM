@@ -1,9 +1,16 @@
 # Scripts use to run pkg development
+library(usethis)
+library(devtools)
 
+
+# Set up package skeleton -------------------------------------------------
+
+usethis::create_package()
+usethis::use_git()
 
 # Documentation -----------------------------------------------------------
-# Package-level documentation
-use_package_doc(open = rlang::is_interactive())
+
+usethis::use_package_doc(open = rlang::is_interactive()) # Package-level documentation
 usethis::use_vignette("EFHSDM") # package-level vignette
 
 # Function documentation
@@ -17,43 +24,35 @@ devtools::build_vignettes()
 # ***Need to add everything that gets called w library() or require() here.
 # akgfmaps dependencies
 usethis::use_package("ggplot2", type = "Imports", min_version = NULL)
-usethis::use_package("viridis", type = "Imports", min_version = NULL) #used by multiple fns
+usethis::use_package("viridis", type = "Imports", min_version = NULL) # used by multiple fns
 usethis::use_package("stars", type = "Imports", min_version = NULL)
 usethis::use_package("sf", type = "Imports", min_version = NULL)
 usethis::use_package("gridExtra", type = "Imports", min_version = NULL)
-#usethis::use_package("patchwork", type = "Imports", min_version = NULL)
-#usethis::use_package("MASS", type = "Imports", min_version = NULL)
 usethis::use_package("scales", type = "Imports", min_version = NULL)
-#usethis::use_package("labeling", type = "Imports", min_version = NULL)
 usethis::use_package("magrittr", type = "Imports", min_version = NULL)
 usethis::use_package("terra", type = "Imports", min_version = NULL)
 
-#GamModel dependencies
-usethis::use_package("mgcv", type = "Imports", min_version = NULL) #used by multiple fns
+# GamModel dependencies
+usethis::use_package("mgcv", type = "Imports", min_version = NULL) # used by multiple fns
 usethis::use_package("PresenceAbsence", type = "Imports", min_version = NULL)
 
-#LoadMap dependencies
-
-#usethis::use_package("sp", type = "Imports", min_version = NULL)
-#usethis::use_package("gstat", type = "Imports", min_version = NULL)
+# LoadMap dependencies
 usethis::use_package("viridis", type = "Imports", min_version = NULL)
-#usethis::use_package("mgcv", type = "Imports", min_version = NULL)
-#usethis::use_package("raster", type = "Imports", min_version = NULL)
 
-#Maxent dependencies
-#usethis::use_package("raster", type = "Imports", min_version = NULL)
+
+# Maxent dependencies
 usethis::use_package("PresenceAbsence", type = "Imports", min_version = NULL)
 usethis::use_package("maxnet", type = "Imports", min_version = NULL)
-#usethis::use_package("ENMeval", type = "Imports", min_version = NULL)
+# usethis::use_package("ENMeval", type = "Imports", min_version = NULL)
 
 # Xtable dependencies
 usethis::use_package("xtable", type = "Imports", min_version = NULL)
-#usethis::use_package("XML", type = "Imports", min_version = NULL)
+# usethis::use_package("XML", type = "Imports", min_version = NULL)
 
 
 # Packages in development
 usethis::use_dev_package("akgfmaps", type = "Imports", remote = "git::https://github.com/afsc-gap-products/akgfmaps.git@master")
-#devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
+# devtools::install_github("sean-rohan-noaa/akgfmaps", build_vignettes = TRUE)
 
 # Datasets ----------------------------------------------------------------
 # Advice from Sean:
@@ -72,7 +71,7 @@ usethis::use_dev_package("akgfmaps", type = "Imports", remote = "git::https://gi
 # Set up sysdata.rda, which includes data that should be automatically loaded with the package and will not be avail to users outside the package
 
 # These are all in the current example; more will probably need to be added
-region_data_all <- read.csv("Y:/RACE_EFH_Variables/Trawl_Models/GOA/all_GOA_data_2021.csv")
+region_data_goa <- read.csv("Y:/RACE_EFH_Variables/Trawl_Models/GOA/all_GOA_data_2021.csv")
 GOA_bathy <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Bathy.grd")
 GOA_btemp <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Btemp.grd")
 GOA_slope <- terra::rast("Y:/RACE_EFH_variables/Variables/Variables_GOA_1km/Slope.grd")
@@ -83,26 +82,26 @@ GOA_lat <- terra::mask(GOA_lat0, GOA_bathy, overwrite = F)
 GOA_lon0 <- terra::init(GOA_bathy, fun = "x")
 GOA_lon <- terra::mask(GOA_lon0, GOA_bathy, overwrite = F)
 
-# region.data <- subset(region_data_all, year >= 2012)
+# region.data <- subset(region_data_goa, year >= 2012)
 # region.data$sponge <- as.integer(region.data$sponge > 0)
 # region.data$logarea <- log(region.data$area)
 
 # this step formulates lon and lat so they can easily be used as variables, and stacks them in one object
 
-#Multiply raster by one to get "free-floating" raster w no filenames attached (good because we don't want paths in there)
-raster_stack <- 1*terra::rast(list(GOA_lon, GOA_lat, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge))
+# Multiply raster by one to get "free-floating" raster w no filenames attached (good because we don't want paths in there)
+raster_stack <- 1 * terra::rast(list(GOA_lon, GOA_lat, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge))
 
 names(raster_stack) <- c("lon", "lat", "bdepth", "btemp", "slope", "sponge")
 
 # Multiply them all by 1
 GOA_bathy <- terra::wrap(GOA_bathy)
-GOA_lon <-terra::wrap(GOA_lon)
-GOA_lat <-terra::wrap(GOA_lat)
-GOA_btemp <-terra::wrap(GOA_btemp)
-GOA_slope <-terra::wrap(GOA_slope)
-GOA_sponge <-terra::wrap(GOA_sponge)
+GOA_lon <- terra::wrap(GOA_lon)
+GOA_lat <- terra::wrap(GOA_lat)
+GOA_btemp <- terra::wrap(GOA_btemp)
+GOA_slope <- terra::wrap(GOA_slope)
+GOA_sponge <- terra::wrap(GOA_sponge)
 
-raster_stack <-terra::wrap(raster_stack) # Makes PackedSpatRaster object, need to unwrap to use
+raster_stack <- terra::wrap(raster_stack) # Makes PackedSpatRaster object, need to unwrap to use
 
 # Save new raster objects
 # save(GOA_bathy, file = here::here("data","GOA_bathy.rda"))
@@ -114,21 +113,35 @@ raster_stack <-terra::wrap(raster_stack) # Makes PackedSpatRaster object, need t
 # save(raster_stack, file = here::here("data","raster_stack.rda"))
 
 
-usethis::use_data(region_data_all,overwrite = TRUE)
+usethis::use_data(region_data_goa, overwrite = TRUE)
+usethis::use_data(region_data_ebs, overwrite = TRUE)
+usethis::use_data(region_data_ai, overwrite = TRUE)
 
 # Only do this if you want to save each raster layer separately
-usethis::use_data(GOA_bathy,overwrite = TRUE)
-usethis::use_data(GOA_btemp,overwrite = TRUE)
-usethis::use_data(GOA_slope,overwrite = TRUE)
-usethis::use_data(GOA_sponge,overwrite = TRUE)
-usethis::use_data(GOA_lat,overwrite = TRUE)
-usethis::use_data(GOA_lon,overwrite = TRUE)
+usethis::use_data(GOA_bathy, overwrite = TRUE)
+usethis::use_data(GOA_btemp, overwrite = TRUE)
+usethis::use_data(GOA_slope, overwrite = TRUE)
+usethis::use_data(GOA_sponge, overwrite = TRUE)
+usethis::use_data(GOA_lat, overwrite = TRUE)
+usethis::use_data(GOA_lon, overwrite = TRUE)
 
 # Do this if you want to save the full raster stack as one stacked object
 usethis::use_data(raster_stack, overwrite = TRUE)
 
-save(region_data_all, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, GOA_lat, GOA_lon, file = here::here("R","sysdata.rda"))
+save(region_data_goa, GOA_bathy, GOA_btemp, GOA_slope, GOA_sponge, GOA_lat, GOA_lon, file = here::here("R", "sysdata.rda"))
 
+
+# Document datasets -------------------------------------------------------
+devtools::document(roclets = c("rd", "collate", "namespace"))
+
+
+
+# Setup testing -----------------------------------------------------------
+usethis::use_testthat()
+
+# Example script for drafting a test
+# usethis::use_test("name")
+usethis::use_test("name")
 
 # Build package -----------------------------------------------------------
 

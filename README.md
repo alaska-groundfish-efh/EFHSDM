@@ -33,19 +33,17 @@ This project requires the following packages. Bear in mind that the `maxnet` pac
 xtable, XML, raster, gstat, sf, stars, akgfmaps, ggplot, viridis, gridExtra, MASS, scales, labeling, maxnet, ENMeval, PresenceAbsence, mgcv
 ```
 
-# Roadmap
-Sections of the analysis are included as separate scripts. The general strategy is to use the functions provided in `Functions_Maxent.R` and `Functions_GamModel.R` to produce models, abundance rasters, effects estimates, and other outputs in a standard-ish format. Then, the scripts `Functions_LoadMap.R` and `Functions_Ensemble.R` provide more general methods for mapping or plotting model outputs and combining inferences from multiple models.
+# Pipeline
 
-1) `Functions_Maxent.R` - this script provides the functions for quickly using maxnet models. 
-2) `Functions_GamModel.R` - this script provides functions for conducting several operations with GAMs. The code has been tested with binomial, poisson, negative binomial, and ziplss hurdle models. 
-3) `Functions_LoadMap.R` - this script provides versatile functions for mapping or plotting the model types mentioned above. It also contains some functions used to set up data specific to the EFH program that are unlikely to be broadly useful. 
-4) `Functions_Ensemble.R` - this script provides functions designed to combine models and model products produced in the previous scripts
-5) `Functions_Xtable.R` - this script produces a few standard output tables to summarize model or ensemble performance.
-6) `Functions_akgfmaps.R` - this script provides standard functions to plot maps using the akgfmaps package that are of higher quality than those included elsewhere
+- Step 1: Load data and maps using the `LoadData()` and `LoadMap()` functions
+- Step 2: Fit the maxent model or maxnet model using `FitMaxent()` or `FitMaxnet()`
+- Step 3: Use the model from step 2 to make an abundance prediction using `MakeMaxnetAbundance()`
+- Step 4: Find the break points using the `FindEFHBreaks()` function from the load maps script
+- Step 5: Use the "cut" function with those break to convert the abundance estimate to an EFH map
 
-Functions may be general or specific to a type of model
+A variety of additional evaluation functions are available after this point
 
-## GAM Specific Functions
+## GAM-specific Functions
 
 | Function               |Use                                                                |
 |:-----------------------|:------------------------------------------------------------------|
@@ -112,10 +110,10 @@ library(EFHSDM)
 
 Currently, the raster for this example is stored with the package, and is just called `raster_stack`. You may eventually want to make your own raster stack and use it here. 
 ``` r
-data(region_data_all) # These are catch counts from the GOA bottom trawl survey
+data(region_data_goa) # These are catch counts from the GOA bottom trawl survey
 data(raster_stack) # This is a raster stack of covariates
 
-region.data <- subset(region_data_all, year >= 2012) # Limit the timeframe to speed things up
+region.data <- subset(region_data_goa, year >= 2012) # Limit the timeframe to speed things up
 region.data$sponge <- as.integer(region.data$sponge > 0)
 region.data$logarea <- log(region.data$area)
 
